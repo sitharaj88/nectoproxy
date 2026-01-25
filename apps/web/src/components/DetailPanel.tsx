@@ -3,8 +3,10 @@ import { X, Copy, Check, Play } from 'lucide-react';
 import { useSelectedEntry, useTrafficStore } from '@/stores/trafficStore';
 import { WebSocketMessagesViewer } from './WebSocketMessagesViewer';
 import { ReplayEditor } from './ReplayEditor';
+import { CodeGeneratorButton } from './codegen';
+import { SecurityTab } from './security';
 
-type Tab = 'headers' | 'request' | 'response' | 'timing' | 'messages';
+type Tab = 'headers' | 'request' | 'response' | 'timing' | 'security' | 'messages';
 
 function formatHeaders(headers: Record<string, string | string[]> | null): string {
   if (!headers) return '';
@@ -81,6 +83,7 @@ export function DetailPanel() {
       { id: 'request', label: 'Request' },
       { id: 'response', label: 'Response' },
       { id: 'timing', label: 'Timing' },
+      { id: 'security', label: 'Security' },
     ];
 
     if (isWebSocket) {
@@ -106,13 +109,27 @@ export function DetailPanel() {
         </div>
         <div className="flex items-center gap-1 ml-2">
           {!isWebSocket && (
-            <button
-              onClick={() => setShowReplay(true)}
-              className="p-1 rounded hover:bg-gray-700 text-gray-400 transition-colors"
-              title="Replay Request"
-            >
-              <Play className="w-4 h-4" />
-            </button>
+            <>
+              <CodeGeneratorButton
+                entry={entry}
+                requestBody={
+                  typeof entry.requestBody === 'string'
+                    ? entry.requestBody
+                    : entry.requestBody
+                    ? Buffer.isBuffer(entry.requestBody)
+                      ? entry.requestBody.toString('utf-8')
+                      : JSON.stringify(entry.requestBody)
+                    : null
+                }
+              />
+              <button
+                onClick={() => setShowReplay(true)}
+                className="p-1 rounded hover:bg-gray-700 text-gray-400 transition-colors"
+                title="Replay Request"
+              >
+                <Play className="w-4 h-4" />
+              </button>
+            </>
           )}
           <button
             onClick={() => setSelected(null)}
@@ -231,6 +248,21 @@ export function DetailPanel() {
               )}
             </div>
           </div>
+        )}
+
+        {activeTab === 'security' && (
+          <SecurityTab
+            entry={entry}
+            responseBody={
+              typeof entry.responseBody === 'string'
+                ? entry.responseBody
+                : entry.responseBody
+                ? Buffer.isBuffer(entry.responseBody)
+                  ? entry.responseBody.toString('utf-8')
+                  : JSON.stringify(entry.responseBody)
+                : null
+            }
+          />
         )}
 
         {activeTab === 'messages' && isWebSocket && (

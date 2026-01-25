@@ -1,9 +1,10 @@
 import { useRef, type RefObject } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useFilteredEntries, useTrafficStore } from '@/stores/trafficStore';
+import { useCompareStore } from '@/stores/compareStore';
 import { TrafficContextMenu } from './TrafficContextMenu';
 import type { TrafficEntry } from '@proxyscope/shared';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Square, CheckSquare } from 'lucide-react';
 
 interface TrafficListProps {
   searchInputRef?: RefObject<HTMLInputElement>;
@@ -48,19 +49,40 @@ interface TrafficRowProps {
   entry: TrafficEntry;
   isSelected: boolean;
   onClick: () => void;
+  isCompareMode?: boolean;
+  isCompareSelected?: boolean;
+  onCompareToggle?: () => void;
 }
 
-function TrafficRow({ entry, isSelected, onClick }: TrafficRowProps) {
+function TrafficRow({ entry, isSelected, onClick, isCompareMode, isCompareSelected, onCompareToggle }: TrafficRowProps) {
   const url = new URL(entry.url);
   const pathWithQuery = url.pathname + url.search;
 
+  const handleClick = () => {
+    if (isCompareMode && onCompareToggle) {
+      onCompareToggle();
+    } else {
+      onClick();
+    }
+  };
+
   return (
     <div
-      onClick={onClick}
+      onClick={handleClick}
       className={`flex items-center gap-2 px-3 py-2 border-b border-gray-800 cursor-pointer hover:bg-gray-800 transition-colors ${
         isSelected ? 'bg-gray-700' : ''
-      }`}
+      } ${isCompareSelected ? 'bg-blue-900/30 border-l-2 border-l-blue-500' : ''}`}
     >
+      {/* Compare Checkbox */}
+      {isCompareMode && (
+        <div className="w-6 flex-shrink-0">
+          {isCompareSelected ? (
+            <CheckSquare className="w-4 h-4 text-blue-400" />
+          ) : (
+            <Square className="w-4 h-4 text-gray-500" />
+          )}
+        </div>
+      )}
       {/* Status */}
       <div className="w-12 text-center">
         {entry.isComplete ? (
@@ -110,6 +132,8 @@ export function TrafficList({ searchInputRef: _searchInputRef }: TrafficListProp
   const setSelected = useTrafficStore((state) => state.setSelected);
   const setFilter = useTrafficStore((state) => state.setFilter);
 
+  const { isCompareMode, selectedIds: compareSelectedIds, toggleSelection } = useCompareStore();
+
   const virtualizer = useVirtualizer({
     count: entries.length,
     getScrollElement: () => parentRef.current,
@@ -134,6 +158,7 @@ export function TrafficList({ searchInputRef: _searchInputRef }: TrafficListProp
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 bg-gray-800 border-b border-gray-700 text-xs text-gray-400 font-medium">
+        {isCompareMode && <div className="w-6" />}
         <div className="w-12 text-center">Status</div>
         <div className="w-16">Method</div>
         <div className="w-12">Proto</div>
@@ -174,6 +199,9 @@ export function TrafficList({ searchInputRef: _searchInputRef }: TrafficListProp
                     entry={entry}
                     isSelected={entry.id === selectedId}
                     onClick={() => setSelected(entry.id)}
+                    isCompareMode={isCompareMode}
+                    isCompareSelected={compareSelectedIds.includes(entry.id)}
+                    onCompareToggle={() => toggleSelection(entry.id)}
                   />
                 </TrafficContextMenu>
               </div>

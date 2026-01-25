@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ViewMode = 'list' | 'waterfall' | 'split';
+export type ViewMode = 'list' | 'waterfall' | 'split' | 'dashboard';
 
 interface ViewState {
   mode: ViewMode;

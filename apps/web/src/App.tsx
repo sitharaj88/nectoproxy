@@ -12,6 +12,8 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { MobileNav } from '@/components/MobileNav';
 import { WaterfallChart } from '@/components/WaterfallChart';
+import { DashboardView } from '@/components/dashboard';
+import { CompareModal } from '@/components/compare';
 import { useSocketConnection } from '@/hooks/useSocket';
 import { useSelectedEntry, useTrafficStore } from '@/stores/trafficStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -32,6 +34,7 @@ export default function App() {
   const [showNetwork, setShowNetwork] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   const [activeNetworkProfile, setActiveNetworkProfile] = useState<NetworkProfile | null>(null);
   const [mobileTab, setMobileTab] = useState<'traffic' | 'rules' | 'breakpoints' | 'settings' | 'waterfall'>('traffic');
 
@@ -118,6 +121,9 @@ export default function App() {
       case 'view-waterfall':
         setViewMode('waterfall');
         break;
+      case 'view-dashboard':
+        setViewMode('dashboard');
+        break;
       case 'filter-errors':
         toast.info('Filtering errors...');
         break;
@@ -140,6 +146,11 @@ export default function App() {
 
   // Determine content view based on mode
   const renderMainContent = () => {
+    // Dashboard view takes full screen
+    if (viewMode === 'dashboard') {
+      return <DashboardView />;
+    }
+
     if (isMobile) {
       // Mobile: Single panel based on active tab
       switch (mobileTab) {
@@ -196,12 +207,13 @@ export default function App() {
         showNetwork={showNetwork}
         hasActiveNetworkProfile={activeNetworkProfile !== null}
         onOpenCommandPalette={() => setShowCommandPalette(true)}
+        onOpenCompare={() => setShowCompare(true)}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
 
-      {/* Filter Bar - Hidden on mobile when not on traffic view */}
-      {(!isMobile || mobileTab === 'traffic') && (
+      {/* Filter Bar - Hidden on mobile when not on traffic view, and hidden in dashboard */}
+      {viewMode !== 'dashboard' && (!isMobile || mobileTab === 'traffic') && (
         <FilterBar searchInputRef={searchInputRef} />
       )}
 
@@ -244,6 +256,11 @@ export default function App() {
       <KeyboardShortcutsHelp
         isOpen={showShortcutsHelp}
         onClose={() => setShowShortcutsHelp(false)}
+      />
+
+      <CompareModal
+        isOpen={showCompare}
+        onClose={() => setShowCompare(false)}
       />
 
       {/* Toast Notifications */}

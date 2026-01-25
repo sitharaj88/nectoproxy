@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Trash2, Download, Settings, Circle, ListFilter, Octagon, Gauge, Command, List, BarChart3, Sun, Moon } from 'lucide-react';
+import { Play, Pause, Trash2, Download, Settings, Circle, ListFilter, Octagon, Gauge, Command, List, BarChart3, Sun, Moon, PieChart } from 'lucide-react';
 import { useTrafficStore, useFilteredEntries } from '@/stores/trafficStore';
 import { useBreakpointStore } from '@/stores/breakpointStore';
 import { getCACertificateDownloadUrl, getActiveSession } from '@/services/api';
 import { HarExportImport } from './HarExportImport';
+import { CompareButton } from './compare';
 import { useTheme } from '@/hooks/useTheme';
 import type { ViewMode } from '@/stores/viewStore';
 import type { Session } from '@proxyscope/shared';
@@ -20,11 +21,12 @@ interface HeaderProps {
   showNetwork?: boolean;
   hasActiveNetworkProfile?: boolean;
   onOpenCommandPalette?: () => void;
+  onOpenCompare?: () => void;
   viewMode?: ViewMode;
   onViewModeChange?: (mode: ViewMode) => void;
 }
 
-export function Header({ isConnected, proxyPort, onToggleRules, showRules, onToggleBreakpoints, showBreakpoints, onToggleSettings, onToggleNetwork, showNetwork, hasActiveNetworkProfile, onOpenCommandPalette, viewMode, onViewModeChange }: HeaderProps) {
+export function Header({ isConnected, proxyPort, onToggleRules, showRules, onToggleBreakpoints, showBreakpoints, onToggleSettings, onToggleNetwork, showNetwork, hasActiveNetworkProfile, onOpenCommandPalette, onOpenCompare, viewMode, onViewModeChange }: HeaderProps) {
   const isPaused = useTrafficStore((state) => state.isPaused);
   const setPaused = useTrafficStore((state) => state.setPaused);
   const clearEntries = useTrafficStore((state) => state.clearEntries);
@@ -152,6 +154,8 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
             />
           )}
 
+          {onOpenCompare && <CompareButton onOpenCompare={onOpenCompare} />}
+
           <div className="w-px h-6 bg-gray-600 mx-1" />
 
           {/* View Mode Toggle */}
@@ -171,7 +175,7 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
               </button>
               <button
                 onClick={() => onViewModeChange('waterfall')}
-                className={`p-2 rounded-r-md transition-colors ${
+                className={`p-2 transition-colors ${
                   viewMode === 'waterfall'
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-400 hover:text-gray-200'
@@ -180,6 +184,18 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
                 aria-label="Waterfall View"
               >
                 <BarChart3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onViewModeChange('dashboard')}
+                className={`p-2 rounded-r-md transition-colors ${
+                  viewMode === 'dashboard'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-gray-200'
+                }`}
+                title="Performance Dashboard"
+                aria-label="Performance Dashboard"
+              >
+                <PieChart className="w-4 h-4" />
               </button>
             </div>
           )}
