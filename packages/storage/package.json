@@ -1,0 +1,30 @@
+{
+  "name": "@proxyscope/storage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@proxyscope/shared": "workspace:*",
+    "better-sqlite3": "^11.0.0",
+    "drizzle-orm": "^0.30.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.5.0"
+  }
+}

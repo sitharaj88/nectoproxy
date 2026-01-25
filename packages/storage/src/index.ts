@@ -1,0 +1,8 @@
+export { getDatabase, closeDatabase, getDatabasePath, type DatabaseConfig } from './db/connection.js';
+export * as schema from './db/schema.js';
+export { SessionRepository } from './repositories/SessionRepository.js';
+export { TrafficRepository } from './repositories/TrafficRepository.js';
+export { RuleRepository } from './repositories/RuleRepository.js';
+export { BreakpointRepository } from './repositories/BreakpointRepository.js';
+export { SettingsRepository, type AppSettings } from './repositories/SettingsRepository.js';
+export { WebSocketFrameRepository, type WebSocketFrameCreateInput } from './repositories/WebSocketFrameRepository.js';

@@ -1,0 +1,31 @@
+{
+  "name": "proxyscope",
+  "version": "0.1.0",
+  "description": "A powerful HTTP/HTTPS debugging proxy with Web UI",
+  "type": "module",
+  "bin": {
+    "proxyscope": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@proxyscope/certs": "workspace:*",
+    "@proxyscope/core": "workspace:*",
+    "@proxyscope/server": "workspace:*",
+    "@proxyscope/storage": "workspace:*",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "open": "^10.0.4",
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  },
+  "keywords": ["proxy", "http", "https", "debugging", "mitm", "charles"],
+  "license": "MIT"
+}

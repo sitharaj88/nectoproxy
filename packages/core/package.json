@@ -1,0 +1,31 @@
+{
+  "name": "@proxyscope/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@proxyscope/certs": "workspace:*",
+    "@proxyscope/shared": "workspace:*",
+    "http-mitm-proxy": "^1.1.0",
+    "uuid": "^9.0.1",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.8",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.5.0"
+  }
+}
