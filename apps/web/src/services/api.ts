@@ -99,6 +99,10 @@ export function getCACertificateUrl(): string {
   return `${API_BASE}/certificates/ca`;
 }
 
+export function getCACertificateDownloadUrl(): string {
+  return `${API_BASE}/certificates/download`;
+}
+
 export async function getCACertificateInfo(): Promise<{ fingerprint: string; path: string }> {
   return fetchJson('/certificates/ca/info');
 }

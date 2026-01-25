@@ -27,6 +27,115 @@
   --accent-color: #2563eb;
 }
 
+/* Light theme color overrides for Tailwind classes */
+.light .bg-gray-900 {
+  background-color: #ffffff !important;
+}
+
+.light .bg-gray-800 {
+  background-color: #f9fafb !important;
+}
+
+.light .bg-gray-700 {
+  background-color: #f3f4f6 !important;
+}
+
+.light .bg-gray-800\/50 {
+  background-color: rgba(249, 250, 251, 0.5) !important;
+}
+
+.light .hover\:bg-gray-800:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.light .hover\:bg-gray-700:hover {
+  background-color: #e5e7eb !important;
+}
+
+.light .hover\:bg-gray-600:hover {
+  background-color: #d1d5db !important;
+}
+
+.light .border-gray-700 {
+  border-color: #e5e7eb !important;
+}
+
+.light .border-gray-800 {
+  border-color: #e5e7eb !important;
+}
+
+.light .text-gray-100 {
+  color: #111827 !important;
+}
+
+.light .text-gray-200 {
+  color: #1f2937 !important;
+}
+
+.light .text-gray-300 {
+  color: #374151 !important;
+}
+
+.light .text-gray-400 {
+  color: #4b5563 !important;
+}
+
+.light .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.light .text-white {
+  color: #111827 !important;
+}
+
+.light .hover\:text-gray-200:hover {
+  color: #111827 !important;
+}
+
+.light .hover\:text-gray-300:hover {
+  color: #1f2937 !important;
+}
+
+.light .hover\:text-white:hover {
+  color: #111827 !important;
+}
+
+.light .placeholder-gray-500::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Light mode scrollbar */
+.light ::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Light mode focus ring */
+.light :focus-visible {
+  --tw-ring-offset-color: #ffffff;
+}
+
+.light .focus-ring {
+  --tw-ring-offset-color: #ffffff;
+}
+
+/* Light mode command palette */
+.light [cmdk-item][aria-selected="true"] {
+  background-color: #e5e7eb !important;
+}
+
+/* Light mode skeleton */
+.light .animate-pulse.bg-gray-700 {
+  background-color: #e5e7eb !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;

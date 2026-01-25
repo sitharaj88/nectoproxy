@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Play, Pause, Trash2, Download, Settings, Circle, ListFilter, Octagon, Gauge, Command, List, BarChart3, Sun, Moon } from 'lucide-react';
 import { useTrafficStore, useFilteredEntries } from '@/stores/trafficStore';
 import { useBreakpointStore } from '@/stores/breakpointStore';
-import { getCACertificateUrl, getActiveSession } from '@/services/api';
+import { getCACertificateDownloadUrl, getActiveSession } from '@/services/api';
 import { HarExportImport } from './HarExportImport';
 import { useTheme } from '@/hooks/useTheme';
 import type { ViewMode } from '@/stores/viewStore';
@@ -40,7 +40,8 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
   }, []);
 
   const handleDownloadCert = () => {
-    window.open(getCACertificateUrl(), '_blank');
+    // Use the download endpoint which provides .crt format (better for mobile)
+    window.location.href = getCACertificateDownloadUrl();
   };
 
   const handleImportComplete = () => {
