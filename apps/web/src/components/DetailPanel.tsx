@@ -167,8 +167,8 @@ export function DetailPanel() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-300">General</h3>
               </div>
-              <div className="bg-gray-800 rounded-md p-3 text-sm font-mono space-y-1">
-                <div><span className="text-gray-500">URL:</span> {entry.url}</div>
+              <div className="bg-gray-800 rounded-md p-3 text-sm font-mono space-y-1 overflow-hidden">
+                <div className="break-all"><span className="text-gray-500">URL:</span> {entry.url}</div>
                 <div><span className="text-gray-500">Method:</span> {entry.method}</div>
                 <div><span className="text-gray-500">Status:</span> {entry.status} {entry.statusText}</div>
                 <div><span className="text-gray-500">Protocol:</span> {entry.protocol}</div>
@@ -183,7 +183,7 @@ export function DetailPanel() {
                 <h3 className="text-sm font-medium text-gray-300">Request Headers</h3>
                 <CopyButton text={formatHeaders(entry.requestHeaders)} />
               </div>
-              <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap">
+              <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap break-all overflow-hidden">
                 {formatHeaders(entry.requestHeaders)}
               </pre>
             </div>
@@ -194,7 +194,7 @@ export function DetailPanel() {
                   <h3 className="text-sm font-medium text-gray-300">Response Headers</h3>
                   <CopyButton text={formatHeaders(entry.responseHeaders)} />
                 </div>
-                <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap">
+                <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap break-all overflow-hidden">
                   {formatHeaders(entry.responseHeaders)}
                 </pre>
               </div>

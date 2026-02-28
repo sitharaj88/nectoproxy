@@ -29,7 +29,7 @@ interface HeaderProps {
   onViewModeChange?: (mode: ViewMode) => void;
 }
 
-export function Header({ isConnected, proxyPort, onToggleRules, showRules, onToggleBreakpoints, showBreakpoints, onToggleSettings, onToggleNetwork, showNetwork, hasActiveNetworkProfile, onToggleThrottling, hasActiveThrottleRules, onOpenCommandPalette, onOpenGlobalSearch, onOpenCompare, viewMode, onViewModeChange }: HeaderProps) {
+export function Header({ isConnected, onToggleRules, showRules, onToggleBreakpoints, showBreakpoints, onToggleSettings, onToggleNetwork, showNetwork, hasActiveNetworkProfile, onToggleThrottling, hasActiveThrottleRules, onOpenCommandPalette, onOpenGlobalSearch, onOpenCompare, viewMode, onViewModeChange }: HeaderProps) {
   const isPaused = useTrafficStore((state) => state.isPaused);
   const setPaused = useTrafficStore((state) => state.setPaused);
   const clearEntries = useTrafficStore((state) => state.clearEntries);
@@ -49,78 +49,87 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
   };
 
   return (
-    <header className="bg-gray-800 border-b border-gray-700 px-4 py-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+    <header className="bg-gray-800 border-b border-gray-700 px-4 py-2">
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Brand + Status */}
+        <div className="flex items-center gap-3 shrink-0">
+          <h1 className="text-lg font-bold text-white flex items-center gap-1.5">
             <span className="text-primary-400">Necto</span>
             <span>Proxy</span>
           </h1>
 
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1.5 text-xs">
             <Circle
-              className={`w-2.5 h-2.5 ${
+              className={`w-2 h-2 ${
                 isConnected ? 'fill-green-400 text-green-400' : 'fill-red-400 text-red-400'
               }`}
             />
             <span className="text-gray-400">
               {isConnected ? 'Connected' : 'Disconnected'}
             </span>
-            {proxyPort && (
-              <span className="text-gray-500">| Port {proxyPort}</span>
-            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400 mr-2">
-            {entries.length} requests
-          </span>
+        <div className="w-px h-5 bg-gray-600 shrink-0" />
 
+        <span className="text-xs text-gray-500 tabular-nums shrink-0">
+          {entries.length} requests
+        </span>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Capture Controls */}
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setPaused(!isPaused)}
-            className={`p-2 rounded-md transition-colors ${
+            className={`p-1.5 rounded transition-colors ${
               isPaused
                 ? 'bg-green-600 hover:bg-green-700 text-white'
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
             }`}
             title={isPaused ? 'Resume capture' : 'Pause capture'}
           >
-            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
           </button>
 
           <button
             onClick={clearEntries}
-            className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+            className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
             title="Clear all requests"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
+        </div>
 
+        <div className="w-px h-5 bg-gray-600 shrink-0" />
+
+        {/* Feature Toggles */}
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={onToggleRules}
-            className={`p-2 rounded-md transition-colors ${
+            className={`p-1.5 rounded transition-colors ${
               showRules
                 ? 'bg-blue-600 hover:bg-blue-700 text-white'
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
             }`}
             title={showRules ? 'Hide Rules' : 'Show Rules'}
           >
-            <ListFilter className="w-4 h-4" />
+            <ListFilter className="w-3.5 h-3.5" />
           </button>
 
           <button
             onClick={onToggleBreakpoints}
-            className={`relative p-2 rounded-md transition-colors ${
+            className={`relative p-1.5 rounded transition-colors ${
               showBreakpoints
                 ? 'bg-red-600 hover:bg-red-700 text-white'
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
             }`}
             title={showBreakpoints ? 'Hide Breakpoints' : 'Show Breakpoints'}
           >
-            <Octagon className="w-4 h-4" />
+            <Octagon className="w-3.5 h-3.5" />
             {pendingHits.length > 0 && (
-              <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-red-500 rounded-full">
+              <span className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 text-[10px] font-bold text-white bg-red-500 rounded-full">
                 {pendingHits.length}
               </span>
             )}
@@ -128,7 +137,7 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
 
           <button
             onClick={onToggleNetwork}
-            className={`relative p-2 rounded-md transition-colors ${
+            className={`relative p-1.5 rounded transition-colors ${
               hasActiveNetworkProfile
                 ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
                 : showNetwork
@@ -137,15 +146,15 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
             }`}
             title={hasActiveNetworkProfile ? 'Network Throttling Active' : 'Network Conditioning'}
           >
-            <Gauge className="w-4 h-4" />
+            <Gauge className="w-3.5 h-3.5" />
             {hasActiveNetworkProfile && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-yellow-400" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-yellow-400" />
             )}
           </button>
 
           <button
             onClick={onToggleThrottling}
-            className={`relative p-2 rounded-md transition-colors ${
+            className={`relative p-1.5 rounded transition-colors ${
               hasActiveThrottleRules
                 ? 'bg-orange-600 hover:bg-orange-700 text-white'
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
@@ -153,12 +162,17 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
             title={hasActiveThrottleRules ? 'Per-URL Throttling Active' : 'Per-URL Throttling'}
             aria-label="Per-URL Throttling"
           >
-            <Activity className="w-4 h-4" />
+            <Activity className="w-3.5 h-3.5" />
             {hasActiveThrottleRules && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-orange-400" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-orange-400" />
             )}
           </button>
+        </div>
 
+        <div className="w-px h-5 bg-gray-600 shrink-0" />
+
+        {/* Data Actions */}
+        <div className="flex items-center gap-1 shrink-0">
           {session && (
             <HarExportImport
               sessionId={session.id}
@@ -167,61 +181,63 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
           )}
 
           {onOpenCompare && <CompareButton onOpenCompare={onOpenCompare} />}
+        </div>
 
-          <div className="w-px h-6 bg-gray-600 mx-1" />
+        <div className="w-px h-5 bg-gray-600 shrink-0" />
 
-          {/* View Mode Toggle */}
-          {onViewModeChange && (
-            <div className="flex items-center bg-gray-700 rounded-md">
-              <button
-                onClick={() => onViewModeChange('list')}
-                className={`p-2 rounded-l-md transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-                title="List View"
-                aria-label="List View"
-              >
-                <List className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onViewModeChange('waterfall')}
-                className={`p-2 transition-colors ${
-                  viewMode === 'waterfall'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-                title="Waterfall View"
-                aria-label="Waterfall View"
-              >
-                <BarChart3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onViewModeChange('dashboard')}
-                className={`p-2 rounded-r-md transition-colors ${
-                  viewMode === 'dashboard'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-gray-200'
-                }`}
-                title="Performance Dashboard"
-                aria-label="Performance Dashboard"
-              >
-                <PieChart className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+        {/* View Mode Toggle */}
+        {onViewModeChange && (
+          <div className="flex items-center bg-gray-700 rounded shrink-0">
+            <button
+              onClick={() => onViewModeChange('list')}
+              className={`p-1.5 rounded-l transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+              title="List View"
+              aria-label="List View"
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onViewModeChange('waterfall')}
+              className={`p-1.5 transition-colors ${
+                viewMode === 'waterfall'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+              title="Waterfall View"
+              aria-label="Waterfall View"
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onViewModeChange('dashboard')}
+              className={`p-1.5 rounded-r transition-colors ${
+                viewMode === 'dashboard'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+              title="Performance Dashboard"
+              aria-label="Performance Dashboard"
+            >
+              <PieChart className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
+        {/* Utilities */}
+        <div className="flex items-center gap-1 shrink-0">
           {/* Command Palette */}
           {onOpenCommandPalette && (
             <button
               onClick={onOpenCommandPalette}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+              className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
               title="Command Palette (⌘K)"
               aria-label="Open command palette"
             >
-              <Command className="w-4 h-4" />
-              <kbd className="text-xs text-gray-500 hidden sm:inline">⌘K</kbd>
+              <Command className="w-3.5 h-3.5" />
             </button>
           )}
 
@@ -229,41 +245,40 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
           {onOpenGlobalSearch && (
             <button
               onClick={onOpenGlobalSearch}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
-              title="Search across all sessions (Ctrl+Shift+F)"
+              className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+              title="Search across all sessions (⇧F)"
               aria-label="Global search"
             >
-              <Search className="w-4 h-4" />
-              <kbd className="text-xs text-gray-500 hidden sm:inline">⇧F</kbd>
+              <Search className="w-3.5 h-3.5" />
             </button>
           )}
 
           <button
             onClick={handleDownloadCert}
-            className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+            className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
             title="Download CA Certificate"
             aria-label="Download CA Certificate"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
           </button>
 
           {/* Theme Toggle */}
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+            className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
 
           <button
             onClick={onToggleSettings}
-            className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+            className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
             title="Settings"
             aria-label="Settings"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
-import { Download, Upload, FileUp, X, Check, AlertCircle, Share2 } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Download, Upload, FileUp, X, Check, AlertCircle, Share2, MoreVertical } from 'lucide-react';
 import {
   getHARExportUrl,
   getSnapshotUrl,
@@ -15,6 +15,62 @@ import { useTrafficStore } from '@/stores/trafficStore';
 interface HarExportImportProps {
   sessionId: string;
   sessionName: string;
+}
+
+function DropdownMenu({ onExport, onImport, onSnapshot }: { onExport: () => void; onImport: () => void; onSnapshot: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+        title="Export / Import"
+        aria-label="Export and Import options"
+      >
+        <MoreVertical className="w-4 h-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-48 bg-gray-750 border border-gray-600 rounded-lg shadow-xl z-50 py-1 overflow-hidden">
+          <button
+            onClick={() => { onExport(); setOpen(false); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 transition-colors"
+          >
+            <Download className="w-4 h-4 text-gray-400" />
+            Export HAR
+          </button>
+          <button
+            onClick={() => { onImport(); setOpen(false); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 transition-colors"
+          >
+            <Upload className="w-4 h-4 text-gray-400" />
+            Import HAR
+          </button>
+          <div className="h-px bg-gray-600 mx-2 my-1" />
+          <button
+            onClick={() => { onSnapshot(); setOpen(false); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 transition-colors"
+          >
+            <Share2 className="w-4 h-4 text-gray-400" />
+            Share as HTML
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function HarExportImport({
@@ -138,31 +194,12 @@ export function HarExportImport({
 
   return (
     <>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handleExport}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
-          title="Export session as HAR"
-        >
-          <Download className="w-4 h-4" />
-          Export HAR
-        </button>
-        <button
-          onClick={() => setShowImportModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
-          title="Import HAR file"
-        >
-          <Upload className="w-4 h-4" />
-          Import HAR
-        </button>
-        <button
-          onClick={handleSnapshotExport}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
-          title="Share session as self-contained HTML file"
-        >
-          <Share2 className="w-4 h-4" />
-          Share as HTML
-        </button>
+      <div className="relative flex items-center">
+        <DropdownMenu
+          onExport={handleExport}
+          onImport={() => setShowImportModal(true)}
+          onSnapshot={handleSnapshotExport}
+        />
       </div>
 
       {/* Import Modal */}
