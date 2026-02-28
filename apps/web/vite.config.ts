@@ -25,5 +25,23 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-codemirror': [
+            '@codemirror/lang-html',
+            '@codemirror/lang-json',
+            '@codemirror/lang-xml',
+            '@codemirror/view',
+            '@uiw/react-codemirror',
+          ],
+          'vendor-motion': ['framer-motion'],
+          'vendor-query': ['@tanstack/react-query', '@tanstack/react-virtual'],
+          'vendor-socket': ['socket.io-client'],
+        },
+      },
+    },
   },
 });

@@ -1,17 +1,21 @@
 {
   "name": "proxyscope",
   "version": "0.1.0",
-  "description": "A powerful HTTP/HTTPS debugging proxy with Web UI",
+  "description": "A powerful HTTP/HTTPS debugging proxy with Web UI - a modern alternative to Charles Proxy",
   "type": "module",
   "bin": {
     "proxyscope": "./dist/index.js"
   },
   "main": "./dist/index.js",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/copy-web-ui.mjs",
     "dev": "tsc --watch",
-    "start": "node dist/index.js",
-    "clean": "rm -rf dist"
+    "start": "node dist/index.js start",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "@proxyscope/certs": "workspace:*",
@@ -24,8 +28,39 @@
     "ora": "^8.0.1"
   },
   "devDependencies": {
+    "@proxyscope/web": "workspace:*",
     "typescript": "^5.5.0"
   },
-  "keywords": ["proxy", "http", "https", "debugging", "mitm", "charles"],
-  "license": "MIT"
+  "keywords": [
+    "proxy",
+    "http",
+    "https",
+    "debugging",
+    "mitm",
+    "charles",
+    "fiddler",
+    "mitmproxy",
+    "web-debugging",
+    "network",
+    "inspector",
+    "traffic",
+    "websocket",
+    "ssl",
+    "tls",
+    "intercept"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/proxyscope.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://github.com/user/proxyscope#readme",
+  "bugs": {
+    "url": "https://github.com/user/proxyscope/issues"
+  },
+  "author": "Sitharaj"
 }

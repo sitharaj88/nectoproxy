@@ -19,7 +19,6 @@
   "dependencies": {
     "@proxyscope/certs": "workspace:*",
     "@proxyscope/shared": "workspace:*",
-    "http-mitm-proxy": "^1.1.0",
     "uuid": "^9.0.1",
     "ws": "^8.19.0"
   },

@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import open from 'open';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { CertificateManager } from '@proxyscope/certs';
 import { ProxyServer } from '@proxyscope/core';
@@ -14,12 +15,14 @@ import { SessionRepository, getDatabase } from '@proxyscope/storage';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
+
 const program = new Command();
 
 program
   .name('proxyscope')
   .description('A powerful HTTP/HTTPS debugging proxy with Web UI')
-  .version('0.1.0');
+  .version(pkg.version);
 
 program
   .command('start')
@@ -68,7 +71,7 @@ program
       // Create API server
       spinner.text = 'Starting API server...';
       // Resolve path to web UI dist folder
-      const webDistPath = path.resolve(__dirname, '../../web/dist');
+      const webDistPath = path.resolve(__dirname, 'web-ui');
       const appInstance = createApp(certManager, {
         port: uiPort,
         staticDir: webDistPath,
@@ -201,8 +204,14 @@ program
       process.on('SIGINT', shutdown);
       process.on('SIGTERM', shutdown);
     } catch (error) {
-      spinner.fail('Failed to start ProxyScope');
-      console.error(chalk.red('\nError:'), (error as Error).message);
+      const err = error as NodeJS.ErrnoException;
+      if (err.code === 'EADDRINUSE') {
+        spinner.fail(`Port is already in use`);
+        console.error(chalk.yellow(`\n  Try a different port: proxyscope start -p ${proxyPort + 1}`));
+      } else {
+        spinner.fail('Failed to start ProxyScope');
+        console.error(chalk.red('\nError:'), (error as Error).message);
+      }
       process.exit(1);
     }
   });

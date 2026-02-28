@@ -116,6 +116,19 @@ function initializeDatabase(db: Database.Database): void {
       value TEXT NOT NULL,
       updated_at INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS ws_frames (
+      id TEXT PRIMARY KEY,
+      traffic_id TEXT NOT NULL REFERENCES traffic(id) ON DELETE CASCADE,
+      timestamp INTEGER NOT NULL,
+      direction TEXT NOT NULL,
+      opcode INTEGER NOT NULL,
+      data BLOB,
+      is_binary INTEGER NOT NULL DEFAULT 0,
+      length INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_ws_frames_traffic ON ws_frames(traffic_id);
   `);
 }
 
