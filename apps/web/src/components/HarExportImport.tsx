@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
-import { Download, Upload, FileUp, X, Check, AlertCircle } from 'lucide-react';
+import { Download, Upload, FileUp, X, Check, AlertCircle, Share2 } from 'lucide-react';
 import {
   getHARExportUrl,
+  getSnapshotUrl,
   getTraffic,
   importHAR,
   validateHAR,
@@ -36,6 +37,15 @@ export function HarExportImport({
     const link = document.createElement('a');
     link.href = getHARExportUrl(sessionId);
     link.download = `${sessionName.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.har`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [sessionId, sessionName]);
+
+  const handleSnapshotExport = useCallback(() => {
+    const link = document.createElement('a');
+    link.href = getSnapshotUrl(sessionId);
+    link.download = `proxyscope-${sessionName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.html`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -144,6 +154,14 @@ export function HarExportImport({
         >
           <Upload className="w-4 h-4" />
           Import HAR
+        </button>
+        <button
+          onClick={handleSnapshotExport}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
+          title="Share session as self-contained HTML file"
+        >
+          <Share2 className="w-4 h-4" />
+          Share as HTML
         </button>
       </div>
 

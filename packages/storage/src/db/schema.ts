@@ -64,6 +64,16 @@ export const breakpoints = sqliteTable('breakpoints', {
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
   type: text('type').notNull(), // request, response, both
   match: text('match', { mode: 'json' }).notNull(),
+  conditions: text('conditions', { mode: 'json' }),
+  conditionLogic: text('condition_logic').default('and'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+});
+
+export const sslPassthrough = sqliteTable('ssl_passthrough', {
+  id: text('id').primaryKey(),
+  domain: text('domain').notNull().unique(),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+  reason: text('reason'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 });
 
@@ -82,4 +92,24 @@ export const wsFrames = sqliteTable('ws_frames', {
   data: blob('data', { mode: 'buffer' }),
   isBinary: integer('is_binary', { mode: 'boolean' }).notNull().default(false),
   length: integer('length').notNull().default(0),
+});
+
+export const dnsMappings = sqliteTable('dns_mappings', {
+  id: text('id').primaryKey(),
+  domain: text('domain').notNull().unique(),
+  targetIp: text('target_ip').notNull(),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+  description: text('description'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+});
+
+export const annotations = sqliteTable('annotations', {
+  id: text('id').primaryKey(),
+  trafficId: text('traffic_id').notNull().references(() => traffic.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  color: text('color').notNull().default('gray'),
+  tags: text('tags', { mode: 'json' }).$type<string[]>().notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 });

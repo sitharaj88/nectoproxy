@@ -2,12 +2,42 @@ import type { RuleMatcher } from './rules.js';
 
 export type BreakpointType = 'request' | 'response' | 'both';
 
+export type BreakpointConditionField =
+  | 'status'
+  | 'url'
+  | 'method'
+  | 'header'
+  | 'requestBody'
+  | 'responseBody'
+  | 'duration'
+  | 'host';
+
+export type BreakpointConditionOperator =
+  | 'equals'
+  | 'contains'
+  | 'startsWith'
+  | 'endsWith'
+  | 'matches'
+  | 'greaterThan'
+  | 'lessThan';
+
+export interface BreakpointCondition {
+  field: BreakpointConditionField;
+  operator: BreakpointConditionOperator;
+  value: string;
+  headerName?: string; // Only for field === 'header'
+}
+
+export type BreakpointConditionLogic = 'and' | 'or';
+
 export interface Breakpoint {
   id: string;
   name: string;
   enabled: boolean;
   type: BreakpointType;
   match: RuleMatcher;
+  conditions?: BreakpointCondition[];
+  conditionLogic?: BreakpointConditionLogic;
   createdAt: number;
 }
 
@@ -65,4 +95,6 @@ export interface BreakpointCreateInput {
   enabled?: boolean;
   type: BreakpointType;
   match: RuleMatcher;
+  conditions?: BreakpointCondition[];
+  conditionLogic?: BreakpointConditionLogic;
 }

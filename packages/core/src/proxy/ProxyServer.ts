@@ -61,6 +61,8 @@ export class ProxyServer extends EventEmitter {
     keepAlive: true,
     maxSockets: 256,
   });
+  private sslPassthroughDomains: Set<string> = new Set();
+  private dnsMappings: Map<string, string> = new Map();
 
   constructor(certManager: CertificateManager, config: Partial<ProxyServerConfig> = {}) {
     super();
@@ -141,6 +143,55 @@ export class ProxyServer extends EventEmitter {
 
   getUpstreamProxyConfig(): UpstreamProxyConfig | null {
     return this.upstreamProxyAgent?.getConfig() || null;
+  }
+
+  // SSL Passthrough methods
+  setSslPassthroughDomains(domains: string[]): void {
+    this.sslPassthroughDomains = new Set(domains);
+  }
+
+  isPassthroughDomain(hostname: string): boolean {
+    if (this.sslPassthroughDomains.has(hostname)) {
+      return true;
+    }
+
+    // Check wildcard matches (e.g., *.google.com matches www.google.com)
+    for (const domain of this.sslPassthroughDomains) {
+      if (domain.startsWith('*.')) {
+        const suffix = domain.slice(2);
+        if (hostname.endsWith(suffix) && hostname !== suffix) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // DNS Spoofing methods
+  setDnsMappings(mappings: Array<{ domain: string; targetIp: string }>): void {
+    this.dnsMappings.clear();
+    for (const m of mappings) {
+      this.dnsMappings.set(m.domain, m.targetIp);
+    }
+  }
+
+  private resolveDns(hostname: string): string {
+    // Check exact match
+    const exact = this.dnsMappings.get(hostname);
+    if (exact) return exact;
+
+    // Check wildcard matches
+    for (const [domain, ip] of this.dnsMappings) {
+      if (domain.startsWith('*.')) {
+        const suffix = domain.slice(2);
+        if (hostname === suffix || hostname.endsWith('.' + suffix)) {
+          return ip;
+        }
+      }
+    }
+
+    return hostname; // No mapping, use original
   }
 
   async start(sessionId: string): Promise<void> {
@@ -315,6 +366,19 @@ export class ProxyServer extends EventEmitter {
   ): Promise<void> {
     const [host, portStr] = (req.url || '').split(':');
     const port = parseInt(portStr, 10) || 443;
+
+    // Check if domain should bypass MITM interception
+    if (this.isPassthroughDomain(host)) {
+      const resolvedHost = this.resolveDns(host);
+      const targetSocket = net.connect(port, resolvedHost, () => {
+        socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+        targetSocket.pipe(socket);
+        socket.pipe(targetSocket);
+      });
+      targetSocket.on('error', () => socket.destroy());
+      socket.on('error', () => targetSocket.destroy());
+      return;
+    }
 
     try {
       // Get certificate for domain
@@ -506,9 +570,10 @@ export class ProxyServer extends EventEmitter {
 
   private async forwardRequest(ctx: ProxyContext, ruleResult?: RuleResult): Promise<void> {
     const url = new URL(ctx.clientRequest.url || '/', `http://${ctx.host}`);
+    const resolvedHostname = this.resolveDns(url.hostname);
 
     const options: http.RequestOptions = {
-      hostname: url.hostname,
+      hostname: resolvedHostname,
       port: url.port || 80,
       path: url.pathname + url.search,
       method: ctx.clientRequest.method,
@@ -560,10 +625,12 @@ export class ProxyServer extends EventEmitter {
   }
 
   private async forwardHttpsRequest(ctx: ProxyContext, ruleResult?: RuleResult): Promise<void> {
+    const resolvedHost = this.resolveDns(ctx.host);
+
     // Use upstream proxy if configured and not bypassed
     if (this.upstreamProxyAgent && !this.upstreamProxyAgent.shouldBypass(ctx.host)) {
       const options: http.RequestOptions = {
-        hostname: ctx.host,
+        hostname: resolvedHost,
         port: ctx.port,
         path: ctx.path,
         method: ctx.clientRequest.method,
@@ -576,13 +643,14 @@ export class ProxyServer extends EventEmitter {
     return new Promise((resolve, reject) => {
       const proxyReq = https.request(
         {
-          hostname: ctx.host,
+          hostname: resolvedHost,
           port: ctx.port,
           path: ctx.path,
           method: ctx.clientRequest.method,
           headers: this.filterHeaders(ctx.clientRequest.headers),
           timeout: this.config.timeout,
           agent: this.httpsAgent,
+          servername: ctx.host,
         },
         (proxyRes) => {
           ctx.serverResponse = proxyRes;
@@ -792,7 +860,13 @@ export class ProxyServer extends EventEmitter {
     }
 
     // Check for response breakpoints
-    const breakpoint = this.breakpointManager.shouldBreak(matchCtx, 'response');
+    const breakpoint = this.breakpointManager.shouldBreak(matchCtx, 'response', {
+      status,
+      statusText,
+      headers,
+      body: responseBody,
+      duration: Date.now() - ctx.startTime,
+    });
     if (breakpoint) {
       // Emit breakpoint update
       this.emit('traffic:update', {

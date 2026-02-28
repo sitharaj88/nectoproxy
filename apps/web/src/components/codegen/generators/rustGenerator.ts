@@ -1,13 +1,13 @@
 import type { GeneratorInput, GeneratorOutput } from './types';
+import { filterHeaders, getContentType, isJsonContentType } from './utils';
 
 export function generateRust({ entry, requestBody }: GeneratorInput): GeneratorOutput {
   const lines: string[] = [];
 
   const method = entry.method.toLowerCase();
   const hasBody = requestBody && ['post', 'put', 'patch'].includes(method);
-  const contentType =
-    entry.requestHeaders?.['content-type'] || entry.requestHeaders?.['Content-Type'] || '';
-  const isJson = contentType.includes('application/json');
+  const contentType = getContentType(entry.requestHeaders);
+  const isJson = isJsonContentType(contentType);
 
   // Cargo.toml comment
   lines.push('// Add to Cargo.toml:');
@@ -35,17 +35,13 @@ export function generateRust({ entry, requestBody }: GeneratorInput): GeneratorO
   lines.push('');
 
   // Headers
-  const headers = entry.requestHeaders || {};
-  const skipHeaders = ['host', 'content-length', 'connection'];
-  const filteredHeaders = Object.entries(headers).filter(
-    ([key]) => !skipHeaders.includes(key.toLowerCase())
-  );
+  const filteredHeaders = filterHeaders(entry.requestHeaders);
+  const filteredEntries = Object.entries(filteredHeaders);
 
-  if (filteredHeaders.length > 0) {
+  if (filteredEntries.length > 0) {
     lines.push('    let mut headers = HeaderMap::new();');
-    for (const [key, value] of filteredHeaders) {
-      const headerValue = Array.isArray(value) ? value.join(', ') : value;
-      lines.push(`    headers.insert("${key}", HeaderValue::from_static("${headerValue}"));`);
+    for (const [key, value] of filteredEntries) {
+      lines.push(`    headers.insert("${key}", HeaderValue::from_static("${value}"));`);
     }
     lines.push('');
   }
@@ -53,7 +49,7 @@ export function generateRust({ entry, requestBody }: GeneratorInput): GeneratorO
   // Build request
   lines.push(`    let response = client.${method}(url)`);
 
-  if (filteredHeaders.length > 0) {
+  if (filteredEntries.length > 0) {
     lines.push('        .headers(headers)');
   }
 

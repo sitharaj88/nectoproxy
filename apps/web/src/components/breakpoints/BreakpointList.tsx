@@ -90,6 +90,14 @@ export function BreakpointList({
                       >
                         {bp.type}
                       </span>
+                      {bp.conditions && bp.conditions.length > 0 && (
+                        <span
+                          className="px-2 py-0.5 text-xs rounded bg-yellow-900/50 text-yellow-400"
+                          title={`${bp.conditions.length} condition${bp.conditions.length > 1 ? 's' : ''} (${bp.conditionLogic || 'and'})`}
+                        >
+                          {bp.conditions.length} condition{bp.conditions.length > 1 ? 's' : ''}
+                        </span>
+                      )}
                     </div>
                     <div className="text-sm text-gray-400 mt-1">
                       {formatMatcher(bp.match)}

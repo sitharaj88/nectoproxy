@@ -1,23 +1,17 @@
 import type { GeneratorInput, GeneratorOutput } from './types';
+import { filterHeaders, getContentType, isJsonContentType } from './utils';
 
 export function generateNodeFetch({ entry, requestBody }: GeneratorInput): GeneratorOutput {
   const lines: string[] = [];
 
   // Headers
-  const headers = entry.requestHeaders || {};
-  const skipHeaders = ['host', 'content-length', 'connection'];
-  const filteredHeaders: Record<string, string> = {};
-
-  for (const [key, value] of Object.entries(headers)) {
-    if (skipHeaders.includes(key.toLowerCase())) continue;
-    filteredHeaders[key] = Array.isArray(value) ? value.join(', ') : value;
-  }
+  const filteredHeaders = filterHeaders(entry.requestHeaders);
 
   // Build options object
   const method = entry.method.toUpperCase();
   const hasBody = requestBody && ['POST', 'PUT', 'PATCH'].includes(method);
-  const contentType = headers['content-type'] || headers['Content-Type'] || '';
-  const isJson = contentType.includes('application/json');
+  const contentType = getContentType(entry.requestHeaders);
+  const isJson = isJsonContentType(contentType);
 
   lines.push(`const url = '${entry.url}';`);
   lines.push('');

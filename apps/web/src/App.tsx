@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { FilterBar } from '@/components/FilterBar';
 import { TrafficList } from '@/components/TrafficList';
@@ -7,8 +7,10 @@ import { RulesPanel } from '@/components/rules';
 import { BreakpointsPanel } from '@/components/breakpoints';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { NetworkConditionPanel } from '@/components/NetworkConditionPanel';
+import { ThrottlingPanel } from '@/components/ThrottlingPanel';
 import { Toaster, toast } from '@/components/ui/Toaster';
 import { CommandPalette } from '@/components/CommandPalette';
+import { GlobalSearch } from '@/components/GlobalSearch';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { MobileNav } from '@/components/MobileNav';
 import { WaterfallChart } from '@/components/WaterfallChart';
@@ -17,6 +19,7 @@ import { CompareModal } from '@/components/compare';
 import { SessionTabs } from '@/components/SessionTabs';
 import { useSocketConnection } from '@/hooks/useSocket';
 import { useSelectedEntry, useTrafficStore, useActiveRawEntries } from '@/stores/trafficStore';
+import { useRulesStore } from '@/stores/rulesStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -34,7 +37,9 @@ export default function App() {
   const [showBreakpoints, setShowBreakpoints] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showNetwork, setShowNetwork] = useState(false);
+  const [showThrottling, setShowThrottling] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [activeNetworkProfile, setActiveNetworkProfile] = useState<NetworkProfile | null>(null);
@@ -42,6 +47,13 @@ export default function App() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const rules = useRulesStore((state) => state.rules);
+
+  // Check if there are any active throttle/delay rules
+  const hasActiveThrottleRules = useMemo(
+    () => rules.some((r) => r.enabled && (r.action === 'throttle' || r.action === 'delay')),
+    [rules]
+  );
 
   // Initialize theme
   useTheme();
@@ -63,7 +75,9 @@ export default function App() {
   }, [entries, selectedIndex, setSelected]);
 
   const handleClosePanel = useCallback(() => {
-    if (showCommandPalette) {
+    if (showGlobalSearch) {
+      setShowGlobalSearch(false);
+    } else if (showCommandPalette) {
       setShowCommandPalette(false);
     } else if (showShortcutsHelp) {
       setShowShortcutsHelp(false);
@@ -73,12 +87,14 @@ export default function App() {
       setShowBreakpoints(false);
     } else if (showNetwork) {
       setShowNetwork(false);
+    } else if (showThrottling) {
+      setShowThrottling(false);
     } else if (selectedEntry) {
       setSelected(null);
     } else if (showRules) {
       setShowRules(false);
     }
-  }, [showCommandPalette, showShortcutsHelp, showSettings, showBreakpoints, showNetwork, selectedEntry, showRules, setSelected]);
+  }, [showGlobalSearch, showCommandPalette, showShortcutsHelp, showSettings, showBreakpoints, showNetwork, showThrottling, selectedEntry, showRules, setSelected]);
 
   const handleClearTraffic = useCallback(() => {
     clearEntries();
@@ -89,6 +105,7 @@ export default function App() {
   useKeyboardShortcuts({
     onOpenCommandPalette: () => setShowCommandPalette(true),
     onFocusSearch: () => searchInputRef.current?.focus(),
+    onOpenGlobalSearch: () => setShowGlobalSearch(true),
     onOpenSettings: () => setShowSettings(true),
     onToggleRules: () => setShowRules((s) => !s),
     onToggleBreakpoints: () => setShowBreakpoints((s) => !s),
@@ -113,6 +130,12 @@ export default function App() {
         break;
       case 'network':
         setShowNetwork(true);
+        break;
+      case 'throttling':
+        setShowThrottling(true);
+        break;
+      case 'global-search':
+        setShowGlobalSearch(true);
         break;
       case 'clear':
         handleClearTraffic();
@@ -177,7 +200,7 @@ export default function App() {
           {viewMode === 'waterfall' ? (
             <WaterfallChart />
           ) : (
-            <TrafficList searchInputRef={searchInputRef} />
+            <TrafficList searchInputRef={searchInputRef} onOpenCompare={() => setShowCompare(true)} />
           )}
         </div>
 
@@ -208,7 +231,10 @@ export default function App() {
         onToggleNetwork={() => setShowNetwork(!showNetwork)}
         showNetwork={showNetwork}
         hasActiveNetworkProfile={activeNetworkProfile !== null}
+        onToggleThrottling={() => setShowThrottling(!showThrottling)}
+        hasActiveThrottleRules={hasActiveThrottleRules}
         onOpenCommandPalette={() => setShowCommandPalette(true)}
+        onOpenGlobalSearch={() => setShowGlobalSearch(true)}
         onOpenCompare={() => setShowCompare(true)}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -252,10 +278,20 @@ export default function App() {
         onProfileChange={setActiveNetworkProfile}
       />
 
+      <ThrottlingPanel
+        isOpen={showThrottling}
+        onClose={() => setShowThrottling(false)}
+      />
+
       <CommandPalette
         isOpen={showCommandPalette}
         onClose={() => setShowCommandPalette(false)}
         onNavigate={handleCommandNavigate}
+      />
+
+      <GlobalSearch
+        isOpen={showGlobalSearch}
+        onClose={() => setShowGlobalSearch(false)}
       />
 
       <KeyboardShortcutsHelp

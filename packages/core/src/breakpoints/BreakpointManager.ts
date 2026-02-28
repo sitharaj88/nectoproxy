@@ -2,6 +2,8 @@ import { EventEmitter } from 'node:events';
 import { v4 as uuid } from 'uuid';
 import type {
   Breakpoint,
+  BreakpointCondition,
+  BreakpointConditionLogic,
   BreakpointHit,
   BreakpointResume,
 } from '@proxyscope/shared';
@@ -17,6 +19,14 @@ interface PendingBreakpoint {
 export interface BreakpointManagerConfig {
   defaultTimeout: number; // milliseconds, 0 = no timeout
   autoAction: 'continue' | 'abort'; // what to do on timeout
+}
+
+export interface ResponseContext {
+  status: number;
+  statusText?: string;
+  headers: Record<string, string | string[]>;
+  body: Buffer | null;
+  duration?: number;
 }
 
 const DEFAULT_CONFIG: BreakpointManagerConfig = {
@@ -61,7 +71,11 @@ export class BreakpointManager extends EventEmitter {
     return Array.from(this.breakpoints.values());
   }
 
-  shouldBreak(ctx: MatchContext, phase: 'request' | 'response'): Breakpoint | null {
+  shouldBreak(
+    ctx: MatchContext,
+    phase: 'request' | 'response',
+    responseCtx?: ResponseContext
+  ): Breakpoint | null {
     for (const breakpoint of this.breakpoints.values()) {
       if (!breakpoint.enabled) continue;
 
@@ -69,8 +83,132 @@ export class BreakpointManager extends EventEmitter {
       if (breakpoint.type !== 'both' && breakpoint.type !== phase) continue;
 
       // Check if pattern matches
-      if (this.matcher.matchesContext(breakpoint.match, ctx)) {
-        return breakpoint;
+      if (!this.matcher.matchesContext(breakpoint.match, ctx)) continue;
+
+      // Check conditions if they exist
+      if (breakpoint.conditions && breakpoint.conditions.length > 0) {
+        const logic = breakpoint.conditionLogic || 'and';
+        if (!this.evaluateConditions(breakpoint.conditions, logic, ctx, responseCtx)) {
+          continue;
+        }
+      }
+
+      return breakpoint;
+    }
+    return null;
+  }
+
+  private evaluateConditions(
+    conditions: BreakpointCondition[],
+    logic: BreakpointConditionLogic,
+    ctx: MatchContext,
+    responseCtx?: ResponseContext
+  ): boolean {
+    if (logic === 'and') {
+      return conditions.every((condition) =>
+        this.evaluateCondition(condition, ctx, responseCtx)
+      );
+    }
+    return conditions.some((condition) =>
+      this.evaluateCondition(condition, ctx, responseCtx)
+    );
+  }
+
+  private evaluateCondition(
+    condition: BreakpointCondition,
+    ctx: MatchContext,
+    responseCtx?: ResponseContext
+  ): boolean {
+    const fieldValue = this.getConditionFieldValue(condition, ctx, responseCtx);
+    if (fieldValue === null || fieldValue === undefined) {
+      return false;
+    }
+
+    const { operator, value } = condition;
+
+    // Numeric operators
+    if (operator === 'greaterThan' || operator === 'lessThan') {
+      const numFieldValue = Number(fieldValue);
+      const numConditionValue = Number(value);
+      if (isNaN(numFieldValue) || isNaN(numConditionValue)) {
+        return false;
+      }
+      return operator === 'greaterThan'
+        ? numFieldValue > numConditionValue
+        : numFieldValue < numConditionValue;
+    }
+
+    // String operators
+    const strFieldValue = String(fieldValue);
+
+    switch (operator) {
+      case 'equals':
+        return strFieldValue === value;
+      case 'contains':
+        return strFieldValue.includes(value);
+      case 'startsWith':
+        return strFieldValue.startsWith(value);
+      case 'endsWith':
+        return strFieldValue.endsWith(value);
+      case 'matches':
+        try {
+          const regex = new RegExp(value);
+          return regex.test(strFieldValue);
+        } catch {
+          return false;
+        }
+      default:
+        return false;
+    }
+  }
+
+  private getConditionFieldValue(
+    condition: BreakpointCondition,
+    ctx: MatchContext,
+    responseCtx?: ResponseContext
+  ): string | number | null {
+    switch (condition.field) {
+      case 'url':
+        return ctx.url;
+      case 'method':
+        return ctx.method;
+      case 'host':
+        return ctx.host;
+      case 'status':
+        return responseCtx?.status ?? null;
+      case 'duration':
+        return responseCtx?.duration ?? null;
+      case 'header': {
+        if (!condition.headerName) return null;
+        // Check request headers first, then response headers
+        const reqValue = this.getHeaderValue(ctx.requestHeaders, condition.headerName);
+        if (reqValue !== null) return reqValue;
+        if (responseCtx?.headers) {
+          return this.getHeaderValue(responseCtx.headers, condition.headerName);
+        }
+        return null;
+      }
+      case 'requestBody': {
+        if (!ctx.requestBody) return null;
+        return ctx.requestBody.toString('utf-8');
+      }
+      case 'responseBody': {
+        if (!responseCtx?.body) return null;
+        return responseCtx.body.toString('utf-8');
+      }
+      default:
+        return null;
+    }
+  }
+
+  private getHeaderValue(
+    headers: Record<string, string | string[]>,
+    headerName: string
+  ): string | null {
+    const normalizedKey = headerName.toLowerCase();
+    for (const [key, value] of Object.entries(headers)) {
+      if (key.toLowerCase() === normalizedKey) {
+        return Array.isArray(value) ? value.join(', ') : value;
       }
     }
     return null;

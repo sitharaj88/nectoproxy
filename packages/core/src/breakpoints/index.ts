@@ -1,1 +1,1 @@
-export { BreakpointManager, type BreakpointManagerConfig } from './BreakpointManager.js';
+export { BreakpointManager, type BreakpointManagerConfig, type ResponseContext } from './BreakpointManager.js';

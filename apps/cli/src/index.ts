@@ -9,8 +9,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { CertificateManager } from '@proxyscope/certs';
 import { ProxyServer } from '@proxyscope/core';
-import { createApp, setNetworkProfileChangeCallback, setUpstreamProxyChangeCallback } from '@proxyscope/server';
-import { SessionRepository, TrafficRepository, getDatabase } from '@proxyscope/storage';
+import { createApp, setNetworkProfileChangeCallback, setUpstreamProxyChangeCallback, setSSLPassthroughChangeCallback, setDnsMappingsChangeCallback } from '@proxyscope/server';
+import { SessionRepository, TrafficRepository, SSLPassthroughRepository, DnsMappingRepository, getDatabase } from '@proxyscope/storage';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,6 +164,24 @@ program
       // Connect upstream proxy changes to proxy server
       setUpstreamProxyChangeCallback((config) => {
         proxyServer.setUpstreamProxy(config);
+      });
+
+      // Load SSL passthrough domains and connect changes to proxy server
+      const sslPassthroughRepo = new SSLPassthroughRepository();
+      const enabledPassthroughDomains = await sslPassthroughRepo.findEnabled();
+      proxyServer.setSslPassthroughDomains(enabledPassthroughDomains.map((d) => d.domain));
+
+      setSSLPassthroughChangeCallback((domains) => {
+        proxyServer.setSslPassthroughDomains(domains);
+      });
+
+      // Load DNS mappings and connect changes to proxy server
+      const dnsMappingRepo = new DnsMappingRepository();
+      const enabledDnsMappings = await dnsMappingRepo.findEnabled();
+      proxyServer.setDnsMappings(enabledDnsMappings.map((m) => ({ domain: m.domain, targetIp: m.targetIp })));
+
+      setDnsMappingsChangeCallback((mappings) => {
+        proxyServer.setDnsMappings(mappings);
       });
 
       // Start servers

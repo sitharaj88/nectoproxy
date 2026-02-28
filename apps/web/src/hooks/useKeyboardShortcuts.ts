@@ -3,6 +3,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 interface ShortcutHandlers {
   onOpenCommandPalette?: () => void;
   onFocusSearch?: () => void;
+  onOpenGlobalSearch?: () => void;
   onOpenSettings?: () => void;
   onToggleRules?: () => void;
   onToggleBreakpoints?: () => void;
@@ -26,6 +27,12 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
   useHotkeys('mod+f', (e) => {
     e.preventDefault();
     handlers.onFocusSearch?.();
+  }, { enableOnFormTags: false });
+
+  // Global Search - Cmd/Ctrl + Shift + F
+  useHotkeys('mod+shift+f', (e) => {
+    e.preventDefault();
+    handlers.onOpenGlobalSearch?.();
   }, { enableOnFormTags: false });
 
   // Settings - Cmd/Ctrl + ,
@@ -100,6 +107,7 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
 export const KEYBOARD_SHORTCUTS = [
   { key: '⌘/Ctrl + K', description: 'Open command palette' },
   { key: '⌘/Ctrl + F', description: 'Focus search' },
+  { key: '⌘/Ctrl + Shift + F', description: 'Global search across sessions' },
   { key: '⌘/Ctrl + ,', description: 'Open settings' },
   { key: '⌘/Ctrl + Shift + R', description: 'Toggle rules panel' },
   { key: '⌘/Ctrl + Shift + B', description: 'Toggle breakpoints' },

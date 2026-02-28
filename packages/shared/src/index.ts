@@ -7,3 +7,6 @@ export * from './types/events.js';
 export * from './types/settings.js';
 export * from './types/har.js';
 export * from './types/network.js';
+export * from './types/sslPassthrough.js';
+export * from './types/annotations.js';
+export * from './types/dns.js';

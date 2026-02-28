@@ -1,4 +1,5 @@
 import type { GeneratorInput, GeneratorOutput } from './types';
+import { filterHeaders, getContentType, isJsonContentType } from './utils';
 
 export function generateCurl({ entry, requestBody }: GeneratorInput): GeneratorOutput {
   const lines: string[] = [];
@@ -12,13 +13,10 @@ export function generateCurl({ entry, requestBody }: GeneratorInput): GeneratorO
   }
 
   // Add headers
-  const headers = entry.requestHeaders || {};
-  const skipHeaders = ['host', 'content-length', 'connection'];
+  const filteredHeaders = filterHeaders(entry.requestHeaders);
 
-  for (const [key, value] of Object.entries(headers)) {
-    if (skipHeaders.includes(key.toLowerCase())) continue;
-    const headerValue = Array.isArray(value) ? value.join(', ') : value;
-    lines.push(`  -H '${key}: ${headerValue}'`);
+  for (const [key, value] of Object.entries(filteredHeaders)) {
+    lines.push(`  -H '${key}: ${value}'`);
   }
 
   // Add body if present
@@ -27,8 +25,8 @@ export function generateCurl({ entry, requestBody }: GeneratorInput): GeneratorO
     const escapedBody = requestBody.replace(/'/g, "'\\''");
 
     // Check if it's JSON
-    const contentType = headers['content-type'] || headers['Content-Type'] || '';
-    if (contentType.includes('application/json')) {
+    const contentType = getContentType(entry.requestHeaders);
+    if (isJsonContentType(contentType)) {
       try {
         // Pretty format for readability, then compact for curl
         const parsed = JSON.parse(requestBody);

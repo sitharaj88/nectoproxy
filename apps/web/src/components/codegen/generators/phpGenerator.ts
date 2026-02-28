@@ -1,4 +1,5 @@
 import type { GeneratorInput, GeneratorOutput } from './types';
+import { filterHeaders, getContentType, isJsonContentType } from './utils';
 
 export function generatePhp({ entry, requestBody }: GeneratorInput): GeneratorOutput {
   const lines: string[] = [];
@@ -15,14 +16,11 @@ export function generatePhp({ entry, requestBody }: GeneratorInput): GeneratorOu
   lines.push('');
 
   // Headers
-  const headers = entry.requestHeaders || {};
-  const skipHeaders = ['host', 'content-length', 'connection'];
+  const headerMap = filterHeaders(entry.requestHeaders);
   const filteredHeaders: string[] = [];
 
-  for (const [key, value] of Object.entries(headers)) {
-    if (skipHeaders.includes(key.toLowerCase())) continue;
-    const headerValue = Array.isArray(value) ? value.join(', ') : value;
-    filteredHeaders.push(`'${key}: ${headerValue}'`);
+  for (const [key, value] of Object.entries(headerMap)) {
+    filteredHeaders.push(`'${key}: ${value}'`);
   }
 
   if (filteredHeaders.length > 0) {
@@ -36,8 +34,8 @@ export function generatePhp({ entry, requestBody }: GeneratorInput): GeneratorOu
 
   // Body
   if (hasBody) {
-    const contentType = headers['content-type'] || headers['Content-Type'] || '';
-    if (contentType.includes('application/json')) {
+    const contentType = getContentType(entry.requestHeaders);
+    if (isJsonContentType(contentType)) {
       try {
         const parsed = JSON.parse(requestBody);
         lines.push(`$data = json_encode(${formatPhpArray(parsed)});`);

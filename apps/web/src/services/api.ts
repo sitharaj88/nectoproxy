@@ -7,6 +7,12 @@ import type {
   RuleUpdateInput,
   Breakpoint,
   BreakpointCreateInput,
+  DnsMapping,
+  DnsMappingCreateInput,
+  DnsMappingUpdateInput,
+  Annotation,
+  AnnotationCreateInput,
+  AnnotationUpdateInput,
 } from '@proxyscope/shared';
 
 const API_BASE = '/api';
@@ -32,6 +38,33 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 export interface TrafficResponse {
   entries: Array<TrafficEntry & { requestBody: string | null; responseBody: string | null }>;
   count: number;
+}
+
+// Global Search API
+export interface GlobalSearchParams {
+  query: string;
+  searchIn?: string[];
+  methods?: string[];
+  statusCodes?: string[];
+  limit?: number;
+  offset?: number;
+}
+
+export interface GlobalSearchResult {
+  entries: Array<TrafficEntry & { requestBody: string | null; responseBody: string | null }>;
+  total: number;
+  sessionNames: Record<string, string>;
+}
+
+export async function searchTrafficGlobal(params: GlobalSearchParams): Promise<GlobalSearchResult> {
+  const searchParams = new URLSearchParams();
+  searchParams.set('q', params.query);
+  if (params.searchIn && params.searchIn.length > 0) searchParams.set('searchIn', params.searchIn.join(','));
+  if (params.methods && params.methods.length > 0) searchParams.set('methods', params.methods.join(','));
+  if (params.statusCodes && params.statusCodes.length > 0) searchParams.set('statusCodes', params.statusCodes.join(','));
+  if (params.limit) searchParams.set('limit', String(params.limit));
+  if (params.offset) searchParams.set('offset', String(params.offset));
+  return fetchJson<GlobalSearchResult>(`/traffic/search?${searchParams.toString()}`);
 }
 
 export async function getTraffic(params?: {
@@ -270,6 +303,31 @@ export async function getWebSocketFrameCount(
 // HAR Export/Import API
 export function getHARExportUrl(sessionId: string): string {
   return `${API_BASE}/har/export/${sessionId}`;
+}
+
+// Snapshot Export API
+export function getSnapshotUrl(sessionId: string): string {
+  return `${API_BASE}/snapshot/${sessionId}`;
+}
+
+export async function exportSelectedAsSnapshot(
+  entryIds: string[],
+  sessionName?: string
+): Promise<Blob> {
+  const response = await fetch(`${API_BASE}/snapshot/selected`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ entryIds, sessionName }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
+  }
+
+  return response.blob();
 }
 
 export async function exportSelectedAsHAR(
@@ -516,4 +574,125 @@ export interface LocalIPsResponse {
 
 export async function getLocalIPs(): Promise<LocalIPsResponse> {
   return fetchJson('/network/local-ips');
+}
+
+// SSL Passthrough API
+export interface SSLPassthroughDomainsResponse {
+  domains: SSLPassthroughDomain[];
+}
+
+export interface SSLPassthroughDomain {
+  id: string;
+  domain: string;
+  enabled: boolean;
+  reason?: string;
+  createdAt: number;
+}
+
+export interface SSLPassthroughCreateInput {
+  domain: string;
+  enabled?: boolean;
+  reason?: string;
+}
+
+export async function getSSLPassthroughDomains(): Promise<SSLPassthroughDomainsResponse> {
+  return fetchJson('/ssl-passthrough');
+}
+
+export async function addSSLPassthroughDomain(
+  input: SSLPassthroughCreateInput
+): Promise<SSLPassthroughDomain> {
+  return fetchJson('/ssl-passthrough', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteSSLPassthroughDomain(id: string): Promise<void> {
+  await fetchJson(`/ssl-passthrough/${id}`, { method: 'DELETE' });
+}
+
+export async function toggleSSLPassthroughDomain(
+  id: string
+): Promise<SSLPassthroughDomain> {
+  return fetchJson(`/ssl-passthrough/${id}/toggle`, { method: 'PATCH' });
+}
+
+export async function checkSSLPassthroughDomain(
+  domain: string
+): Promise<{ domain: string; matches: boolean }> {
+  return fetchJson('/ssl-passthrough/check', {
+    method: 'POST',
+    body: JSON.stringify({ domain }),
+  });
+}
+
+// DNS Mapping API
+export interface DnsMappingResponse {
+  mappings: DnsMapping[];
+}
+
+export async function getDnsMappings(): Promise<DnsMappingResponse> {
+  return fetchJson('/dns');
+}
+
+export async function createDnsMapping(input: DnsMappingCreateInput): Promise<DnsMapping> {
+  return fetchJson('/dns', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateDnsMapping(id: string, input: DnsMappingUpdateInput): Promise<DnsMapping> {
+  return fetchJson(`/dns/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function toggleDnsMapping(id: string): Promise<DnsMapping> {
+  return fetchJson(`/dns/${id}/toggle`, { method: 'PATCH' });
+}
+
+export async function deleteDnsMapping(id: string): Promise<void> {
+  await fetchJson(`/dns/${id}`, { method: 'DELETE' });
+}
+
+export async function resolveDnsMapping(
+  hostname: string
+): Promise<{ hostname: string; resolvedIp: string | null; matched: boolean }> {
+  return fetchJson('/dns/resolve', {
+    method: 'POST',
+    body: JSON.stringify({ hostname }),
+  });
+}
+
+// Annotations API
+export async function getAnnotations(
+  trafficId: string
+): Promise<{ annotations: Annotation[] }> {
+  return fetchJson(`/annotations/traffic/${trafficId}`);
+}
+
+export async function createAnnotation(
+  input: AnnotationCreateInput
+): Promise<Annotation> {
+  return fetchJson('/annotations', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateAnnotation(
+  id: string,
+  input: AnnotationUpdateInput
+): Promise<Annotation> {
+  return fetchJson(`/annotations/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteAnnotation(id: string): Promise<void> {
+  await fetchJson(`/annotations/${id}`, { method: 'DELETE' });
 }

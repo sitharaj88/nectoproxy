@@ -1,4 +1,5 @@
 import type { GeneratorInput, GeneratorOutput } from './types';
+import { filterHeaders } from './utils';
 
 export function generateGo({ entry, requestBody }: GeneratorInput): GeneratorOutput {
   const lines: string[] = [];
@@ -42,16 +43,13 @@ export function generateGo({ entry, requestBody }: GeneratorInput): GeneratorOut
   lines.push('');
 
   // Headers
-  const headers = entry.requestHeaders || {};
-  const skipHeaders = ['host', 'content-length', 'connection'];
+  const filteredHeaders = filterHeaders(entry.requestHeaders);
 
-  for (const [key, value] of Object.entries(headers)) {
-    if (skipHeaders.includes(key.toLowerCase())) continue;
-    const headerValue = Array.isArray(value) ? value.join(', ') : value;
-    lines.push(`\treq.Header.Set("${key}", "${headerValue}")`);
+  for (const [key, value] of Object.entries(filteredHeaders)) {
+    lines.push(`\treq.Header.Set("${key}", "${value}")`);
   }
 
-  if (Object.keys(headers).length > 0) {
+  if (Object.keys(filteredHeaders).length > 0) {
     lines.push('');
   }
 

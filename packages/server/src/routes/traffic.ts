@@ -63,6 +63,60 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// Search traffic across all sessions
+router.get('/search', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const query = req.query.q as string;
+
+    if (!query || query.trim().length === 0) {
+      res.status(400).json({ error: 'Search query is required' });
+      return;
+    }
+
+    const searchIn = req.query.searchIn
+      ? (req.query.searchIn as string).split(',').filter((s): s is 'url' | 'headers' | 'body' =>
+          ['url', 'headers', 'body'].includes(s)
+        )
+      : undefined;
+
+    const methods = req.query.methods
+      ? (req.query.methods as string).split(',')
+      : undefined;
+
+    const statusCodes = req.query.statusCodes
+      ? (req.query.statusCodes as string).split(',')
+      : undefined;
+
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
+
+    const result = await trafficRepo.searchGlobal({
+      query: query.trim(),
+      searchIn,
+      methods,
+      statusCodes,
+      limit,
+      offset,
+    });
+
+    // Convert Buffer to base64 for JSON response
+    const serialized = result.entries.map((entry) => ({
+      ...entry,
+      requestBody: entry.requestBody?.toString('base64') || null,
+      responseBody: entry.responseBody?.toString('base64') || null,
+    }));
+
+    res.json({
+      entries: serialized,
+      total: result.total,
+      sessionNames: result.sessionNames,
+    });
+  } catch (error) {
+    console.error('Error searching traffic:', error);
+    res.status(500).json({ error: 'Failed to search traffic' });
+  }
+});
+
 // Get a specific traffic entry
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {

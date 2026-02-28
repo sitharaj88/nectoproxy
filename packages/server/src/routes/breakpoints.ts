@@ -53,6 +53,8 @@ export function createBreakpointsRouter(): Router {
         enabled: req.body.enabled,
         type: req.body.type,
         match: req.body.match,
+        conditions: req.body.conditions,
+        conditionLogic: req.body.conditionLogic,
       };
 
       const breakpoint = await breakpointRepo.create(input);
@@ -72,6 +74,8 @@ export function createBreakpointsRouter(): Router {
       if (req.body.enabled !== undefined) input.enabled = req.body.enabled;
       if (req.body.type !== undefined) input.type = req.body.type;
       if (req.body.match !== undefined) input.match = req.body.match;
+      if (req.body.conditions !== undefined) input.conditions = req.body.conditions;
+      if (req.body.conditionLogic !== undefined) input.conditionLogic = req.body.conditionLogic;
 
       const breakpoint = await breakpointRepo.update(req.params.id, input);
 

@@ -5,8 +5,13 @@ import { WebSocketMessagesViewer } from './WebSocketMessagesViewer';
 import { ReplayEditor } from './ReplayEditor';
 import { CodeGeneratorButton } from './codegen';
 import { SecurityTab } from './security';
+import { GraphQLViewer } from './GraphQLViewer';
+import { GRPCViewer } from './GRPCViewer';
+import { isGraphQLRequest, parseGraphQLRequest } from '@/utils/graphql';
+import { isGRPCRequest, parseGRPCRequest } from '@/utils/grpc';
+import { AnnotationsPanel } from './AnnotationsPanel';
 
-type Tab = 'headers' | 'request' | 'response' | 'timing' | 'security' | 'messages';
+type Tab = 'headers' | 'request' | 'response' | 'timing' | 'security' | 'messages' | 'annotations';
 
 function formatHeaders(headers: Record<string, string | string[]> | null): string {
   if (!headers) return '';
@@ -97,6 +102,7 @@ export function DetailPanel() {
       { id: 'response', label: 'Response' },
       { id: 'timing', label: 'Timing' },
       { id: 'security', label: 'Security' },
+      { id: 'annotations', label: 'Notes' },
     ];
 
     if (isWebSocket) {
@@ -205,33 +211,96 @@ export function DetailPanel() {
           </div>
         )}
 
-        {activeTab === 'request' && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-300">Request Body</h3>
-              {entry.requestBody && (
-                <CopyButton text={formatBody(entry.requestBody, entry.requestHeaders)} />
-              )}
-            </div>
-            <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px]">
-              {formatBody(entry.requestBody, entry.requestHeaders)}
-            </pre>
-          </div>
-        )}
+        {activeTab === 'request' && (() => {
+          const requestBodyStr = bodyToString(entry.requestBody);
+          const isGraphQL = isGraphQLRequest(entry.url, entry.requestHeaders, requestBodyStr);
+          const graphqlRequest = isGraphQL && requestBodyStr ? parseGraphQLRequest(requestBodyStr) : null;
+          const grpcDetected = isGRPCRequest(entry.requestHeaders);
+          const grpcRequest = grpcDetected ? parseGRPCRequest(entry.path, entry.requestHeaders) : null;
 
-        {activeTab === 'response' && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-300">Response Body</h3>
-              {entry.responseBody && (
-                <CopyButton text={formatBody(entry.responseBody, entry.responseHeaders)} />
-              )}
+          if (graphqlRequest) {
+            const responseBodyStr = bodyToString(entry.responseBody);
+            return (
+              <div>
+                <GraphQLViewer request={graphqlRequest} responseBody={responseBodyStr} />
+              </div>
+            );
+          }
+
+          if (grpcDetected && grpcRequest) {
+            const responseBodyStr = bodyToString(entry.responseBody);
+            return (
+              <div>
+                <GRPCViewer
+                  service={grpcRequest.service}
+                  method={grpcRequest.method}
+                  requestBody={requestBodyStr}
+                  responseBody={responseBodyStr}
+                  responseHeaders={entry.responseHeaders}
+                />
+              </div>
+            );
+          }
+
+          return (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-300">Request Body</h3>
+                {entry.requestBody && (
+                  <CopyButton text={formatBody(entry.requestBody, entry.requestHeaders)} />
+                )}
+              </div>
+              <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px]">
+                {formatBody(entry.requestBody, entry.requestHeaders)}
+              </pre>
             </div>
-            <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px]">
-              {formatBody(entry.responseBody, entry.responseHeaders)}
-            </pre>
-          </div>
-        )}
+          );
+        })()}
+
+        {activeTab === 'response' && (() => {
+          const requestBodyStr = bodyToString(entry.requestBody);
+          const isGraphQL = isGraphQLRequest(entry.url, entry.requestHeaders, requestBodyStr);
+          const graphqlRequest = isGraphQL && requestBodyStr ? parseGraphQLRequest(requestBodyStr) : null;
+          const grpcDetected = isGRPCRequest(entry.requestHeaders);
+          const grpcRequest = grpcDetected ? parseGRPCRequest(entry.path, entry.requestHeaders) : null;
+          const responseBodyStr = bodyToString(entry.responseBody);
+
+          if (graphqlRequest) {
+            return (
+              <div>
+                <GraphQLViewer request={graphqlRequest} responseBody={responseBodyStr} />
+              </div>
+            );
+          }
+
+          if (grpcDetected && grpcRequest) {
+            return (
+              <div>
+                <GRPCViewer
+                  service={grpcRequest.service}
+                  method={grpcRequest.method}
+                  requestBody={requestBodyStr}
+                  responseBody={responseBodyStr}
+                  responseHeaders={entry.responseHeaders}
+                />
+              </div>
+            );
+          }
+
+          return (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-300">Response Body</h3>
+                {entry.responseBody && (
+                  <CopyButton text={formatBody(entry.responseBody, entry.responseHeaders)} />
+                )}
+              </div>
+              <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px]">
+                {formatBody(entry.responseBody, entry.responseHeaders)}
+              </pre>
+            </div>
+          );
+        })()}
 
         {activeTab === 'timing' && (
           <div>
@@ -260,6 +329,10 @@ export function DetailPanel() {
             entry={entry}
             responseBody={bodyToString(entry.responseBody)}
           />
+        )}
+
+        {activeTab === 'annotations' && (
+          <AnnotationsPanel trafficId={entry.id} />
         )}
 
         {activeTab === 'messages' && isWebSocket && (

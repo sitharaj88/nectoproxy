@@ -1,4 +1,5 @@
 import type { GeneratorInput, GeneratorOutput } from './types';
+import { filterHeaders, getContentType, isJsonContentType } from './utils';
 
 export function generatePython({ entry, requestBody }: GeneratorInput): GeneratorOutput {
   const lines: string[] = [];
@@ -12,14 +13,7 @@ export function generatePython({ entry, requestBody }: GeneratorInput): Generato
   lines.push('');
 
   // Headers
-  const headers = entry.requestHeaders || {};
-  const skipHeaders = ['host', 'content-length', 'connection'];
-  const filteredHeaders: Record<string, string> = {};
-
-  for (const [key, value] of Object.entries(headers)) {
-    if (skipHeaders.includes(key.toLowerCase())) continue;
-    filteredHeaders[key] = Array.isArray(value) ? value.join(', ') : value;
-  }
+  const filteredHeaders = filterHeaders(entry.requestHeaders);
 
   if (Object.keys(filteredHeaders).length > 0) {
     lines.push('headers = {');
@@ -33,10 +27,10 @@ export function generatePython({ entry, requestBody }: GeneratorInput): Generato
   // Body
   const method = entry.method.toLowerCase();
   const hasBody = requestBody && ['post', 'put', 'patch'].includes(method);
-  const contentType = headers['content-type'] || headers['Content-Type'] || '';
+  const contentType = getContentType(entry.requestHeaders);
 
   if (hasBody) {
-    if (contentType.includes('application/json')) {
+    if (isJsonContentType(contentType)) {
       try {
         const parsed = JSON.parse(requestBody);
         lines.push('payload = ' + formatPythonDict(parsed));
@@ -53,7 +47,7 @@ export function generatePython({ entry, requestBody }: GeneratorInput): Generato
 
   // Request call
   const hasHeaders = Object.keys(filteredHeaders).length > 0;
-  const isJson = contentType.includes('application/json');
+  const isJson = isJsonContentType(contentType);
 
   let callLine = `response = requests.${method}(url`;
 

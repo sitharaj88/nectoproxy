@@ -108,8 +108,40 @@ function initializeDatabase(db: Database.Database): void {
       enabled INTEGER NOT NULL DEFAULT 1,
       type TEXT NOT NULL,
       match TEXT NOT NULL,
+      conditions TEXT,
+      condition_logic TEXT DEFAULT 'and',
       created_at INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS ssl_passthrough (
+      id TEXT PRIMARY KEY,
+      domain TEXT NOT NULL UNIQUE,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      reason TEXT,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS dns_mappings (
+      id TEXT PRIMARY KEY,
+      domain TEXT NOT NULL UNIQUE,
+      target_ip TEXT NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      description TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS annotations (
+      id TEXT PRIMARY KEY,
+      traffic_id TEXT NOT NULL REFERENCES traffic(id) ON DELETE CASCADE,
+      content TEXT NOT NULL,
+      color TEXT NOT NULL DEFAULT 'gray',
+      tags TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_annotations_traffic ON annotations(traffic_id);
 
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
@@ -130,6 +162,16 @@ function initializeDatabase(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_ws_frames_traffic ON ws_frames(traffic_id);
   `);
+
+  // Migrate existing breakpoints table to add new columns if missing
+  const bpColumns = db.prepare("PRAGMA table_info(breakpoints)").all() as { name: string }[];
+  const bpColNames = new Set(bpColumns.map((c) => c.name));
+  if (!bpColNames.has('conditions')) {
+    db.exec("ALTER TABLE breakpoints ADD COLUMN conditions TEXT");
+  }
+  if (!bpColNames.has('condition_logic')) {
+    db.exec("ALTER TABLE breakpoints ADD COLUMN condition_logic TEXT DEFAULT 'and'");
+  }
 }
 
 export function closeDatabase(): void {

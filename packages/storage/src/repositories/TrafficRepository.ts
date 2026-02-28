@@ -1,6 +1,6 @@
-import { eq, and, like, gte, lte, inArray, desc, asc, sql } from 'drizzle-orm';
+import { eq, and, like, gte, lte, inArray, desc, asc, sql, or, count as drizzleCount } from 'drizzle-orm';
 import { getDatabase } from '../db/connection.js';
-import { traffic } from '../db/schema.js';
+import { traffic, sessions } from '../db/schema.js';
 import type { TrafficEntry, TrafficQuery, TrafficStats } from '@proxyscope/shared';
 
 export class TrafficRepository {
@@ -182,6 +182,102 @@ export class TrafficRepository {
   async delete(id: string): Promise<boolean> {
     const result = await this.db.delete(traffic).where(eq(traffic.id, id));
     return result.changes > 0;
+  }
+
+  async searchGlobal(params: {
+    query: string;
+    searchIn?: ('url' | 'headers' | 'body')[];
+    methods?: string[];
+    statusCodes?: string[];
+    limit?: number;
+    offset?: number;
+  }): Promise<{ entries: TrafficEntry[]; total: number; sessionNames: Record<string, string> }> {
+    const { query, searchIn = ['url'], methods, statusCodes, limit = 50, offset = 0 } = params;
+
+    const searchPattern = `%${query}%`;
+
+    // Build search conditions based on searchIn
+    const searchConditions = [];
+
+    // Always search in url and host
+    searchConditions.push(like(traffic.url, searchPattern));
+    searchConditions.push(like(traffic.host, searchPattern));
+    searchConditions.push(like(traffic.path, searchPattern));
+
+    // Search in headers if requested
+    if (searchIn.includes('headers')) {
+      searchConditions.push(sql`CAST(${traffic.requestHeaders} AS TEXT) LIKE ${searchPattern}`);
+      searchConditions.push(sql`CAST(${traffic.responseHeaders} AS TEXT) LIKE ${searchPattern}`);
+    }
+
+    // Search in body if requested
+    if (searchIn.includes('body')) {
+      searchConditions.push(sql`CAST(${traffic.requestBody} AS TEXT) LIKE ${searchPattern}`);
+      searchConditions.push(sql`CAST(${traffic.responseBody} AS TEXT) LIKE ${searchPattern}`);
+    }
+
+    // Combine search conditions with OR (match any field)
+    const searchOr = or(...searchConditions);
+
+    // Build additional filter conditions
+    const filterConditions = [];
+    if (searchOr) {
+      filterConditions.push(searchOr);
+    }
+
+    if (methods && methods.length > 0) {
+      filterConditions.push(inArray(traffic.method, methods));
+    }
+
+    if (statusCodes && statusCodes.length > 0) {
+      const statusInts = statusCodes.map((s) => parseInt(s, 10));
+      filterConditions.push(inArray(traffic.status, statusInts));
+    }
+
+    const whereClause = filterConditions.length > 0 ? and(...filterConditions) : undefined;
+
+    // Get total count
+    const countResult = await this.db
+      .select({ total: drizzleCount() })
+      .from(traffic)
+      .where(whereClause);
+
+    const total = countResult[0]?.total || 0;
+
+    // Get paginated results
+    let queryBuilder = this.db.select().from(traffic);
+
+    if (whereClause) {
+      queryBuilder = queryBuilder.where(whereClause) as typeof queryBuilder;
+    }
+
+    queryBuilder = queryBuilder
+      .orderBy(desc(traffic.timestamp))
+      .limit(limit)
+      .offset(offset) as typeof queryBuilder;
+
+    const result = await queryBuilder;
+
+    // Collect unique session IDs and fetch session names
+    const sessionIds = [...new Set(result.map((row) => row.sessionId))];
+    const sessionNames: Record<string, string> = {};
+
+    if (sessionIds.length > 0) {
+      const sessionResults = await this.db
+        .select({ id: sessions.id, name: sessions.name })
+        .from(sessions)
+        .where(inArray(sessions.id, sessionIds));
+
+      for (const s of sessionResults) {
+        sessionNames[s.id] = s.name;
+      }
+    }
+
+    return {
+      entries: result.map((row) => this.mapToTrafficEntry(row)),
+      total,
+      sessionNames,
+    };
   }
 
   private mapToTrafficEntry(row: typeof traffic.$inferSelect): TrafficEntry {

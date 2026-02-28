@@ -9,11 +9,15 @@ import sessionsRouter from './routes/sessions.js';
 import settingsRouter from './routes/settings.js';
 import websocketRouter from './routes/websocket.js';
 import harRouter from './routes/har.js';
+import snapshotRouter from './routes/snapshot.js';
 import networkRouter from './routes/network.js';
 import upstreamProxyRouter from './routes/upstream-proxy.js';
 import { createRulesRouter } from './routes/rules.js';
 import { createBreakpointsRouter } from './routes/breakpoints.js';
 import { createCertificatesRouter } from './routes/certificates.js';
+import sslPassthroughRouter from './routes/ssl-passthrough.js';
+import dnsRouter from './routes/dns.js';
+import annotationsRouter from './routes/annotations.js';
 
 export interface AppConfig {
   port: number;
@@ -44,11 +48,15 @@ export function createApp(certManager: CertificateManager, config: AppConfig): A
   app.use('/api/settings', settingsRouter);
   app.use('/api/websocket', websocketRouter);
   app.use('/api/har', harRouter);
+  app.use('/api/snapshot', snapshotRouter);
   app.use('/api/network', networkRouter);
   app.use('/api/upstream-proxy', upstreamProxyRouter);
   app.use('/api/rules', createRulesRouter(socketServer));
   app.use('/api/breakpoints', createBreakpointsRouter());
   app.use('/api/certificates', createCertificatesRouter(certManager));
+  app.use('/api/ssl-passthrough', sslPassthroughRouter);
+  app.use('/api/dns', dnsRouter);
+  app.use('/api/annotations', annotationsRouter);
 
   // Health check
   app.get('/api/health', (_req, res) => {

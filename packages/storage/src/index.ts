@@ -6,3 +6,6 @@ export { RuleRepository } from './repositories/RuleRepository.js';
 export { BreakpointRepository } from './repositories/BreakpointRepository.js';
 export { SettingsRepository, type AppSettings } from './repositories/SettingsRepository.js';
 export { WebSocketFrameRepository, type WebSocketFrameCreateInput } from './repositories/WebSocketFrameRepository.js';
+export { AnnotationRepository } from './repositories/AnnotationRepository.js';
+export { SSLPassthroughRepository } from './repositories/SSLPassthroughRepository.js';
+export { DnsMappingRepository } from './repositories/DnsMappingRepository.js';

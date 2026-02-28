@@ -4,6 +4,8 @@ import { getDatabase } from '../db/connection.js';
 import { breakpoints } from '../db/schema.js';
 import type {
   Breakpoint,
+  BreakpointCondition,
+  BreakpointConditionLogic,
   BreakpointCreateInput,
   BreakpointType,
   RuleMatcher,
@@ -22,6 +24,8 @@ export class BreakpointRepository {
       enabled: input.enabled ?? true,
       type: input.type,
       match: input.match,
+      conditions: input.conditions ?? null,
+      conditionLogic: input.conditionLogic ?? 'and',
       createdAt: now,
     };
 
@@ -85,6 +89,12 @@ export class BreakpointRepository {
     if (input.match !== undefined) {
       updates.match = input.match;
     }
+    if (input.conditions !== undefined) {
+      updates.conditions = input.conditions ?? null;
+    }
+    if (input.conditionLogic !== undefined) {
+      updates.conditionLogic = input.conditionLogic;
+    }
 
     await this.db.update(breakpoints).set(updates).where(eq(breakpoints.id, id));
 
@@ -115,7 +125,7 @@ export class BreakpointRepository {
   }
 
   private mapToBreakpoint(row: typeof breakpoints.$inferSelect): Breakpoint {
-    return {
+    const breakpoint: Breakpoint = {
       id: row.id,
       name: row.name,
       enabled: row.enabled,
@@ -123,5 +133,14 @@ export class BreakpointRepository {
       match: row.match as RuleMatcher,
       createdAt: row.createdAt.getTime(),
     };
+
+    if (row.conditions) {
+      breakpoint.conditions = row.conditions as BreakpointCondition[];
+    }
+    if (row.conditionLogic) {
+      breakpoint.conditionLogic = row.conditionLogic as BreakpointConditionLogic;
+    }
+
+    return breakpoint;
   }
 }

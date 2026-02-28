@@ -39,6 +39,7 @@ const COMMANDS: CommandItem[] = [
   { id: 'rules', label: 'Toggle Rules Panel', icon: <FileCode className="w-4 h-4" />, shortcut: '⌘⇧R', group: 'Navigation' },
   { id: 'breakpoints', label: 'Toggle Breakpoints', icon: <Pause className="w-4 h-4" />, shortcut: '⌘⇧B', group: 'Navigation' },
   { id: 'network', label: 'Network Conditioning', icon: <Wifi className="w-4 h-4" />, group: 'Navigation' },
+  { id: 'global-search', label: 'Search Across All Sessions', icon: <Search className="w-4 h-4" />, shortcut: '⌘⇧F', group: 'Navigation' },
 
   // Actions
   { id: 'clear', label: 'Clear Traffic', icon: <Trash2 className="w-4 h-4" />, shortcut: '⌘⇧X', group: 'Actions' },

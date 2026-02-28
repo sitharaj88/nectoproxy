@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Trash2, Download, Settings, Circle, ListFilter, Octagon, Gauge, Command, List, BarChart3, Sun, Moon, PieChart } from 'lucide-react';
+import { Play, Pause, Trash2, Download, Settings, Circle, ListFilter, Octagon, Gauge, Command, Search, List, BarChart3, Sun, Moon, PieChart, Activity } from 'lucide-react';
 import { useTrafficStore, useActiveEntries } from '@/stores/trafficStore';
 import { useBreakpointStore } from '@/stores/breakpointStore';
 import { getCACertificateDownloadUrl, getActiveSession } from '@/services/api';
@@ -20,13 +20,16 @@ interface HeaderProps {
   onToggleNetwork?: () => void;
   showNetwork?: boolean;
   hasActiveNetworkProfile?: boolean;
+  onToggleThrottling?: () => void;
+  hasActiveThrottleRules?: boolean;
   onOpenCommandPalette?: () => void;
+  onOpenGlobalSearch?: () => void;
   onOpenCompare?: () => void;
   viewMode?: ViewMode;
   onViewModeChange?: (mode: ViewMode) => void;
 }
 
-export function Header({ isConnected, proxyPort, onToggleRules, showRules, onToggleBreakpoints, showBreakpoints, onToggleSettings, onToggleNetwork, showNetwork, hasActiveNetworkProfile, onOpenCommandPalette, onOpenCompare, viewMode, onViewModeChange }: HeaderProps) {
+export function Header({ isConnected, proxyPort, onToggleRules, showRules, onToggleBreakpoints, showBreakpoints, onToggleSettings, onToggleNetwork, showNetwork, hasActiveNetworkProfile, onToggleThrottling, hasActiveThrottleRules, onOpenCommandPalette, onOpenGlobalSearch, onOpenCompare, viewMode, onViewModeChange }: HeaderProps) {
   const isPaused = useTrafficStore((state) => state.isPaused);
   const setPaused = useTrafficStore((state) => state.setPaused);
   const clearEntries = useTrafficStore((state) => state.clearEntries);
@@ -140,6 +143,22 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
             )}
           </button>
 
+          <button
+            onClick={onToggleThrottling}
+            className={`relative p-2 rounded-md transition-colors ${
+              hasActiveThrottleRules
+                ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            }`}
+            title={hasActiveThrottleRules ? 'Per-URL Throttling Active' : 'Per-URL Throttling'}
+            aria-label="Per-URL Throttling"
+          >
+            <Activity className="w-4 h-4" />
+            {hasActiveThrottleRules && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-orange-400" />
+            )}
+          </button>
+
           {session && (
             <HarExportImport
               sessionId={session.id}
@@ -203,6 +222,19 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
             >
               <Command className="w-4 h-4" />
               <kbd className="text-xs text-gray-500 hidden sm:inline">⌘K</kbd>
+            </button>
+          )}
+
+          {/* Global Search */}
+          {onOpenGlobalSearch && (
+            <button
+              onClick={onOpenGlobalSearch}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+              title="Search across all sessions (Ctrl+Shift+F)"
+              aria-label="Global search"
+            >
+              <Search className="w-4 h-4" />
+              <kbd className="text-xs text-gray-500 hidden sm:inline">⇧F</kbd>
             </button>
           )}
 

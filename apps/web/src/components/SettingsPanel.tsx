@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Globe, Copy, Check, Smartphone, QrCode } from 'lucide-react';
+import { Globe, Copy, Check, Smartphone, QrCode, Shield } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { getSettings, updateSettings, resetSettings, getLocalIPs, type AppSettings, type LocalIPAddress } from '@/services/api';
 import { UpstreamProxyConfig } from './UpstreamProxyConfig';
+import { SSLPassthroughPanel } from './SSLPassthroughPanel';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [saving, setSaving] = useState(false);
   const [error, setLocalError] = useState<string | null>(null);
   const [showUpstreamProxy, setShowUpstreamProxy] = useState(false);
+  const [showSSLPassthrough, setShowSSLPassthrough] = useState(false);
   const [localIPs, setLocalIPs] = useState<LocalIPAddress[]>([]);
   const [copiedIP, setCopiedIP] = useState<string | null>(null);
   const [selectedQRIP, setSelectedQRIP] = useState<string>('');
@@ -209,6 +211,20 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-white text-sm"
                     >
                       <Globe className="w-4 h-4" />
+                      Configure
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm text-gray-300">SSL Passthrough</label>
+                      <p className="text-xs text-gray-500">Bypass MITM for specified domains</p>
+                    </div>
+                    <button
+                      onClick={() => setShowSSLPassthrough(true)}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-white text-sm"
+                    >
+                      <Shield className="w-4 h-4" />
                       Configure
                     </button>
                   </div>
@@ -423,6 +439,12 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       <UpstreamProxyConfig
         isOpen={showUpstreamProxy}
         onClose={() => setShowUpstreamProxy(false)}
+      />
+
+      {/* SSL Passthrough Configuration Modal */}
+      <SSLPassthroughPanel
+        isOpen={showSSLPassthrough}
+        onClose={() => setShowSSLPassthrough(false)}
       />
     </div>
   );
