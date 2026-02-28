@@ -296,15 +296,19 @@ export interface HARImportResult {
   success: boolean;
   imported: number;
   total: number;
+  sessionId: string;
+  sessionName: string;
 }
 
 export async function importHAR(
   file: File,
-  sessionId: string
+  sessionId?: string
 ): Promise<HARImportResult> {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('sessionId', sessionId);
+  if (sessionId) {
+    formData.append('sessionId', sessionId);
+  }
 
   const response = await fetch(`${API_BASE}/har/import`, {
     method: 'POST',

@@ -1,6 +1,6 @@
 import { useRef, type RefObject } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useFilteredEntries, useTrafficStore } from '@/stores/trafficStore';
+import { useActiveEntries, useTrafficStore } from '@/stores/trafficStore';
 import { useCompareStore } from '@/stores/compareStore';
 import { TrafficContextMenu } from './TrafficContextMenu';
 import type { TrafficEntry } from '@proxyscope/shared';
@@ -127,7 +127,7 @@ function TrafficRow({ entry, isSelected, onClick, isCompareMode, isCompareSelect
 
 export function TrafficList({ searchInputRef: _searchInputRef }: TrafficListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const entries = useFilteredEntries();
+  const entries = useActiveEntries();
   const selectedId = useTrafficStore((state) => state.selectedId);
   const setSelected = useTrafficStore((state) => state.setSelected);
   const setFilter = useTrafficStore((state) => state.setFilter);

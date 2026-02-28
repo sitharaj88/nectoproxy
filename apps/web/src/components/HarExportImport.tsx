@@ -2,22 +2,23 @@ import { useState, useRef, useCallback } from 'react';
 import { Download, Upload, FileUp, X, Check, AlertCircle } from 'lucide-react';
 import {
   getHARExportUrl,
+  getTraffic,
   importHAR,
   validateHAR,
   type HARImportResult,
   type HARValidationResult,
 } from '../services/api';
+import { useSessionStore } from '@/stores/sessionStore';
+import { useTrafficStore } from '@/stores/trafficStore';
 
 interface HarExportImportProps {
   sessionId: string;
   sessionName: string;
-  onImportComplete?: (result: HARImportResult) => void;
 }
 
 export function HarExportImport({
   sessionId,
   sessionName,
-  onImportComplete,
 }: HarExportImportProps) {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -28,8 +29,10 @@ export function HarExportImport({
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const openTab = useSessionStore((s) => s.openTab);
+  const loadSessionEntries = useTrafficStore((s) => s.loadSessionEntries);
+
   const handleExport = useCallback(() => {
-    // Trigger download via link
     const link = document.createElement('a');
     link.href = getHARExportUrl(sessionId);
     link.download = `${sessionName.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.har`;
@@ -89,15 +92,24 @@ export function HarExportImport({
     setError(null);
 
     try {
-      const result = await importHAR(selectedFile, sessionId);
+      // Import without sessionId — backend auto-creates a new session
+      const result = await importHAR(selectedFile);
       setImportResult(result);
-      onImportComplete?.(result);
+
+      // Load entries for the new session and open as a tab
+      const trafficData = await getTraffic({ sessionId: result.sessionId, limit: 10000 });
+      loadSessionEntries(result.sessionId, trafficData.entries);
+      openTab({
+        id: result.sessionId,
+        name: result.sessionName,
+        type: 'imported',
+      });
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setImporting(false);
     }
-  }, [selectedFile, sessionId, onImportComplete]);
+  }, [selectedFile, openTab, loadSessionEntries]);
 
   const resetModal = useCallback(() => {
     setSelectedFile(null);
@@ -159,6 +171,9 @@ export function HarExportImport({
                   <h4 className="text-lg font-medium mb-2">Import Complete</h4>
                   <p className="text-gray-400">
                     Imported {importResult.imported} of {importResult.total} entries
+                  </p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Opened in tab: {importResult.sessionName}
                   </p>
                   <button
                     onClick={closeModal}

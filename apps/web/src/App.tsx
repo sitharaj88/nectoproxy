@@ -14,8 +14,9 @@ import { MobileNav } from '@/components/MobileNav';
 import { WaterfallChart } from '@/components/WaterfallChart';
 import { DashboardView } from '@/components/dashboard';
 import { CompareModal } from '@/components/compare';
+import { SessionTabs } from '@/components/SessionTabs';
 import { useSocketConnection } from '@/hooks/useSocket';
-import { useSelectedEntry, useTrafficStore } from '@/stores/trafficStore';
+import { useSelectedEntry, useTrafficStore, useActiveRawEntries } from '@/stores/trafficStore';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTheme } from '@/hooks/useTheme';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -25,7 +26,8 @@ import type { NetworkProfile } from '@/services/api';
 export default function App() {
   const { isConnected, proxyConfig } = useSocketConnection();
   const selectedEntry = useSelectedEntry();
-  const { entries, setSelected, clearEntries } = useTrafficStore();
+  const { setSelected, clearEntries } = useTrafficStore();
+  const entries = useActiveRawEntries();
   const { mode: viewMode, setMode: setViewMode } = useViewStore();
 
   const [showRules, setShowRules] = useState(false);
@@ -216,6 +218,9 @@ export default function App() {
       {viewMode !== 'dashboard' && (!isMobile || mobileTab === 'traffic') && (
         <FilterBar searchInputRef={searchInputRef} />
       )}
+
+      {/* Session Tabs */}
+      {viewMode !== 'dashboard' && <SessionTabs />}
 
       {/* Main Content */}
       <div className={`flex-1 flex overflow-hidden ${isMobile ? 'pb-16' : ''}`}>

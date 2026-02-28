@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { TrafficEntry } from '@proxyscope/shared';
+import { useSessionStore } from './sessionStore';
 
 export interface AdvancedFilter {
   search: string;
@@ -18,6 +19,7 @@ export interface AdvancedFilter {
 
 interface TrafficState {
   entries: TrafficEntry[];
+  importedEntries: Record<string, TrafficEntry[]>;
   selectedId: string | null;
   filter: AdvancedFilter;
   maxEntries: number;
@@ -32,6 +34,8 @@ interface TrafficState {
   setFilter: (filter: Partial<AdvancedFilter>) => void;
   resetFilter: () => void;
   setPaused: (paused: boolean) => void;
+  loadSessionEntries: (sessionId: string, entries: TrafficEntry[]) => void;
+  removeSessionEntries: (sessionId: string) => void;
 }
 
 const defaultFilter: AdvancedFilter = {
@@ -51,6 +55,7 @@ const defaultFilter: AdvancedFilter = {
 
 export const useTrafficStore = create<TrafficState>((set, get) => ({
   entries: [],
+  importedEntries: {},
   selectedId: null,
   filter: { ...defaultFilter },
   maxEntries: 10000,
@@ -100,6 +105,19 @@ export const useTrafficStore = create<TrafficState>((set, get) => ({
   resetFilter: () => set({ filter: { ...defaultFilter } }),
 
   setPaused: (isPaused) => set({ isPaused }),
+
+  loadSessionEntries: (sessionId, entries) => {
+    set((state) => ({
+      importedEntries: { ...state.importedEntries, [sessionId]: entries },
+    }));
+  },
+
+  removeSessionEntries: (sessionId) => {
+    set((state) => {
+      const { [sessionId]: _, ...rest } = state.importedEntries;
+      return { importedEntries: rest };
+    });
+  },
 }));
 
 // Helper function to test regex safely
@@ -137,10 +155,8 @@ function decodeBody(body: unknown): string {
   return '';
 }
 
-// Selector for filtered entries
-export const useFilteredEntries = () => {
-  const { entries, filter } = useTrafficStore();
-
+// Apply filters to a list of entries
+function applyFilters(entries: TrafficEntry[], filter: AdvancedFilter): TrafficEntry[] {
   return entries.filter((entry) => {
     // URL/host search filter
     if (filter.search) {
@@ -205,12 +221,46 @@ export const useFilteredEntries = () => {
 
     return true;
   });
+}
+
+// Selector for filtered entries (live traffic only)
+export const useFilteredEntries = () => {
+  const { entries, filter } = useTrafficStore();
+  return applyFilters(entries, filter);
 };
 
-// Selector for selected entry
+// Selector for active tab entries (session-aware, with filters)
+export const useActiveEntries = () => {
+  const { entries, importedEntries, filter } = useTrafficStore();
+  const activeTabId = useSessionStore((s) => s.activeTabId);
+
+  const sourceEntries = activeTabId === 'live'
+    ? entries
+    : importedEntries[activeTabId] || [];
+
+  return applyFilters(sourceEntries, filter);
+};
+
+// Selector for active tab raw entries (no filters)
+export const useActiveRawEntries = () => {
+  const { entries, importedEntries } = useTrafficStore();
+  const activeTabId = useSessionStore((s) => s.activeTabId);
+
+  return activeTabId === 'live'
+    ? entries
+    : importedEntries[activeTabId] || [];
+};
+
+// Selector for selected entry (session-aware)
 export const useSelectedEntry = () => {
-  const { entries, selectedId } = useTrafficStore();
-  return entries.find((e) => e.id === selectedId) || null;
+  const { entries, importedEntries, selectedId } = useTrafficStore();
+  const activeTabId = useSessionStore((s) => s.activeTabId);
+
+  const sourceEntries = activeTabId === 'live'
+    ? entries
+    : importedEntries[activeTabId] || [];
+
+  return sourceEntries.find((e) => e.id === selectedId) || null;
 };
 
 // Check if any filters are active

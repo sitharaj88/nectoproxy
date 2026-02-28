@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useFilteredEntries } from '@/stores/trafficStore';
+import { useActiveEntries } from '@/stores/trafficStore';
 import type { TrafficEntry } from '@proxyscope/shared';
 
 export interface TimeSeriesPoint {
@@ -99,7 +99,7 @@ function median(arr: number[]): number {
 }
 
 export function usePerformanceStats(): PerformanceStats {
-  const entries = useFilteredEntries();
+  const entries = useActiveEntries();
 
   return useMemo(() => {
     const now = Date.now();

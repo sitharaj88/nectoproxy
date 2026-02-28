@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Play, Pause, Trash2, Download, Settings, Circle, ListFilter, Octagon, Gauge, Command, List, BarChart3, Sun, Moon, PieChart } from 'lucide-react';
-import { useTrafficStore, useFilteredEntries } from '@/stores/trafficStore';
+import { useTrafficStore, useActiveEntries } from '@/stores/trafficStore';
 import { useBreakpointStore } from '@/stores/breakpointStore';
 import { getCACertificateDownloadUrl, getActiveSession } from '@/services/api';
 import { HarExportImport } from './HarExportImport';
@@ -30,7 +30,7 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
   const isPaused = useTrafficStore((state) => state.isPaused);
   const setPaused = useTrafficStore((state) => state.setPaused);
   const clearEntries = useTrafficStore((state) => state.clearEntries);
-  const entries = useFilteredEntries();
+  const entries = useActiveEntries();
   const pendingHits = useBreakpointStore((state) => state.pendingHits);
   const [session, setSession] = useState<Session | null>(null);
   const { theme, setTheme } = useTheme();
@@ -42,12 +42,7 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
   }, []);
 
   const handleDownloadCert = () => {
-    // Use the download endpoint which provides .crt format (better for mobile)
     window.location.href = getCACertificateDownloadUrl();
-  };
-
-  const handleImportComplete = () => {
-    // Entries are emitted via Socket.IO and appear automatically in the traffic list
   };
 
   return (
@@ -149,7 +144,6 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
             <HarExportImport
               sessionId={session.id}
               sessionName={session.name}
-              onImportComplete={handleImportComplete}
             />
           )}
 

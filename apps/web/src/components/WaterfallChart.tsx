@@ -1,13 +1,13 @@
 import { useMemo, useRef, useEffect } from 'react';
 import type { TrafficEntry } from '@proxyscope/shared';
-import { useFilteredEntries, useTrafficStore } from '@/stores/trafficStore';
+import { useActiveEntries, useTrafficStore } from '@/stores/trafficStore';
 
 interface WaterfallChartProps {
   maxEntries?: number;
 }
 
 export function WaterfallChart({ maxEntries = 100 }: WaterfallChartProps) {
-  const entries = useFilteredEntries();
+  const entries = useActiveEntries();
   const setSelected = useTrafficStore((state) => state.setSelected);
   const selectedId = useTrafficStore((state) => state.selectedId);
   const chartRef = useRef<HTMLDivElement>(null);

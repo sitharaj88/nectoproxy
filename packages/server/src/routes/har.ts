@@ -3,15 +3,13 @@ import multer from 'multer';
 import { TrafficRepository, SessionRepository } from '@proxyscope/storage';
 import { HarConverter } from '../services/HarConverter.js';
 import type { HAR } from '@proxyscope/shared';
-import type { SocketServer } from '../websocket/SocketServer.js';
 
 const upload = multer({ storage: multer.memoryStorage() });
 const trafficRepo = new TrafficRepository();
 const sessionRepo = new SessionRepository();
 const harConverter = new HarConverter();
 
-export function createHarRouter(socketServer: SocketServer): RouterType {
-  const router: RouterType = Router();
+const router: RouterType = Router();
 
 // Export session traffic as HAR
 router.get('/export/:sessionId', async (req, res) => {
@@ -85,22 +83,10 @@ router.post('/export', async (req, res) => {
 router.post('/import', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;
-    const { sessionId } = req.body;
+    const { sessionId: providedSessionId, sessionName: providedName } = req.body;
 
     if (!file) {
       res.status(400).json({ error: 'No file provided' });
-      return;
-    }
-
-    if (!sessionId) {
-      res.status(400).json({ error: 'No session ID provided' });
-      return;
-    }
-
-    // Verify session exists
-    const session = await sessionRepo.findById(sessionId);
-    if (!session) {
-      res.status(404).json({ error: 'Session not found' });
       return;
     }
 
@@ -119,42 +105,46 @@ router.post('/import', upload.single('file'), async (req, res) => {
       return;
     }
 
+    let sessionId = providedSessionId;
+    let sessionName: string;
+
+    if (sessionId) {
+      // Verify provided session exists
+      const session = await sessionRepo.findById(sessionId);
+      if (!session) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
+      sessionName = session.name;
+    } else {
+      // Auto-create a new session for the import
+      const harCreator = har.log.creator?.name || 'HAR';
+      const baseName = providedName || file.originalname?.replace(/\.har$/i, '') || harCreator;
+      sessionName = `Imported: ${baseName}`;
+      const session = await sessionRepo.create({ name: sessionName });
+      sessionId = session.id;
+    }
+
     // Convert HAR entries to traffic entries
     const entries = harConverter.fromHAR(har, sessionId);
 
-    // Save entries to database and emit via Socket.IO
+    // Save entries to database (no Socket.IO emission for imports)
     let imported = 0;
-    const importedEntries = [];
     for (const entry of entries) {
       try {
         await trafficRepo.create(entry);
-        importedEntries.push(entry);
         imported++;
       } catch (err) {
         console.error('Error importing entry:', err);
       }
     }
 
-    // Emit imported entries to connected clients so they appear in the UI
-    for (const entry of importedEntries) {
-      socketServer.emitTrafficNew(entry);
-      // Emit an immediate update to mark as complete with response data
-      socketServer.emitTrafficUpdate({
-        id: entry.id,
-        status: entry.status,
-        statusText: entry.statusText,
-        responseHeaders: entry.responseHeaders,
-        responseBody: entry.responseBody,
-        responseBodySize: entry.responseBodySize,
-        duration: entry.duration,
-        isComplete: true,
-      });
-    }
-
     res.json({
       success: true,
       imported,
       total: har.log.entries.length,
+      sessionId,
+      sessionName,
     });
   } catch (err) {
     console.error('Error importing HAR:', err);
@@ -204,5 +194,4 @@ router.post('/validate', upload.single('file'), async (req, res) => {
   }
 });
 
-  return router;
-}
+export default router;
