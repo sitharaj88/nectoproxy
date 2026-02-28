@@ -33,7 +33,7 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
       .join('\n');
   }
 
-  function decodeBody(body: Buffer | string | null): string {
+  function decodeBody(body: unknown): string {
     if (!body) return '';
     if (typeof body === 'string') {
       try {
@@ -41,6 +41,11 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
       } catch {
         return body;
       }
+    }
+    if (body instanceof Uint8Array) return new TextDecoder().decode(body);
+    // Handle serialized Node.js Buffer: { type: "Buffer", data: [...] }
+    if (typeof body === 'object' && body !== null && 'type' in body && (body as Record<string, unknown>).type === 'Buffer' && 'data' in body) {
+      return new TextDecoder().decode(new Uint8Array((body as Record<string, unknown>).data as number[]));
     }
     return '';
   }

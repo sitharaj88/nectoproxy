@@ -22,15 +22,19 @@ function formatHeaders(headers: Record<string, string | string[]> | null): strin
     .join('\n');
 }
 
-function formatBody(body: Buffer | null, headers: Record<string, string | string[]> | null): string {
+function formatBody(body: unknown, headers: Record<string, string | string[]> | null): string {
   if (!body) return '(empty)';
 
-  const bodyStr =
-    typeof body === 'string'
-      ? body
-      : Buffer.isBuffer(body)
-      ? body.toString('utf-8')
-      : JSON.stringify(body);
+  let bodyStr: string;
+  if (typeof body === 'string') {
+    bodyStr = body;
+  } else if (body instanceof Uint8Array) {
+    bodyStr = new TextDecoder().decode(body);
+  } else if (typeof body === 'object' && body !== null && 'type' in body && (body as Record<string, unknown>).type === 'Buffer' && 'data' in body) {
+    bodyStr = new TextDecoder().decode(new Uint8Array((body as Record<string, unknown>).data as number[]));
+  } else {
+    bodyStr = JSON.stringify(body);
+  }
 
   const contentType = headers?.['content-type'] || '';
   if (typeof contentType === 'string' && contentType.includes('application/json')) {

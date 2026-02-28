@@ -18,15 +18,20 @@ function formatHeaders(headers: Record<string, string | string[]> | null): strin
     .join('\n');
 }
 
-function formatBody(body: Buffer | null, headers: Record<string, string | string[]> | null): string {
-  if (!body) return '(empty)';
+function bodyToString(body: unknown): string | null {
+  if (!body) return null;
+  if (typeof body === 'string') return body;
+  if (body instanceof Uint8Array) return new TextDecoder().decode(body);
+  // Handle serialized Node.js Buffer objects: { type: "Buffer", data: [...] }
+  if (typeof body === 'object' && body !== null && 'type' in body && (body as Record<string, unknown>).type === 'Buffer' && 'data' in body) {
+    return new TextDecoder().decode(new Uint8Array((body as Record<string, unknown>).data as number[]));
+  }
+  return JSON.stringify(body);
+}
 
-  // Convert Buffer-like object to string
-  const bodyStr = typeof body === 'string'
-    ? body
-    : Buffer.isBuffer(body)
-    ? body.toString('utf-8')
-    : JSON.stringify(body);
+function formatBody(body: unknown, headers: Record<string, string | string[]> | null): string {
+  const bodyStr = bodyToString(body);
+  if (!bodyStr) return '(empty)';
 
   // Try to pretty print JSON
   const contentType = headers?.['content-type'] || '';
@@ -112,15 +117,7 @@ export function DetailPanel() {
             <>
               <CodeGeneratorButton
                 entry={entry}
-                requestBody={
-                  typeof entry.requestBody === 'string'
-                    ? entry.requestBody
-                    : entry.requestBody
-                    ? Buffer.isBuffer(entry.requestBody)
-                      ? entry.requestBody.toString('utf-8')
-                      : JSON.stringify(entry.requestBody)
-                    : null
-                }
+                requestBody={bodyToString(entry.requestBody)}
               />
               <button
                 onClick={() => setShowReplay(true)}
@@ -253,15 +250,7 @@ export function DetailPanel() {
         {activeTab === 'security' && (
           <SecurityTab
             entry={entry}
-            responseBody={
-              typeof entry.responseBody === 'string'
-                ? entry.responseBody
-                : entry.responseBody
-                ? Buffer.isBuffer(entry.responseBody)
-                  ? entry.responseBody.toString('utf-8')
-                  : JSON.stringify(entry.responseBody)
-                : null
-            }
+            responseBody={bodyToString(entry.responseBody)}
           />
         )}
 

@@ -304,7 +304,7 @@ function parseHeaders(text: string): Record<string, string> | undefined {
   return Object.keys(headers).length > 0 ? headers : undefined;
 }
 
-function bufferToString(buffer: Buffer | null): string {
+function bufferToString(buffer: unknown): string {
   if (!buffer) return '';
   // Handle both Buffer and base64 encoded strings from JSON
   if (typeof buffer === 'string') {
@@ -314,9 +314,10 @@ function bufferToString(buffer: Buffer | null): string {
       return buffer;
     }
   }
-  // Handle actual Buffer objects
-  if (buffer && typeof buffer === 'object' && 'data' in buffer) {
-    return String.fromCharCode(...(buffer as { data: number[] }).data);
+  if (buffer instanceof Uint8Array) return new TextDecoder().decode(buffer);
+  // Handle serialized Node.js Buffer: { type: "Buffer", data: [...] }
+  if (typeof buffer === 'object' && buffer !== null && 'data' in buffer) {
+    return new TextDecoder().decode(new Uint8Array((buffer as { data: number[] }).data));
   }
   return '';
 }

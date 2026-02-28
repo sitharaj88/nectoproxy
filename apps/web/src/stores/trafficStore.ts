@@ -120,7 +120,7 @@ function matchesPattern(text: string, pattern: string, isRegex: boolean): boolea
 }
 
 // Helper to decode body content for searching
-function decodeBody(body: Buffer | string | null): string {
+function decodeBody(body: unknown): string {
   if (!body) return '';
   if (typeof body === 'string') {
     try {
@@ -129,8 +129,10 @@ function decodeBody(body: Buffer | string | null): string {
       return body;
     }
   }
-  if (Buffer.isBuffer(body)) {
-    return body.toString('utf-8');
+  if (body instanceof Uint8Array) return new TextDecoder().decode(body);
+  // Handle serialized Node.js Buffer: { type: "Buffer", data: [...] }
+  if (typeof body === 'object' && body !== null && 'type' in body && (body as Record<string, unknown>).type === 'Buffer' && 'data' in body) {
+    return new TextDecoder().decode(new Uint8Array((body as Record<string, unknown>).data as number[]));
   }
   return '';
 }

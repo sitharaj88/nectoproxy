@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import http from 'node:http';
+import https from 'node:https';
 import net from 'node:net';
 import tls from 'node:tls';
 import { URL } from 'node:url';
@@ -55,6 +56,11 @@ export class ProxyServer extends EventEmitter {
   private webSocketHandler: WebSocketHandler = new WebSocketHandler();
   private throttleService: ThrottleService = new ThrottleService();
   private upstreamProxyAgent: UpstreamProxyAgent | null = null;
+  private httpsAgent: https.Agent = new https.Agent({
+    rejectUnauthorized: false,
+    keepAlive: true,
+    maxSockets: 256,
+  });
 
   constructor(certManager: CertificateManager, config: Partial<ProxyServerConfig> = {}) {
     super();
@@ -194,6 +200,9 @@ export class ProxyServer extends EventEmitter {
       }
       this.tlsServers.clear();
 
+      // Destroy shared HTTPS agent
+      this.httpsAgent.destroy();
+
       if (this.server) {
         this.server.close(() => {
           this.emit('stopped');
@@ -332,8 +341,7 @@ export class ProxyServer extends EventEmitter {
       });
 
       // Process decrypted HTTP requests
-      const parser = this.createHttpParser(tlsSocket, host, port);
-      tlsSocket.pipe(parser);
+      this.createHttpParser(tlsSocket, host, port);
     } catch (err) {
       this.emit('error', err);
       socket.write('HTTP/1.1 502 Bad Gateway\r\n\r\n');
@@ -345,7 +353,7 @@ export class ProxyServer extends EventEmitter {
     tlsSocket: tls.TLSSocket,
     host: string,
     port: number
-  ): NodeJS.WritableStream {
+  ): void {
     // Create a simple HTTP server to handle requests on the TLS socket
     const server = http.createServer((req, res) => {
       const ctx = this.createContextFromTls(req, res, tlsSocket, host, port);
@@ -357,10 +365,8 @@ export class ProxyServer extends EventEmitter {
       this.handleWebSocketUpgrade(req, socket as net.Socket, head, true, host, port);
     });
 
-    // Emit the socket to the server
+    // Emit the socket to the server so it starts parsing HTTP from it
     server.emit('connection', tlsSocket);
-
-    return tlsSocket;
   }
 
   private createContext(
@@ -554,28 +560,29 @@ export class ProxyServer extends EventEmitter {
   }
 
   private async forwardHttpsRequest(ctx: ProxyContext, ruleResult?: RuleResult): Promise<void> {
-    const options: http.RequestOptions = {
-      hostname: ctx.host,
-      port: ctx.port,
-      path: ctx.path,
-      method: ctx.clientRequest.method,
-      headers: this.filterHeaders(ctx.clientRequest.headers),
-      timeout: this.config.timeout,
-    };
-
     // Use upstream proxy if configured and not bypassed
     if (this.upstreamProxyAgent && !this.upstreamProxyAgent.shouldBypass(ctx.host)) {
+      const options: http.RequestOptions = {
+        hostname: ctx.host,
+        port: ctx.port,
+        path: ctx.path,
+        method: ctx.clientRequest.method,
+        headers: this.filterHeaders(ctx.clientRequest.headers),
+        timeout: this.config.timeout,
+      };
       return this.forwardHttpsRequestThroughProxy(ctx, options, ruleResult);
     }
 
     return new Promise((resolve, reject) => {
-      const proxyReq = http.request(
+      const proxyReq = https.request(
         {
-          ...options,
-          protocol: 'https:',
-          agent: new (require('https').Agent)({
-            rejectUnauthorized: false, // Accept self-signed certs on upstream
-          }),
+          hostname: ctx.host,
+          port: ctx.port,
+          path: ctx.path,
+          method: ctx.clientRequest.method,
+          headers: this.filterHeaders(ctx.clientRequest.headers),
+          timeout: this.config.timeout,
+          agent: this.httpsAgent,
         },
         (proxyRes) => {
           ctx.serverResponse = proxyRes;

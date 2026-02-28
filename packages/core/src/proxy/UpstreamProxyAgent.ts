@@ -1,5 +1,6 @@
 import http from 'node:http';
 import https from 'node:https';
+import dns from 'node:dns';
 import net from 'node:net';
 import { URL } from 'node:url';
 import type { UpstreamProxyConfig } from '@proxyscope/shared';
@@ -311,7 +312,6 @@ export class UpstreamProxyAgent {
       }
 
       // Resolve DNS
-      const dns = require('dns');
       dns.resolve4(hostname, (err: Error | null, addresses: string[]) => {
         if (err) {
           reject(err);
