@@ -20,7 +20,15 @@ function formatHeaders(headers: Record<string, string | string[]> | null): strin
 
 function bodyToString(body: unknown): string | null {
   if (!body) return null;
-  if (typeof body === 'string') return body;
+  if (typeof body === 'string') {
+    // Bodies from REST API arrive as base64 strings
+    try {
+      return atob(body);
+    } catch {
+      return body;
+    }
+  }
+  if (body instanceof ArrayBuffer) return new TextDecoder().decode(body);
   if (body instanceof Uint8Array) return new TextDecoder().decode(body);
   // Handle serialized Node.js Buffer objects: { type: "Buffer", data: [...] }
   if (typeof body === 'object' && body !== null && 'type' in body && (body as Record<string, unknown>).type === 'Buffer' && 'data' in body) {
