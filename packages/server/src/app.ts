@@ -8,7 +8,7 @@ import trafficRouter from './routes/traffic.js';
 import sessionsRouter from './routes/sessions.js';
 import settingsRouter from './routes/settings.js';
 import websocketRouter from './routes/websocket.js';
-import harRouter from './routes/har.js';
+import { createHarRouter } from './routes/har.js';
 import networkRouter from './routes/network.js';
 import upstreamProxyRouter from './routes/upstream-proxy.js';
 import { createRulesRouter } from './routes/rules.js';
@@ -43,7 +43,7 @@ export function createApp(certManager: CertificateManager, config: AppConfig): A
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/settings', settingsRouter);
   app.use('/api/websocket', websocketRouter);
-  app.use('/api/har', harRouter);
+  app.use('/api/har', createHarRouter(socketServer));
   app.use('/api/network', networkRouter);
   app.use('/api/upstream-proxy', upstreamProxyRouter);
   app.use('/api/rules', createRulesRouter(socketServer));

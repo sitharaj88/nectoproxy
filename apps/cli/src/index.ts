@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { CertificateManager } from '@proxyscope/certs';
 import { ProxyServer } from '@proxyscope/core';
 import { createApp, setNetworkProfileChangeCallback, setUpstreamProxyChangeCallback } from '@proxyscope/server';
-import { SessionRepository, getDatabase } from '@proxyscope/storage';
+import { SessionRepository, TrafficRepository, getDatabase } from '@proxyscope/storage';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,13 +77,26 @@ program
         staticDir: webDistPath,
       });
 
-      // Connect proxy events to socket server
+      // Connect proxy events to socket server and persist to database
+      const trafficRepo = new TrafficRepository();
+
       proxyServer.on('traffic:new', (entry) => {
         appInstance.socketServer.emitTrafficNew(entry);
+        // Persist to database (fire-and-forget)
+        trafficRepo.create(entry).catch((err) => {
+          // Ignore duplicate ID errors on rapid updates
+          if (!String(err).includes('UNIQUE constraint')) {
+            console.error(chalk.dim('DB write error:'), err.message);
+          }
+        });
       });
 
       proxyServer.on('traffic:update', (update) => {
         appInstance.socketServer.emitTrafficUpdate(update);
+        // Persist update to database (fire-and-forget)
+        trafficRepo.update(update.id, update).catch(() => {
+          // Silently ignore update errors for entries not yet in DB
+        });
       });
 
       proxyServer.on('error', (error) => {

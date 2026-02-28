@@ -74,7 +74,11 @@ export class HarConverter {
           mimeType: entry.responseHeaders
             ? this.getContentType(entry.responseHeaders) || 'application/octet-stream'
             : 'application/octet-stream',
-          text: entry.responseBody ? this.bodyToString(entry.responseBody) : undefined,
+          text: entry.responseBody
+            ? this.isBinaryContent(entry.responseHeaders)
+              ? this.bodyToBase64(entry.responseBody)
+              : this.bodyToString(entry.responseBody)
+            : undefined,
           encoding: this.isBinaryContent(entry.responseHeaders) ? 'base64' : undefined,
         },
         redirectURL: '',
@@ -249,6 +253,16 @@ export class HarConverter {
     if (typeof body === 'string') return body;
     if (Buffer.isBuffer(body)) return body.toString('utf-8');
     return String(body);
+  }
+
+  /**
+   * Convert body buffer to base64 string (for binary content)
+   */
+  private bodyToBase64(body: Buffer | string | null): string {
+    if (!body) return '';
+    if (typeof body === 'string') return Buffer.from(body).toString('base64');
+    if (Buffer.isBuffer(body)) return body.toString('base64');
+    return '';
   }
 
   /**

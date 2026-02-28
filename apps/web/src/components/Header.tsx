@@ -47,8 +47,7 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
   };
 
   const handleImportComplete = () => {
-    // Refresh traffic list after import
-    window.location.reload();
+    // Entries are emitted via Socket.IO and appear automatically in the traffic list
   };
 
   return (

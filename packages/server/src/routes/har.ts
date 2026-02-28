@@ -3,12 +3,15 @@ import multer from 'multer';
 import { TrafficRepository, SessionRepository } from '@proxyscope/storage';
 import { HarConverter } from '../services/HarConverter.js';
 import type { HAR } from '@proxyscope/shared';
+import type { SocketServer } from '../websocket/SocketServer.js';
 
-const router: RouterType = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 const trafficRepo = new TrafficRepository();
 const sessionRepo = new SessionRepository();
 const harConverter = new HarConverter();
+
+export function createHarRouter(socketServer: SocketServer): RouterType {
+  const router: RouterType = Router();
 
 // Export session traffic as HAR
 router.get('/export/:sessionId', async (req, res) => {
@@ -119,15 +122,33 @@ router.post('/import', upload.single('file'), async (req, res) => {
     // Convert HAR entries to traffic entries
     const entries = harConverter.fromHAR(har, sessionId);
 
-    // Save entries to database
+    // Save entries to database and emit via Socket.IO
     let imported = 0;
+    const importedEntries = [];
     for (const entry of entries) {
       try {
         await trafficRepo.create(entry);
+        importedEntries.push(entry);
         imported++;
       } catch (err) {
         console.error('Error importing entry:', err);
       }
+    }
+
+    // Emit imported entries to connected clients so they appear in the UI
+    for (const entry of importedEntries) {
+      socketServer.emitTrafficNew(entry);
+      // Emit an immediate update to mark as complete with response data
+      socketServer.emitTrafficUpdate({
+        id: entry.id,
+        status: entry.status,
+        statusText: entry.statusText,
+        responseHeaders: entry.responseHeaders,
+        responseBody: entry.responseBody,
+        responseBodySize: entry.responseBodySize,
+        duration: entry.duration,
+        isComplete: true,
+      });
     }
 
     res.json({
@@ -183,4 +204,5 @@ router.post('/validate', upload.single('file'), async (req, res) => {
   }
 });
 
-export default router;
+  return router;
+}
