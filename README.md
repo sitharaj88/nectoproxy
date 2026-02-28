@@ -171,7 +171,7 @@ nectoproxy/
 
 ```bash
 # Clone the repository
-git clone https://github.com/user/nectoproxy.git
+git clone https://github.com/sitharaj88/nectoproxy.git
 cd nectoproxy
 
 # Install dependencies
@@ -193,6 +193,18 @@ All data is stored locally in `~/.nectoproxy/`:
 - `~/.nectoproxy/certs/` — CA and domain certificates
 - `~/.nectoproxy/nectoproxy.db` — SQLite database (sessions, traffic, rules, settings)
 
+## Author
+
+**Sitharaj Seenivasan**
+
+- Website: [sitharaj.in](https://sitharaj.in)
+- LinkedIn: [sitharaj08](https://linkedin.com/in/sitharaj08)
+- Buy Me a Coffee: [sitharaj88](https://buymeacoffee.com/sitharaj88)
+
+If you find NectoProxy useful, consider supporting the project:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-sitharaj88-yellow?style=flat-square&logo=buy-me-a-coffee)](https://buymeacoffee.com/sitharaj88)
+
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) - Copyright (c) 2026 Sitharaj Seenivasan

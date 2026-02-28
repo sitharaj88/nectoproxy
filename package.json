@@ -5,10 +5,13 @@
   "description": "A powerful HTTP/HTTPS debugging proxy with Web UI",
   "keywords": ["proxy", "http", "https", "debugging", "mitm", "charles"],
   "license": "MIT",
-  "author": "Sitharaj",
+  "author": {
+    "name": "Sitharaj Seenivasan",
+    "url": "https://sitharaj.in"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/user/nectoproxy.git"
+    "url": "https://github.com/sitharaj88/nectoproxy.git"
   },
   "scripts": {
     "dev": "turbo run dev",

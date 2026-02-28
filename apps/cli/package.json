@@ -8,7 +8,8 @@
   },
   "main": "./dist/index.js",
   "files": [
-    "dist/"
+    "dist/",
+    "!dist/**/*.map"
   ],
   "scripts": {
     "build": "tsc && node scripts/copy-web-ui.mjs",
@@ -55,12 +56,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/user/nectoproxy.git",
+    "url": "https://github.com/sitharaj88/nectoproxy.git",
     "directory": "apps/cli"
   },
-  "homepage": "https://github.com/user/nectoproxy#readme",
+  "homepage": "https://github.com/sitharaj88/nectoproxy#readme",
   "bugs": {
-    "url": "https://github.com/user/nectoproxy/issues"
+    "url": "https://github.com/sitharaj88/nectoproxy/issues"
   },
-  "author": "Sitharaj"
+  "author": {
+    "name": "Sitharaj Seenivasan",
+    "url": "https://sitharaj.in"
+  }
 }
