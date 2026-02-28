@@ -3,6 +3,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { xml } from '@codemirror/lang-xml';
 import { html } from '@codemirror/lang-html';
+import { javascript } from '@codemirror/lang-javascript';
+import { css } from '@codemirror/lang-css';
 import { EditorView } from '@codemirror/view';
 import { Copy, Check, WrapText, Code2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -58,8 +60,42 @@ function detectLanguage(contentType?: string) {
   if (ct.includes('json')) return json();
   if (ct.includes('xml')) return xml();
   if (ct.includes('html')) return html();
+  if (ct.includes('javascript') || ct.includes('ecmascript')) return javascript();
+  if (ct.includes('css')) return css();
 
   return null;
+}
+
+function formatXml(xmlStr: string): string {
+  let formatted = '';
+  let indent = 0;
+  const parts = xmlStr.replace(/>\s*</g, '><').split(/(<[^>]+>)/);
+
+  for (const part of parts) {
+    if (!part.trim()) continue;
+
+    if (part.startsWith('</')) {
+      indent = Math.max(0, indent - 1);
+      formatted += '  '.repeat(indent) + part + '\n';
+    } else if (part.startsWith('<') && part.endsWith('/>')) {
+      formatted += '  '.repeat(indent) + part + '\n';
+    } else if (part.startsWith('<?') || part.startsWith('<!')) {
+      formatted += '  '.repeat(indent) + part + '\n';
+    } else if (part.startsWith('<') && !part.startsWith('</')) {
+      formatted += '  '.repeat(indent) + part + '\n';
+      indent++;
+    } else {
+      formatted += '  '.repeat(indent) + part + '\n';
+    }
+  }
+
+  return formatted.trimEnd();
+}
+
+function isFormattable(contentType?: string): boolean {
+  if (!contentType) return false;
+  const ct = contentType.toLowerCase();
+  return ct.includes('json') || ct.includes('xml') || ct.includes('html');
 }
 
 function tryPrettyPrint(content: string, contentType?: string): string {
@@ -71,6 +107,14 @@ function tryPrettyPrint(content: string, contentType?: string): string {
     try {
       const parsed = JSON.parse(content);
       return JSON.stringify(parsed, null, 2);
+    } catch {
+      return content;
+    }
+  }
+
+  if (ct.includes('xml') || ct.includes('html')) {
+    try {
+      return formatXml(content);
     } catch {
       return content;
     }
@@ -119,7 +163,7 @@ export function CodeViewer({
     }
   };
 
-  const isJson = contentType?.toLowerCase().includes('json');
+  const formattable = isFormattable(contentType);
 
   return (
     <div className={`relative rounded-lg overflow-hidden bg-gray-900 border border-gray-700 ${className}`}>
@@ -134,7 +178,7 @@ export function CodeViewer({
         </div>
 
         <div className="flex items-center gap-1">
-          {isJson && (
+          {formattable && (
             <button
               onClick={() => setPrettyPrint(!prettyPrint)}
               className={`p-1.5 rounded transition-colors ${

@@ -10,6 +10,7 @@ import { GRPCViewer } from './GRPCViewer';
 import { isGraphQLRequest, parseGraphQLRequest } from '@/utils/graphql';
 import { isGRPCRequest, parseGRPCRequest } from '@/utils/grpc';
 import { AnnotationsPanel } from './AnnotationsPanel';
+import { CodeViewer } from './CodeViewer';
 
 type Tab = 'headers' | 'request' | 'response' | 'timing' | 'security' | 'messages' | 'annotations';
 
@@ -42,21 +43,11 @@ function bodyToString(body: unknown): string | null {
   return JSON.stringify(body);
 }
 
-function formatBody(body: unknown, headers: Record<string, string | string[]> | null): string {
-  const bodyStr = bodyToString(body);
-  if (!bodyStr) return '(empty)';
-
-  // Try to pretty print JSON
-  const contentType = headers?.['content-type'] || '';
-  if (typeof contentType === 'string' && contentType.includes('application/json')) {
-    try {
-      return JSON.stringify(JSON.parse(bodyStr), null, 2);
-    } catch {
-      return bodyStr;
-    }
-  }
-
-  return bodyStr;
+function getContentType(headers: Record<string, string | string[]> | null): string | undefined {
+  if (!headers) return undefined;
+  const ct = headers['content-type'];
+  if (!ct) return undefined;
+  return Array.isArray(ct) ? ct[0] : ct;
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -244,15 +235,12 @@ export function DetailPanel() {
 
           return (
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-300">Request Body</h3>
-                {entry.requestBody && (
-                  <CopyButton text={formatBody(entry.requestBody, entry.requestHeaders)} />
-                )}
-              </div>
-              <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px]">
-                {formatBody(entry.requestBody, entry.requestHeaders)}
-              </pre>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Request Body</h3>
+              <CodeViewer
+                content={bodyToString(entry.requestBody) || '(empty)'}
+                contentType={getContentType(entry.requestHeaders)}
+                maxHeight="500px"
+              />
             </div>
           );
         })()}
@@ -289,15 +277,12 @@ export function DetailPanel() {
 
           return (
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-300">Response Body</h3>
-                {entry.responseBody && (
-                  <CopyButton text={formatBody(entry.responseBody, entry.responseHeaders)} />
-                )}
-              </div>
-              <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px]">
-                {formatBody(entry.responseBody, entry.responseHeaders)}
-              </pre>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">Response Body</h3>
+              <CodeViewer
+                content={bodyToString(entry.responseBody) || '(empty)'}
+                contentType={getContentType(entry.responseHeaders)}
+                maxHeight="500px"
+              />
             </div>
           );
         })()}
