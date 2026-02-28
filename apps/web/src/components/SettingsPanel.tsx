@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Globe, Copy, Check, Smartphone } from 'lucide-react';
+import { Globe, Copy, Check, Smartphone, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { getSettings, updateSettings, resetSettings, getLocalIPs, type AppSettings, type LocalIPAddress } from '@/services/api';
 import { UpstreamProxyConfig } from './UpstreamProxyConfig';
@@ -18,6 +19,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [showUpstreamProxy, setShowUpstreamProxy] = useState(false);
   const [localIPs, setLocalIPs] = useState<LocalIPAddress[]>([]);
   const [copiedIP, setCopiedIP] = useState<string | null>(null);
+  const [selectedQRIP, setSelectedQRIP] = useState<string>('');
 
   // Load settings and IPs on mount
   useEffect(() => {
@@ -31,6 +33,9 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         setSettings(settingsResponse.settings);
         setLocalSettings(settingsResponse.settings);
         setLocalIPs(ipsResponse.addresses);
+        if (ipsResponse.addresses.length > 0) {
+          setSelectedQRIP(ipsResponse.addresses[0].address);
+        }
       } catch (err) {
         setError((err as Error).message);
         setLocalError((err as Error).message);
@@ -338,6 +343,46 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                   Configure your mobile WiFi proxy settings with the IP address and port shown above.
                   Don't forget to install the CA certificate for HTTPS traffic.
                 </p>
+
+                {/* QR Code for Certificate Download */}
+                {localIPs.length > 0 && selectedQRIP && (
+                  <div className="mt-5 p-4 bg-gray-900 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                      <QrCode className="w-4 h-4" />
+                      Certificate QR Code
+                    </h4>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Scan this QR code with your phone camera to download the CA certificate.
+                    </p>
+
+                    {localIPs.length > 1 && (
+                      <select
+                        value={selectedQRIP}
+                        onChange={(e) => setSelectedQRIP(e.target.value)}
+                        className="w-full mb-3 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                      >
+                        {localIPs.map((ip) => (
+                          <option key={`${ip.name}-${ip.address}`} value={ip.address}>
+                            {ip.address} ({ip.name})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-3 bg-white rounded-lg">
+                        <QRCodeSVG
+                          value={`http://${selectedQRIP}:${localSettings.uiPort}/api/certificates/download`}
+                          size={180}
+                          level="M"
+                        />
+                      </div>
+                      <code className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                        http://{selectedQRIP}:{localSettings.uiPort}/api/certificates/download
+                      </code>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           ) : (
