@@ -11,7 +11,7 @@ export interface DatabaseConfig {
 }
 
 const DEFAULT_CONFIG: DatabaseConfig = {
-  dataDir: path.join(os.homedir(), '.proxyscope'),
+  dataDir: path.join(os.homedir(), '.nectoproxy'),
   filename: 'data.db',
 };
 

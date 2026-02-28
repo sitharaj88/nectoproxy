@@ -4,7 +4,7 @@ import { useActiveEntries, useTrafficStore } from '@/stores/trafficStore';
 import { useCompareStore } from '@/stores/compareStore';
 import { useRulesStore } from '@/stores/rulesStore';
 import { TrafficContextMenu } from './TrafficContextMenu';
-import type { TrafficEntry, Rule } from '@proxyscope/shared';
+import type { TrafficEntry, Rule } from '@nectoproxy/shared';
 import { Loader2, Square, CheckSquare, ArrowLeftRight, X, Gauge } from 'lucide-react';
 import { isGraphQLRequest, parseGraphQLRequest } from '@/utils/graphql';
 import { isGRPCRequest } from '@/utils/grpc';

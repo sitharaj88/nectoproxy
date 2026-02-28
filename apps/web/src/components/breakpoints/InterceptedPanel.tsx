@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { BreakpointHit, BreakpointResumeModifications } from '@proxyscope/shared';
+import type { BreakpointHit, BreakpointResumeModifications } from '@nectoproxy/shared';
 import { resumeBreakpoint } from '../../services/socket';
 import { useBreakpointStore } from '../../stores/breakpointStore';
 

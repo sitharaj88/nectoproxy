@@ -1,4 +1,4 @@
-# ProxyScope
+# NectoProxy
 
 A powerful HTTP/HTTPS debugging proxy with a modern Web UI. A free, open-source alternative to Charles Proxy and Fiddler.
 
@@ -7,13 +7,13 @@ A powerful HTTP/HTTPS debugging proxy with a modern Web UI. A free, open-source 
 ## Installation
 
 ```bash
-npm install -g proxyscope
+npm install -g nectoproxy
 ```
 
 Or run directly with npx:
 
 ```bash
-npx proxyscope start
+npx nectoproxy start
 ```
 
 **Requirements:** Node.js 20 or later.
@@ -22,7 +22,7 @@ npx proxyscope start
 
 ```bash
 # Start the proxy server and Web UI
-proxyscope start
+nectoproxy start
 
 # The proxy starts on port 8888, Web UI on port 8889
 # Your browser will open automatically
@@ -33,7 +33,7 @@ proxyscope start
 1. Set your HTTP proxy to `127.0.0.1:8888`
 2. Install the CA certificate to inspect HTTPS traffic:
    ```bash
-   proxyscope cert --install
+   nectoproxy cert --install
    ```
 
 ## Features
@@ -77,57 +77,57 @@ proxyscope start
 
 ```bash
 # Start the proxy
-proxyscope start [options]
+nectoproxy start [options]
   -p, --port <port>       Proxy port (default: 8888)
   -u, --ui-port <port>    Web UI port (default: 8889)
   --host <host>           Host to bind to (default: 127.0.0.1)
   --no-open               Don't auto-open browser
 
 # Certificate management
-proxyscope cert --install       Show CA certificate installation instructions
-proxyscope cert --path          Print CA certificate file path
-proxyscope cert --clear-cache   Clear cached domain certificates
+nectoproxy cert --install       Show CA certificate installation instructions
+nectoproxy cert --path          Print CA certificate file path
+nectoproxy cert --clear-cache   Clear cached domain certificates
 
 # Session management
-proxyscope sessions --list            List all sessions
-proxyscope sessions --create <name>   Create a new session
-proxyscope sessions --delete <id>     Delete a session
+nectoproxy sessions --list            List all sessions
+nectoproxy sessions --create <name>   Create a new session
+nectoproxy sessions --delete <id>     Delete a session
 
 # Version
-proxyscope --version
+nectoproxy --version
 ```
 
 ## Certificate Setup
 
-To inspect HTTPS traffic, install the ProxyScope CA certificate in your browser/system:
+To inspect HTTPS traffic, install the NectoProxy CA certificate in your browser/system:
 
 ### macOS
 ```bash
 sudo security add-trusted-cert -d -r trustRoot \
   -k /Library/Keychains/System.keychain \
-  ~/.proxyscope/certs/ca.pem
+  ~/.nectoproxy/certs/ca.pem
 ```
 
 ### Windows (PowerShell as Administrator)
 ```powershell
-Import-Certificate -FilePath "$env:USERPROFILE\.proxyscope\certs\ca.pem" `
+Import-Certificate -FilePath "$env:USERPROFILE\.nectoproxy\certs\ca.pem" `
   -CertStoreLocation Cert:\LocalMachine\Root
 ```
 
 ### Linux (Ubuntu/Debian)
 ```bash
-sudo cp ~/.proxyscope/certs/ca.pem /usr/local/share/ca-certificates/proxyscope-ca.crt
+sudo cp ~/.nectoproxy/certs/ca.pem /usr/local/share/ca-certificates/nectoproxy-ca.crt
 sudo update-ca-certificates
 ```
 
 ### Firefox (all platforms)
 1. Settings > Privacy & Security > Certificates > View Certificates
-2. Authorities tab > Import > Select `~/.proxyscope/certs/ca.pem`
+2. Authorities tab > Import > Select `~/.nectoproxy/certs/ca.pem`
 3. Check "Trust this CA to identify websites"
 
 ## Comparison
 
-| Feature | ProxyScope | Charles Proxy | Fiddler | mitmproxy |
+| Feature | NectoProxy | Charles Proxy | Fiddler | mitmproxy |
 |---------|-----------|---------------|---------|-----------|
 | Price | Free & Open Source | $50 | Free* | Free & Open Source |
 | Web UI | Yes | No (native) | No (native) | Yes (mitmweb) |
@@ -146,7 +146,7 @@ sudo update-ca-certificates
 ## Architecture
 
 ```
-proxyscope/
+nectoproxy/
 ├── apps/
 │   ├── cli/          # CLI entry point (npm package)
 │   └── web/          # React Web UI (bundled with CLI)
@@ -171,8 +171,8 @@ proxyscope/
 
 ```bash
 # Clone the repository
-git clone https://github.com/user/proxyscope.git
-cd proxyscope
+git clone https://github.com/user/nectoproxy.git
+cd nectoproxy
 
 # Install dependencies
 pnpm install
@@ -189,9 +189,9 @@ pnpm test
 
 ## Data Storage
 
-All data is stored locally in `~/.proxyscope/`:
-- `~/.proxyscope/certs/` — CA and domain certificates
-- `~/.proxyscope/proxyscope.db` — SQLite database (sessions, traffic, rules, settings)
+All data is stored locally in `~/.nectoproxy/`:
+- `~/.nectoproxy/certs/` — CA and domain certificates
+- `~/.nectoproxy/nectoproxy.db` — SQLite database (sessions, traffic, rules, settings)
 
 ## License
 

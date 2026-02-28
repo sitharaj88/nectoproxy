@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { subscribeToTraffic, subscribeToProxy, getSocket } from '@/services/socket';
 import { useTrafficStore } from '@/stores/trafficStore';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 
 export function useSocketConnection() {
   const [isConnected, setIsConnected] = useState(false);

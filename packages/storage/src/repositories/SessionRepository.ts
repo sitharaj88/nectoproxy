@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { getDatabase } from '../db/connection.js';
 import { sessions } from '../db/schema.js';
-import type { Session, SessionCreateInput, SessionUpdateInput } from '@proxyscope/shared';
+import type { Session, SessionCreateInput, SessionUpdateInput } from '@nectoproxy/shared';
 
 export class SessionRepository {
   private get db() {

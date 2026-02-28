@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useActiveEntries } from '@/stores/trafficStore';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 
 export interface TimeSeriesPoint {
   timestamp: number;

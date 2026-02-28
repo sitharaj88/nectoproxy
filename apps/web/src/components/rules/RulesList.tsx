@@ -1,5 +1,5 @@
 import { Edit2, Trash2 } from 'lucide-react';
-import type { Rule, RuleAction } from '@proxyscope/shared';
+import type { Rule, RuleAction } from '@nectoproxy/shared';
 import { useRulesStore } from '@/stores/rulesStore';
 import { toggleRule, deleteRule } from '@/services/api';
 

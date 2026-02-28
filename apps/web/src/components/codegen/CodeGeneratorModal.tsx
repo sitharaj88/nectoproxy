@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { X, Copy, Check, Code2 } from 'lucide-react';
 import { languages, type GeneratorInput } from './generators';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 
 interface CodeGeneratorModalProps {
   isOpen: boolean;

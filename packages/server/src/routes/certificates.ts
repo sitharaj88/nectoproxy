@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from 'express';
-import type { CertificateManager } from '@proxyscope/certs';
+import type { CertificateManager } from '@nectoproxy/certs';
 
 export function createCertificatesRouter(certManager: CertificateManager): Router {
   const router = Router();
@@ -10,7 +10,7 @@ export function createCertificatesRouter(certManager: CertificateManager): Route
       const caCert = certManager.getCACertificatePem();
 
       res.setHeader('Content-Type', 'application/x-pem-file');
-      res.setHeader('Content-Disposition', 'attachment; filename="proxyscope-ca.pem"');
+      res.setHeader('Content-Disposition', 'attachment; filename="nectoproxy-ca.pem"');
       res.send(caCert);
     } catch (error) {
       console.error('Error getting CA certificate:', error);
@@ -25,7 +25,7 @@ export function createCertificatesRouter(certManager: CertificateManager): Route
 
       // Use application/x-x509-ca-cert for better mobile compatibility
       res.setHeader('Content-Type', 'application/x-x509-ca-cert');
-      res.setHeader('Content-Disposition', 'attachment; filename="proxyscope-ca.crt"');
+      res.setHeader('Content-Disposition', 'attachment; filename="nectoproxy-ca.crt"');
       res.send(caCert);
     } catch (error) {
       console.error('Error getting CA certificate:', error);

@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type Router as RouterType } from 'express';
-import { SessionRepository } from '@proxyscope/storage';
-import type { SessionCreateInput, SessionUpdateInput } from '@proxyscope/shared';
+import { SessionRepository } from '@nectoproxy/storage';
+import type { SessionCreateInput, SessionUpdateInput } from '@nectoproxy/shared';
 
 const router: RouterType = Router();
 const sessionRepo = new SessionRepository();

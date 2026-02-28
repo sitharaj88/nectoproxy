@@ -1,8 +1,8 @@
 import { Router, type Router as RouterType } from 'express';
 import { v4 as uuid } from 'uuid';
 import { networkInterfaces } from 'node:os';
-import type { NetworkProfile } from '@proxyscope/shared';
-import { NETWORK_PRESETS } from '@proxyscope/shared';
+import type { NetworkProfile } from '@nectoproxy/shared';
+import { NETWORK_PRESETS } from '@nectoproxy/shared';
 
 const router: RouterType = Router();
 

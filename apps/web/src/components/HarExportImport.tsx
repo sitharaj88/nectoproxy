@@ -45,7 +45,7 @@ export function HarExportImport({
   const handleSnapshotExport = useCallback(() => {
     const link = document.createElement('a');
     link.href = getSnapshotUrl(sessionId);
-    link.download = `proxyscope-${sessionName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.html`;
+    link.download = `nectoproxy-${sessionName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}.html`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -5,7 +5,7 @@ import type {
   HARQueryParam,
   HARCookie,
   TrafficEntry,
-} from '@proxyscope/shared';
+} from '@nectoproxy/shared';
 
 const VERSION = '0.1.0';
 
@@ -13,12 +13,12 @@ export class HarConverter {
   /**
    * Convert traffic entries to HAR format
    */
-  toHAR(entries: TrafficEntry[], sessionName: string = 'ProxyScope Session'): HAR {
+  toHAR(entries: TrafficEntry[], sessionName: string = 'NectoProxy Session'): HAR {
     return {
       log: {
         version: '1.2',
         creator: {
-          name: 'ProxyScope',
+          name: 'NectoProxy',
           version: VERSION,
         },
         pages: [

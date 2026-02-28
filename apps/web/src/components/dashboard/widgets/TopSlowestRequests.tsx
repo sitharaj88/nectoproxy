@@ -1,5 +1,5 @@
 import { useTrafficStore } from '@/stores/trafficStore';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 
 interface TopSlowestRequestsProps {
   requests: TrafficEntry[];

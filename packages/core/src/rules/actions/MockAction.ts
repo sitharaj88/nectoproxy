@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import type { MockResponse } from '@proxyscope/shared';
+import type { MockResponse } from '@nectoproxy/shared';
 import type { ActionHandler, RuleResult } from './types.js';
 import type { MatchContext } from '../RuleMatcher.js';
 

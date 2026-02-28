@@ -2,7 +2,7 @@ import { eq, asc, like } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { getDatabase } from '../db/connection.js';
 import { annotations } from '../db/schema.js';
-import type { Annotation, AnnotationCreateInput, AnnotationUpdateInput } from '@proxyscope/shared';
+import type { Annotation, AnnotationCreateInput, AnnotationUpdateInput } from '@nectoproxy/shared';
 
 export class AnnotationRepository {
   private get db() {

@@ -2,7 +2,7 @@ import { eq, asc } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { getDatabase } from '../db/connection.js';
 import { dnsMappings } from '../db/schema.js';
-import type { DnsMapping, DnsMappingCreateInput, DnsMappingUpdateInput } from '@proxyscope/shared';
+import type { DnsMapping, DnsMappingCreateInput, DnsMappingUpdateInput } from '@nectoproxy/shared';
 
 export class DnsMappingRepository {
   private get db() {

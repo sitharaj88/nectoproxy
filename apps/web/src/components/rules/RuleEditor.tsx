@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import type { RuleAction, RuleCreateInput, RuleMatcher } from '@proxyscope/shared';
+import type { RuleAction, RuleCreateInput, RuleMatcher } from '@nectoproxy/shared';
 import { useRulesStore } from '@/stores/rulesStore';
 import { createRule, updateRule } from '@/services/api';
 

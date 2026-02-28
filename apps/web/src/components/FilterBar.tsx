@@ -1,7 +1,7 @@
 import { useState, type RefObject } from 'react';
 import { X, Regex, FileText, ChevronDown, Clock, HardDrive, AlertCircle } from 'lucide-react';
 import { useTrafficStore, useHasActiveFilters, type AdvancedFilter } from '@/stores/trafficStore';
-import { BUILT_IN_FILTER_PRESETS } from '@proxyscope/shared';
+import { BUILT_IN_FILTER_PRESETS } from '@nectoproxy/shared';
 import { SearchAutocomplete } from './SearchAutocomplete';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];

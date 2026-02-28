@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Code2 } from 'lucide-react';
 import { CodeGeneratorModal } from './CodeGeneratorModal';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 
 interface CodeGeneratorButtonProps {
   entry: TrafficEntry;

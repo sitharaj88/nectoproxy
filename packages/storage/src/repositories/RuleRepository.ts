@@ -2,7 +2,7 @@ import { eq, asc } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { getDatabase } from '../db/connection.js';
 import { rules } from '../db/schema.js';
-import type { Rule, RuleCreateInput, RuleUpdateInput, RuleMatcher, RuleAction } from '@proxyscope/shared';
+import type { Rule, RuleCreateInput, RuleUpdateInput, RuleMatcher, RuleAction } from '@nectoproxy/shared';
 
 export class RuleRepository {
   private get db() {

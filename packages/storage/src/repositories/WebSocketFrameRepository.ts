@@ -2,7 +2,7 @@ import { eq, desc } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { getDatabase } from '../db/connection.js';
 import { wsFrames } from '../db/schema.js';
-import type { WebSocketFrame } from '@proxyscope/shared';
+import type { WebSocketFrame } from '@nectoproxy/shared';
 
 export interface WebSocketFrameCreateInput {
   trafficId: string;

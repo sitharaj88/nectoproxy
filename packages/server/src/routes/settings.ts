@@ -1,5 +1,5 @@
 import { Router, type Router as RouterType } from 'express';
-import { SettingsRepository, type AppSettings } from '@proxyscope/storage';
+import { SettingsRepository, type AppSettings } from '@nectoproxy/storage';
 
 const router: RouterType = Router();
 const settingsRepo = new SettingsRepository();

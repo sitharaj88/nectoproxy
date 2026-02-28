@@ -1,5 +1,5 @@
 {
-  "name": "@proxyscope/certs",
+  "name": "@nectoproxy/certs",
   "version": "0.1.0",
   "private": true,
   "type": "module",

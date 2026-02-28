@@ -1,5 +1,5 @@
 {
-  "name": "@proxyscope/web",
+  "name": "@nectoproxy/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lang-xml": "^6.1.0",
     "@codemirror/view": "^6.39.11",
-    "@proxyscope/shared": "workspace:*",
+    "@nectoproxy/shared": "workspace:*",
     "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-focus-scope": "^1.1.8",
     "@tanstack/react-query": "^5.28.0",

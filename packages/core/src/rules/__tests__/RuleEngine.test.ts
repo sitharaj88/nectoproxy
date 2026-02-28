@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RuleEngine } from '../RuleEngine.js';
-import type { Rule } from '@proxyscope/shared';
+import type { Rule } from '@nectoproxy/shared';
 import type { MatchContext } from '../RuleMatcher.js';
 
 function makeRule(overrides: Partial<Rule> = {}): Rule {

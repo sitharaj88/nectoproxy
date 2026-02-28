@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { HarConverter } from '../HarConverter.js';
-import type { TrafficEntry, HAR } from '@proxyscope/shared';
+import type { TrafficEntry, HAR } from '@nectoproxy/shared';
 
 function makeTrafficEntry(overrides: Partial<TrafficEntry> = {}): TrafficEntry {
   return {
@@ -45,7 +45,7 @@ describe('HarConverter', () => {
     it('produces valid HAR 1.2 structure', () => {
       const har = converter.toHAR([makeTrafficEntry()], 'Test Session');
       expect(har.log.version).toBe('1.2');
-      expect(har.log.creator.name).toBe('ProxyScope');
+      expect(har.log.creator.name).toBe('NectoProxy');
       expect(har.log.pages).toHaveLength(1);
       expect(har.log.pages![0].title).toBe('Test Session');
       expect(har.log.entries).toHaveLength(1);

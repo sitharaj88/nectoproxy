@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 import { useActiveEntries, useTrafficStore } from '@/stores/trafficStore';
 
 interface WaterfallChartProps {

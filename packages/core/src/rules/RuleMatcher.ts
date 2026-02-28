@@ -1,4 +1,4 @@
-import type { RuleMatcher } from '@proxyscope/shared';
+import type { RuleMatcher } from '@nectoproxy/shared';
 
 export interface MatchContext {
   url: string;

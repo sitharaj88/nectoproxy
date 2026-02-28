@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Breakpoint, BreakpointHit } from '@proxyscope/shared';
+import type { Breakpoint, BreakpointHit } from '@nectoproxy/shared';
 
 interface BreakpointState {
   breakpoints: Breakpoint[];

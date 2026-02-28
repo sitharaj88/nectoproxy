@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import type { Annotation, AnnotationCreateInput } from '@proxyscope/shared';
+import type { Annotation, AnnotationCreateInput } from '@nectoproxy/shared';
 import { getAnnotations, createAnnotation, deleteAnnotation } from '@/services/api';
 
 interface AnnotationsPanelProps {

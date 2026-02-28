@@ -5,7 +5,7 @@ import { subscribeToBreakpoints } from '../../services/socket';
 import { BreakpointList } from './BreakpointList';
 import { BreakpointEditor } from './BreakpointEditor';
 import { InterceptedPanel } from './InterceptedPanel';
-import type { BreakpointCreateInput } from '@proxyscope/shared';
+import type { BreakpointCreateInput } from '@nectoproxy/shared';
 
 interface BreakpointsPanelProps {
   isOpen: boolean;

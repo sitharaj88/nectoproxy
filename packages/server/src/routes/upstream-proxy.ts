@@ -1,5 +1,5 @@
 import { Router, type Router as RouterType } from 'express';
-import type { UpstreamProxyConfig } from '@proxyscope/shared';
+import type { UpstreamProxyConfig } from '@nectoproxy/shared';
 
 const router: RouterType = Router();
 

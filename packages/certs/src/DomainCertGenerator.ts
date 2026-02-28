@@ -50,7 +50,7 @@ export class DomainCertGenerator {
     // Set subject for the domain
     const attrs = [
       { name: 'commonName', value: domain },
-      { name: 'organizationName', value: 'ProxyScope Generated' },
+      { name: 'organizationName', value: 'NectoProxy Generated' },
     ];
     cert.setSubject(attrs);
 

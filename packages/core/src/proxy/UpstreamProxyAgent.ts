@@ -3,7 +3,7 @@ import https from 'node:https';
 import dns from 'node:dns';
 import net from 'node:net';
 import { URL } from 'node:url';
-import type { UpstreamProxyConfig } from '@proxyscope/shared';
+import type { UpstreamProxyConfig } from '@nectoproxy/shared';
 
 export interface UpstreamProxyAgentOptions {
   config: UpstreamProxyConfig;

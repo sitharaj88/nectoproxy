@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
-import { DnsMappingRepository } from '@proxyscope/storage';
-import type { DnsMappingCreateInput, DnsMappingUpdateInput } from '@proxyscope/shared';
+import { DnsMappingRepository } from '@nectoproxy/storage';
+import type { DnsMappingCreateInput, DnsMappingUpdateInput } from '@nectoproxy/shared';
 
 const router: ReturnType<typeof Router> = Router();
 const dnsMappingRepo = new DnsMappingRepository();

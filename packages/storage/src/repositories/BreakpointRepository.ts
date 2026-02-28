@@ -9,7 +9,7 @@ import type {
   BreakpointCreateInput,
   BreakpointType,
   RuleMatcher,
-} from '@proxyscope/shared';
+} from '@nectoproxy/shared';
 
 export class BreakpointRepository {
   private get db() {

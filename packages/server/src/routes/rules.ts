@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
-import { RuleRepository } from '@proxyscope/storage';
-import type { RuleCreateInput, RuleUpdateInput } from '@proxyscope/shared';
+import { RuleRepository } from '@nectoproxy/storage';
+import type { RuleCreateInput, RuleUpdateInput } from '@nectoproxy/shared';
 import type { SocketServer } from '../websocket/SocketServer.js';
 
 export function createRulesRouter(socketServer: SocketServer): Router {

@@ -1,4 +1,4 @@
-import type { Breakpoint } from '@proxyscope/shared';
+import type { Breakpoint } from '@nectoproxy/shared';
 
 interface BreakpointListProps {
   breakpoints: Breakpoint[];

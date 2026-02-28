@@ -9,7 +9,7 @@ describe('CertificateManager', () => {
   let certManager: CertificateManager;
 
   beforeEach(async () => {
-    tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'proxyscope-test-'));
+    tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'nectoproxy-test-'));
     certManager = new CertificateManager({
       certsDir: path.join(tmpDir, 'certs'),
       caName: 'Test CA',

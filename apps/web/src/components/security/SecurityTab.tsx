@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 import { runAllScanners, type SecurityIssue, type IssueCategory } from './scanners';
 import { SecuritySummary } from './SecuritySummary';
 import { SecurityIssueCard } from './SecurityIssueCard';

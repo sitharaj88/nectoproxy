@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
-import { AnnotationRepository } from '@proxyscope/storage';
-import type { AnnotationCreateInput, AnnotationUpdateInput } from '@proxyscope/shared';
+import { AnnotationRepository } from '@nectoproxy/storage';
+import type { AnnotationCreateInput, AnnotationUpdateInput } from '@nectoproxy/shared';
 
 const router: ReturnType<typeof Router> = Router();
 const annotationRepo = new AnnotationRepository();

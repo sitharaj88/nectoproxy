@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import type { DnsMapping, DnsMappingCreateInput } from '@proxyscope/shared';
+import type { DnsMapping, DnsMappingCreateInput } from '@nectoproxy/shared';
 import {
   getDnsMappings,
   createDnsMapping,

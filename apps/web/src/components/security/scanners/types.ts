@@ -1,4 +1,4 @@
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 

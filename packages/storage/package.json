@@ -1,5 +1,5 @@
 {
-  "name": "@proxyscope/storage",
+  "name": "@nectoproxy/storage",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@proxyscope/shared": "workspace:*",
+    "@nectoproxy/shared": "workspace:*",
     "better-sqlite3": "^11.0.0",
     "drizzle-orm": "^0.30.0",
     "uuid": "^9.0.1"

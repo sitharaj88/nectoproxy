@@ -1,5 +1,5 @@
 {
-  "name": "@proxyscope/server",
+  "name": "@nectoproxy/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,10 +17,10 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@proxyscope/certs": "workspace:*",
-    "@proxyscope/core": "workspace:*",
-    "@proxyscope/shared": "workspace:*",
-    "@proxyscope/storage": "workspace:*",
+    "@nectoproxy/certs": "workspace:*",
+    "@nectoproxy/core": "workspace:*",
+    "@nectoproxy/shared": "workspace:*",
+    "@nectoproxy/storage": "workspace:*",
     "cors": "^2.8.5",
     "express": "^4.18.3",
     "multer": "^1.4.5-lts.1",

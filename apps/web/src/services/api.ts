@@ -13,7 +13,7 @@ import type {
   Annotation,
   AnnotationCreateInput,
   AnnotationUpdateInput,
-} from '@proxyscope/shared';
+} from '@nectoproxy/shared';
 
 const API_BASE = '/api';
 

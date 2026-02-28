@@ -1,4 +1,4 @@
-import type { MapRemoteConfig } from '@proxyscope/shared';
+import type { MapRemoteConfig } from '@nectoproxy/shared';
 import type { ActionHandler, RuleResult } from './types.js';
 import type { MatchContext } from '../RuleMatcher.js';
 

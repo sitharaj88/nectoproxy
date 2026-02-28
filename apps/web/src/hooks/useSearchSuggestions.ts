@@ -9,7 +9,7 @@ export interface SearchSuggestion {
 }
 
 // Recent searches stored in localStorage
-const RECENT_SEARCHES_KEY = 'proxyscope_recent_searches';
+const RECENT_SEARCHES_KEY = 'nectoproxy_recent_searches';
 const MAX_RECENT_SEARCHES = 10;
 
 export function getRecentSearches(): string[] {

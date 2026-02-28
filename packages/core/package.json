@@ -1,5 +1,5 @@
 {
-  "name": "@proxyscope/core",
+  "name": "@nectoproxy/core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,8 +17,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@proxyscope/certs": "workspace:*",
-    "@proxyscope/shared": "workspace:*",
+    "@nectoproxy/certs": "workspace:*",
+    "@nectoproxy/shared": "workspace:*",
     "uuid": "^9.0.1",
     "ws": "^8.19.0"
   },

@@ -7,10 +7,10 @@ import open from 'open';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { CertificateManager } from '@proxyscope/certs';
-import { ProxyServer } from '@proxyscope/core';
-import { createApp, setNetworkProfileChangeCallback, setUpstreamProxyChangeCallback, setSSLPassthroughChangeCallback, setDnsMappingsChangeCallback } from '@proxyscope/server';
-import { SessionRepository, TrafficRepository, SSLPassthroughRepository, DnsMappingRepository, getDatabase } from '@proxyscope/storage';
+import { CertificateManager } from '@nectoproxy/certs';
+import { ProxyServer } from '@nectoproxy/core';
+import { createApp, setNetworkProfileChangeCallback, setUpstreamProxyChangeCallback, setSSLPassthroughChangeCallback, setDnsMappingsChangeCallback } from '@nectoproxy/server';
+import { SessionRepository, TrafficRepository, SSLPassthroughRepository, DnsMappingRepository, getDatabase } from '@nectoproxy/storage';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +20,7 @@ const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url),
 const program = new Command();
 
 program
-  .name('proxyscope')
+  .name('nectoproxy')
   .description('A powerful HTTP/HTTPS debugging proxy with Web UI')
   .version(pkg.version);
 
@@ -36,7 +36,7 @@ program
     const uiPort = parseInt(options.uiPort, 10);
     const autoOpen = options.open !== false;
 
-    console.log(chalk.bold.cyan('\n  ProxyScope - HTTP/HTTPS Debugging Proxy\n'));
+    console.log(chalk.bold.cyan('\n  NectoProxy - HTTP/HTTPS Debugging Proxy\n'));
 
     const spinner = ora('Initializing...').start();
 
@@ -188,7 +188,7 @@ program
       await proxyServer.start(session.id);
       await appInstance.start();
 
-      spinner.succeed('ProxyScope started successfully!\n');
+      spinner.succeed('NectoProxy started successfully!\n');
 
       // Display info
       console.log(chalk.white('  Proxy Server:'), chalk.green(`http://${options.host}:${proxyPort}`));
@@ -200,7 +200,7 @@ program
       const caPath = certManager.getCACertificatePath();
       console.log(chalk.white('  CA Certificate:'), chalk.cyan(caPath));
       console.log(chalk.dim('  Install the CA certificate to inspect HTTPS traffic.'));
-      console.log(chalk.dim(`  Run: ${chalk.white('proxyscope cert --install')} for instructions.`));
+      console.log(chalk.dim(`  Run: ${chalk.white('nectoproxy cert --install')} for instructions.`));
       console.log();
 
       // Open browser
@@ -238,9 +238,9 @@ program
       const err = error as NodeJS.ErrnoException;
       if (err.code === 'EADDRINUSE') {
         spinner.fail(`Port is already in use`);
-        console.error(chalk.yellow(`\n  Try a different port: proxyscope start -p ${proxyPort + 1}`));
+        console.error(chalk.yellow(`\n  Try a different port: nectoproxy start -p ${proxyPort + 1}`));
       } else {
-        spinner.fail('Failed to start ProxyScope');
+        spinner.fail('Failed to start NectoProxy');
         console.error(chalk.red('\nError:'), (error as Error).message);
       }
       process.exit(1);
@@ -276,7 +276,7 @@ program
 
       // Default: show cert info
       const ca = certManager.getCACertificate();
-      console.log(chalk.bold('\nProxyScope CA Certificate\n'));
+      console.log(chalk.bold('\nNectoProxy CA Certificate\n'));
       console.log(chalk.white('Path:'), chalk.cyan(certManager.getCACertificatePath()));
       if (ca?.fingerprint) {
         console.log(chalk.white('Fingerprint:'), chalk.yellow(ca.fingerprint));

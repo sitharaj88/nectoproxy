@@ -5,7 +5,7 @@ import {
   type ReplayResult,
   type ReplayComparison,
 } from '../services/api';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 
 interface ReplayEditorProps {
   entry: TrafficEntry;

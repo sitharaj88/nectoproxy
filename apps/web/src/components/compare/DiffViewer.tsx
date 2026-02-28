@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { X, ArrowLeftRight, Clock, FileText, Globe, Minus, Plus, Equal } from 'lucide-react';
 import { DiffView } from './DiffView';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 
 type DiffTab = 'overview' | 'headers' | 'request' | 'response' | 'timing';
 

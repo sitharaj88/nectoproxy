@@ -1,4 +1,4 @@
-import type { ModifyResponseConfig } from '@proxyscope/shared';
+import type { ModifyResponseConfig } from '@nectoproxy/shared';
 import type { ActionHandler, RuleResult } from './types.js';
 import type { MatchContext } from '../RuleMatcher.js';
 

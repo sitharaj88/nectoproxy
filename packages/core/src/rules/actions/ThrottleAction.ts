@@ -1,4 +1,4 @@
-import type { ThrottleConfig } from '@proxyscope/shared';
+import type { ThrottleConfig } from '@nectoproxy/shared';
 import type { ActionHandler, RuleResult } from './types.js';
 import type { MatchContext } from '../RuleMatcher.js';
 

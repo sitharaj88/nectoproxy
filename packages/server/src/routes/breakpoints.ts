@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
-import { BreakpointRepository } from '@proxyscope/storage';
-import type { BreakpointCreateInput } from '@proxyscope/shared';
+import { BreakpointRepository } from '@nectoproxy/storage';
+import type { BreakpointCreateInput } from '@nectoproxy/shared';
 
 export function createBreakpointsRouter(): Router {
   const router = Router();

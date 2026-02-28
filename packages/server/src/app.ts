@@ -2,7 +2,7 @@ import express, { type Express } from 'express';
 import cors from 'cors';
 import { createServer, type Server as HttpServer } from 'node:http';
 import path from 'node:path';
-import type { CertificateManager } from '@proxyscope/certs';
+import type { CertificateManager } from '@nectoproxy/certs';
 import { SocketServer } from './websocket/SocketServer.js';
 import trafficRouter from './routes/traffic.js';
 import sessionsRouter from './routes/sessions.js';

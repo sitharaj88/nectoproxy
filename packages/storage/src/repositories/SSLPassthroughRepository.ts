@@ -2,7 +2,7 @@ import { eq, asc } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { getDatabase } from '../db/connection.js';
 import { sslPassthrough } from '../db/schema.js';
-import type { SSLPassthroughDomain, SSLPassthroughCreateInput } from '@proxyscope/shared';
+import type { SSLPassthroughDomain, SSLPassthroughCreateInput } from '@nectoproxy/shared';
 
 export class SSLPassthroughRepository {
   private get db() {

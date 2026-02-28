@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { TrafficEntry } from '@proxyscope/shared';
+import type { TrafficEntry } from '@nectoproxy/shared';
 import { useSessionStore } from './sessionStore';
 
 export interface AdvancedFilter {

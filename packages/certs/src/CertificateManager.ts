@@ -13,8 +13,8 @@ export interface CertificateManagerConfig {
 }
 
 const DEFAULT_CONFIG: CertificateManagerConfig = {
-  certsDir: path.join(os.homedir(), '.proxyscope', 'certs'),
-  caName: 'ProxyScope CA',
+  certsDir: path.join(os.homedir(), '.nectoproxy', 'certs'),
+  caName: 'NectoProxy CA',
   caValidityDays: 3650,
   certValidityDays: 365,
   keySize: 2048,
@@ -217,7 +217,7 @@ export class CertificateManager {
     const platform = process.platform;
 
     let instructions = `
-ProxyScope CA Certificate Installation Instructions
+NectoProxy CA Certificate Installation Instructions
 ===================================================
 
 Certificate location: ${certPath}
@@ -232,7 +232,7 @@ macOS:
 1. Double-click the certificate file, or run:
    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${certPath}"
 
-2. Open Keychain Access, find "ProxyScope CA", and set it to "Always Trust"
+2. Open Keychain Access, find "NectoProxy CA", and set it to "Always Trust"
 
 Or use the command line:
    open "${certPath}"
@@ -260,11 +260,11 @@ Or use PowerShell (as Administrator):
 Linux:
 ------
 Ubuntu/Debian:
-   sudo cp "${certPath}" /usr/local/share/ca-certificates/proxyscope-ca.crt
+   sudo cp "${certPath}" /usr/local/share/ca-certificates/nectoproxy-ca.crt
    sudo update-ca-certificates
 
 Fedora/RHEL/CentOS:
-   sudo cp "${certPath}" /etc/pki/ca-trust/source/anchors/proxyscope-ca.pem
+   sudo cp "${certPath}" /etc/pki/ca-trust/source/anchors/nectoproxy-ca.pem
    sudo update-ca-trust
 
 Arch Linux:

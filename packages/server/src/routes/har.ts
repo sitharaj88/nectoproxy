@@ -1,8 +1,8 @@
 import { Router, type Router as RouterType } from 'express';
 import multer from 'multer';
-import { TrafficRepository, SessionRepository } from '@proxyscope/storage';
+import { TrafficRepository, SessionRepository } from '@nectoproxy/storage';
 import { HarConverter } from '../services/HarConverter.js';
-import type { HAR } from '@proxyscope/shared';
+import type { HAR } from '@nectoproxy/shared';
 
 const upload = multer({ storage: multer.memoryStorage() });
 const trafficRepo = new TrafficRepository();
@@ -65,10 +65,10 @@ router.post('/export', async (req, res) => {
     }
 
     // Convert to HAR
-    const har = harConverter.toHAR(validEntries, sessionName || 'ProxyScope Export');
+    const har = harConverter.toHAR(validEntries, sessionName || 'NectoProxy Export');
 
     // Set headers for file download
-    const filename = `proxyscope_export_${Date.now()}.har`;
+    const filename = `nectoproxy_export_${Date.now()}.har`;
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 

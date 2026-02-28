@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Rule } from '@proxyscope/shared';
+import type { Rule } from '@nectoproxy/shared';
 
 interface RulesState {
   rules: Rule[];

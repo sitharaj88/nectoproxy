@@ -1,4 +1,4 @@
-import type { Rule, RuleAction } from '@proxyscope/shared';
+import type { Rule, RuleAction } from '@nectoproxy/shared';
 import { RuleMatcherEngine, type MatchContext } from './RuleMatcher.js';
 import {
   type ActionHandler,

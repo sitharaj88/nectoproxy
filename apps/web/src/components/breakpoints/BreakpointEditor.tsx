@@ -7,7 +7,7 @@ import type {
   BreakpointConditionOperator,
   BreakpointCreateInput,
   BreakpointType,
-} from '@proxyscope/shared';
+} from '@nectoproxy/shared';
 
 const CONDITION_FIELDS: { value: BreakpointConditionField; label: string }[] = [
   { value: 'status', label: 'Status' },

@@ -10,7 +10,7 @@ import type {
   WebSocketFrameEvent,
   WebSocketCloseEvent,
   WebSocketErrorEvent,
-} from '@proxyscope/shared';
+} from '@nectoproxy/shared';
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 

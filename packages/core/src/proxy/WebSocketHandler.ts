@@ -3,7 +3,7 @@ import { IncomingMessage } from 'node:http';
 import net from 'node:net';
 import { v4 as uuid } from 'uuid';
 import WebSocket, { WebSocketServer, RawData } from 'ws';
-import type { WebSocketFrame } from '@proxyscope/shared';
+import type { WebSocketFrame } from '@nectoproxy/shared';
 
 export interface WebSocketContext {
   id: string;

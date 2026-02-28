@@ -1,4 +1,4 @@
-import type { NetworkProfile } from '@proxyscope/shared';
+import type { NetworkProfile } from '@nectoproxy/shared';
 
 export class ThrottleService {
   private activeProfile: NetworkProfile | null = null;

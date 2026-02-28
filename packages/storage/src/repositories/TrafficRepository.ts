@@ -1,7 +1,7 @@
 import { eq, and, like, gte, lte, inArray, desc, asc, sql, or, count as drizzleCount } from 'drizzle-orm';
 import { getDatabase } from '../db/connection.js';
 import { traffic, sessions } from '../db/schema.js';
-import type { TrafficEntry, TrafficQuery, TrafficStats } from '@proxyscope/shared';
+import type { TrafficEntry, TrafficQuery, TrafficStats } from '@nectoproxy/shared';
 
 export class TrafficRepository {
   private get db() {

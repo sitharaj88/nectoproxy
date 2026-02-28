@@ -14,8 +14,8 @@ export interface CACertificate {
 }
 
 const DEFAULT_CA_CONFIG: CAConfig = {
-  commonName: 'ProxyScope CA',
-  organizationName: 'ProxyScope',
+  commonName: 'NectoProxy CA',
+  organizationName: 'NectoProxy',
   validityDays: 3650, // 10 years
   keySize: 2048,
 };

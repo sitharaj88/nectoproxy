@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getWebSocketFrames, type WebSocketFrameResponse } from '../services/api';
 import { subscribeToWebSocket } from '../services/socket';
-import type { WebSocketFrameEvent } from '@proxyscope/shared';
+import type { WebSocketFrameEvent } from '@nectoproxy/shared';
 
 interface WebSocketMessagesViewerProps {
   trafficId: string;

@@ -6,7 +6,7 @@ import type {
   BreakpointConditionLogic,
   BreakpointHit,
   BreakpointResume,
-} from '@proxyscope/shared';
+} from '@nectoproxy/shared';
 import { RuleMatcherEngine, type MatchContext } from '../rules/RuleMatcher.js';
 
 interface PendingBreakpoint {

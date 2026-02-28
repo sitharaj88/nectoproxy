@@ -1,4 +1,4 @@
-import type { DelayConfig } from '@proxyscope/shared';
+import type { DelayConfig } from '@nectoproxy/shared';
 import type { ActionHandler, RuleResult } from './types.js';
 import type { MatchContext } from '../RuleMatcher.js';
 

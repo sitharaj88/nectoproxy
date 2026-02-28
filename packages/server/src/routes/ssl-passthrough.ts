@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
-import { SSLPassthroughRepository } from '@proxyscope/storage';
-import type { SSLPassthroughCreateInput } from '@proxyscope/shared';
+import { SSLPassthroughRepository } from '@nectoproxy/storage';
+import type { SSLPassthroughCreateInput } from '@nectoproxy/shared';
 
 const router: ReturnType<typeof Router> = Router();
 const passthroughRepo = new SSLPassthroughRepository();

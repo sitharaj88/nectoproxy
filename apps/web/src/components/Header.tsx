@@ -7,7 +7,7 @@ import { HarExportImport } from './HarExportImport';
 import { CompareButton } from './compare';
 import { useTheme } from '@/hooks/useTheme';
 import type { ViewMode } from '@/stores/viewStore';
-import type { Session } from '@proxyscope/shared';
+import type { Session } from '@nectoproxy/shared';
 
 interface HeaderProps {
   isConnected: boolean;
@@ -53,8 +53,8 @@ export function Header({ isConnected, proxyPort, onToggleRules, showRules, onTog
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <span className="text-primary-400">Proxy</span>
-            <span>Scope</span>
+            <span className="text-primary-400">Necto</span>
+            <span>Proxy</span>
           </h1>
 
           <div className="flex items-center gap-2 text-sm">

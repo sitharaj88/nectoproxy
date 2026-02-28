@@ -69,13 +69,13 @@ export const DEFAULT_SETTINGS: Settings = {
     autoScroll: true,
   },
   storage: {
-    dataDir: '~/.proxyscope',
+    dataDir: '~/.nectoproxy',
     maxDatabaseSize: 1024 * 1024 * 1024, // 1GB
     retentionDays: 30,
     compressOldSessions: true,
   },
   certificates: {
-    caName: 'ProxyScope CA',
+    caName: 'NectoProxy CA',
     caValidityDays: 3650, // 10 years
     certValidityDays: 365,
     keySize: 2048,

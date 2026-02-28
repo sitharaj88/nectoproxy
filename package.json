@@ -1,5 +1,5 @@
 {
-  "name": "proxyscope",
+  "name": "nectoproxy",
   "version": "0.1.0",
   "private": true,
   "description": "A powerful HTTP/HTTPS debugging proxy with Web UI",
@@ -8,7 +8,7 @@
   "author": "Sitharaj",
   "repository": {
     "type": "git",
-    "url": "https://github.com/user/proxyscope.git"
+    "url": "https://github.com/user/nectoproxy.git"
   },
   "scripts": {
     "dev": "turbo run dev",
@@ -16,7 +16,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
-    "release": "pnpm build && pnpm --filter proxyscope deploy ./publish-staging && cd publish-staging && npm publish --access public"
+    "release": "pnpm build && pnpm --filter nectoproxy deploy ./publish-staging && cd publish-staging && npm publish --access public"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

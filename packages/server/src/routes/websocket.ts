@@ -1,5 +1,5 @@
 import { Router, type Router as RouterType } from 'express';
-import { WebSocketFrameRepository } from '@proxyscope/storage';
+import { WebSocketFrameRepository } from '@nectoproxy/storage';
 
 const router: RouterType = Router();
 const wsFrameRepo = new WebSocketFrameRepository();

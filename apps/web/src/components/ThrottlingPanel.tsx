@@ -21,7 +21,7 @@ import {
   deleteRule,
 } from '@/services/api';
 import { subscribeToRules } from '@/services/socket';
-import type { Rule, ThrottleConfig, DelayConfig } from '@proxyscope/shared';
+import type { Rule, ThrottleConfig, DelayConfig } from '@nectoproxy/shared';
 
 interface ThrottlingPanelProps {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type Router as RouterType } from 'express';
-import { TrafficRepository } from '@proxyscope/storage';
-import type { TrafficQuery, TrafficSortField } from '@proxyscope/shared';
+import { TrafficRepository } from '@nectoproxy/storage';
+import type { TrafficQuery, TrafficSortField } from '@nectoproxy/shared';
 import { ReplayService } from '../services/ReplayService.js';
 
 const router: RouterType = Router();
