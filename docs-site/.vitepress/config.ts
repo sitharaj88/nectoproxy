@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'NectoProxy',
   description: 'A powerful HTTP/HTTPS debugging proxy with Web UI - open-source alternative to Charles Proxy and Fiddler',
+  outDir: '../docs',
   ignoreDeadLinks: [
     /localhost/,
   ],
