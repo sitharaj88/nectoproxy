@@ -23,16 +23,16 @@ importers:
 
   apps/cli:
     dependencies:
-      '@proxyscope/certs':
+      '@nectoproxy/certs':
         specifier: workspace:*
         version: link:../../packages/certs
-      '@proxyscope/core':
+      '@nectoproxy/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@proxyscope/server':
+      '@nectoproxy/server':
         specifier: workspace:*
         version: link:../../packages/server
-      '@proxyscope/storage':
+      '@nectoproxy/storage':
         specifier: workspace:*
         version: link:../../packages/storage
       chalk:
@@ -48,7 +48,7 @@ importers:
         specifier: ^8.0.1
         version: 8.2.0
     devDependencies:
-      '@proxyscope/web':
+      '@nectoproxy/web':
         specifier: workspace:*
         version: link:../web
       typescript:
@@ -75,7 +75,7 @@ importers:
       '@codemirror/view':
         specifier: ^6.39.11
         version: 6.39.11
-      '@proxyscope/shared':
+      '@nectoproxy/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@radix-ui/react-context-menu':
@@ -173,10 +173,10 @@ importers:
 
   packages/core:
     dependencies:
-      '@proxyscope/certs':
+      '@nectoproxy/certs':
         specifier: workspace:*
         version: link:../certs
-      '@proxyscope/shared':
+      '@nectoproxy/shared':
         specifier: workspace:*
         version: link:../shared
       uuid:
@@ -198,16 +198,16 @@ importers:
 
   packages/server:
     dependencies:
-      '@proxyscope/certs':
+      '@nectoproxy/certs':
         specifier: workspace:*
         version: link:../certs
-      '@proxyscope/core':
+      '@nectoproxy/core':
         specifier: workspace:*
         version: link:../core
-      '@proxyscope/shared':
+      '@nectoproxy/shared':
         specifier: workspace:*
         version: link:../shared
-      '@proxyscope/storage':
+      '@nectoproxy/storage':
         specifier: workspace:*
         version: link:../storage
       cors:
@@ -250,7 +250,7 @@ importers:
 
   packages/storage:
     dependencies:
-      '@proxyscope/shared':
+      '@nectoproxy/shared':
         specifier: workspace:*
         version: link:../shared
       better-sqlite3:
