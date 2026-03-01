@@ -21,6 +21,7 @@ import annotationsRouter from './routes/annotations.js';
 
 export interface AppConfig {
   port: number;
+  host?: string;
   staticDir?: string;
 }
 
@@ -83,8 +84,8 @@ export function createApp(certManager: CertificateManager, config: AppConfig): A
     socketServer,
     start: () => {
       return new Promise((resolve, reject) => {
-        httpServer.listen(config.port, () => {
-          console.log(`Server listening on port ${config.port}`);
+        httpServer.listen(config.port, config.host ?? '0.0.0.0', () => {
+          console.log(`Server listening on ${config.host ?? '0.0.0.0'}:${config.port}`);
           resolve();
         });
         httpServer.once('error', reject);

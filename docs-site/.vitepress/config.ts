@@ -45,6 +45,7 @@ export default defineConfig({
             { text: 'What is NectoProxy?', link: '/guide/' },
             { text: 'Installation', link: '/guide/installation' },
             { text: 'Quick Start', link: '/guide/quick-start' },
+            { text: 'Complete Guide', link: '/guide/detailed-guide' },
             { text: 'Comparison', link: '/guide/comparison' },
           ]
         }

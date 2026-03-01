@@ -166,12 +166,12 @@ Increasing `maxBodySize` significantly will increase memory usage and database s
 
 **Causes and Solutions:**
 
-**1. NectoProxy is bound to localhost only**
+**1. NectoProxy host is restricted to localhost**
 
-By default, NectoProxy binds to `127.0.0.1`, which only accepts connections from the local machine. Start with:
+If you explicitly started NectoProxy with `--host 127.0.0.1`, it only accepts connections from the local machine. Remove the `--host` flag or use `--host 0.0.0.0` (the default) to allow LAN connections:
 
 ```bash
-nectoproxy start --host 0.0.0.0
+nectoproxy start
 ```
 
 **2. Firewall is blocking the port**

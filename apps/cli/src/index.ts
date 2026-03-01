@@ -5,6 +5,7 @@ import open from 'open';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { networkInterfaces } from 'node:os';
 import { CertificateManager } from '@nectoproxy/certs';
 import { ProxyServer } from '@nectoproxy/core';
 import { createApp, setNetworkProfileChangeCallback, setUpstreamProxyChangeCallback, setSSLPassthroughChangeCallback, setDnsMappingsChangeCallback } from '@nectoproxy/server';
@@ -28,7 +29,7 @@ program
   .option('-p, --port <port>', 'Proxy server port', '8888')
   .option('-u, --ui-port <port>', 'Web UI port', '8889')
   .option('--no-open', 'Do not auto-open browser')
-  .option('--host <host>', 'Host to bind to', '127.0.0.1')
+  .option('--host <host>', 'Host to bind to', '0.0.0.0')
   .action(async (options) => {
     const proxyPort = parseInt(options.port, 10);
     const uiPort = parseInt(options.uiPort, 10);
@@ -72,6 +73,7 @@ program
       const webDistPath = path.resolve(__dirname, 'web-ui');
       const appInstance = createApp(certManager, {
         port: uiPort,
+        host: options.host,
         staticDir: webDistPath,
       });
 
@@ -188,9 +190,19 @@ program
 
       spinner.succeed('NectoProxy started successfully!\n');
 
+      // Resolve display host — show the machine's LAN IP instead of 0.0.0.0
+      let displayHost = options.host;
+      if (displayHost === '0.0.0.0') {
+        const nets = networkInterfaces();
+        const lanIp = Object.values(nets).flat().find(
+          (n) => n && n.family === 'IPv4' && !n.internal
+        );
+        displayHost = lanIp?.address ?? 'localhost';
+      }
+
       // Display info
-      console.log(chalk.white('  Proxy Server:'), chalk.green(`http://${options.host}:${proxyPort}`));
-      console.log(chalk.white('  Web UI:'), chalk.green(`http://localhost:${uiPort}`));
+      console.log(chalk.white('  Proxy Server:'), chalk.green(`http://${displayHost}:${proxyPort}`));
+      console.log(chalk.white('  Web UI:'), chalk.green(`http://${displayHost}:${uiPort}`));
       console.log(chalk.white('  Session:'), chalk.yellow(session.name));
       console.log();
 
@@ -203,7 +215,7 @@ program
 
       // Open browser
       if (autoOpen) {
-        const uiUrl = `http://localhost:${uiPort}`;
+        const uiUrl = `http://${displayHost}:${uiPort}`;
         console.log(chalk.dim(`  Opening ${uiUrl} in your browser...`));
         await open(uiUrl);
       }

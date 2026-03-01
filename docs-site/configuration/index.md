@@ -11,8 +11,8 @@ NectoProxy can be configured through three complementary mechanisms:
 When you launch NectoProxy from the terminal, you can pass command-line flags to override default values. These flags take effect immediately when the proxy starts.
 
 ```bash
-# Start with custom ports and host binding
-nectoproxy start -p 9999 -u 9998 --host 0.0.0.0
+# Start with custom ports
+nectoproxy start -p 9999 -u 9998
 
 # Start without auto-opening the browser
 nectoproxy start --no-open

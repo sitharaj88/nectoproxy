@@ -35,7 +35,7 @@ The following table summarizes every command and option available in NectoProxy:
 # Start the proxy (default: proxy on 8888, UI on 8889)
 nectoproxy start
 nectoproxy start -p 9090 -u 9091       # Custom ports
-nectoproxy start --host 0.0.0.0        # Listen on all interfaces (LAN access)
+nectoproxy start --host 127.0.0.1      # Restrict to localhost only
 nectoproxy start --no-open             # Don't auto-open browser
 
 # Certificate management

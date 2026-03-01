@@ -68,10 +68,10 @@ Instead of importing the certificate manually, you can configure Firefox to trus
 
 After installing the certificate using either method:
 
-1. Make sure your Firefox proxy is set to `127.0.0.1:8888`:
+1. Make sure your Firefox proxy is set to `localhost:8888`:
    - Go to Settings > General > Network Settings > Settings.
    - Select **Manual proxy configuration**.
-   - Set HTTP Proxy to `127.0.0.1` and Port to `8888`.
+   - Set HTTP Proxy to `localhost` and Port to `8888`.
    - Check **Also use this proxy for HTTPS**.
    - Click **OK**.
 

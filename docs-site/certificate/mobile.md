@@ -6,10 +6,10 @@ This guide covers setting up the NectoProxy CA certificate on iOS and Android de
 
 Before setting up a mobile device, ensure:
 
-1. **NectoProxy is running** on your computer with the `--host 0.0.0.0` flag to accept connections from other devices on the network:
+1. **NectoProxy is running** on your computer. NectoProxy binds to all interfaces by default, so mobile devices on the same network can connect:
 
     ```bash
-    nectoproxy start --host 0.0.0.0
+    nectoproxy start
     ```
 
 2. **Your mobile device and computer are on the same Wi-Fi network.**
@@ -188,7 +188,7 @@ Starting with Android 7 (Nougat), Google changed how user-installed CA certifica
 
 ### No Traffic Appearing in NectoProxy
 
-- **Verify NectoProxy is listening on all interfaces**: Make sure you started NectoProxy with `--host 0.0.0.0`, not the default `127.0.0.1`.
+- **Verify NectoProxy is listening on all interfaces**: Make sure you did not start NectoProxy with `--host 127.0.0.1`, which restricts access to localhost only. The default (`0.0.0.0`) allows LAN connections.
 - **Same network**: Confirm your mobile device and computer are on the same Wi-Fi network.
 - **Firewall**: Check that your computer's firewall allows incoming connections on port 8888 and 8889.
 - **Correct IP**: Double-check the computer's IP address. It may change if you reconnect to Wi-Fi.

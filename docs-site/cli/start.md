@@ -14,16 +14,18 @@ nectoproxy start [options]
 |---|---|---|---|
 | `--port <port>` | `-p` | `8888` | Port for the HTTP/HTTPS proxy server |
 | `--ui-port <port>` | `-u` | `8889` | Port for the Web UI dashboard |
-| `--host <host>` | | `127.0.0.1` | Host address to bind to |
+| `--host <host>` | | `0.0.0.0` | Host address to bind to (all interfaces) |
 | `--no-open` | | | Do not automatically open the Web UI in the default browser |
 
 ## Default Behavior
 
 When you run `nectoproxy start` without any options:
 
-1. The **proxy server** starts on `127.0.0.1:8888`.
-2. The **Web UI** starts on `127.0.0.1:8889`.
+1. The **proxy server** starts on all network interfaces (`0.0.0.0:8888`).
+2. The **Web UI** starts on all network interfaces (`0.0.0.0:8889`).
 3. Your **default browser** opens automatically to the Web UI URL.
+
+NectoProxy automatically detects your LAN IP address and displays it at startup.
 
 ```bash
 nectoproxy start
@@ -34,8 +36,8 @@ Output:
 ```
   NectoProxy v0.1.0
 
-  Proxy server running on http://127.0.0.1:8888
-  Web UI available at  http://127.0.0.1:8889
+  Proxy Server: http://192.168.1.42:8888
+  Web UI:       http://192.168.1.42:8889
 ```
 
 ## Examples
@@ -57,8 +59,8 @@ nectoproxy start -p 9090 -u 9091
 ```
 
 This starts:
-- Proxy on `127.0.0.1:9090`
-- Web UI on `127.0.0.1:9091`
+- Proxy on port `9090`
+- Web UI on port `9091`
 
 ::: tip When to Change Ports
 Change the default ports when:
@@ -67,18 +69,20 @@ Change the default ports when:
 - Your organization has port allocation policies.
 :::
 
-### LAN Access (Debug Mobile Devices)
+### Localhost Only (Restrict Network Access)
 
-To allow connections from other devices on your local network (e.g., mobile phones, tablets, or other computers), bind to all network interfaces:
+By default, NectoProxy binds to all network interfaces (`0.0.0.0`), making it accessible from other devices on your local network. If you want to restrict access to only the local machine:
 
 ```bash
-nectoproxy start --host 0.0.0.0
+nectoproxy start --host 127.0.0.1
 ```
 
-This makes the proxy accessible at `<your-lan-ip>:8888` and the Web UI at `<your-lan-ip>:8889` from any device on the same network.
+::: tip Security Consideration
+Binding to `127.0.0.1` ensures only the local machine can use the proxy and access the Web UI. This is the most secure option when you do not need LAN access.
+:::
 
-::: warning Security Consideration
-Binding to `0.0.0.0` exposes NectoProxy to your entire local network. Only use this on trusted networks. Anyone on the network can route their traffic through your proxy and access the Web UI.
+::: warning Default Network Exposure
+By default, NectoProxy listens on all interfaces (`0.0.0.0`), which exposes it to your entire local network. Only use the default on trusted networks. Use `--host 127.0.0.1` on untrusted networks.
 :::
 
 ### Without Auto-Opening Browser
@@ -99,10 +103,10 @@ This is useful when:
 You can combine all options:
 
 ```bash
-nectoproxy start -p 9090 -u 9091 --host 0.0.0.0 --no-open
+nectoproxy start -p 9090 -u 9091 --host 127.0.0.1 --no-open
 ```
 
-This starts the proxy on port 9090, the Web UI on port 9091, listens on all interfaces, and does not open the browser.
+This starts the proxy on port 9090, the Web UI on port 9091, restricts access to localhost only, and does not open the browser.
 
 ## Stopping NectoProxy
 

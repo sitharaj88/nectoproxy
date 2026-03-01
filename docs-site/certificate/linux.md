@@ -156,8 +156,8 @@ After installing the certificate at the system level, verify it with `curl` or `
 
 ```bash
 # Configure your terminal to use the proxy
-export http_proxy=http://127.0.0.1:8888
-export https_proxy=http://127.0.0.1:8888
+export http_proxy=http://localhost:8888
+export https_proxy=http://localhost:8888
 
 # This should succeed without --insecure
 curl https://example.com

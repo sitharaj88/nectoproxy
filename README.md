@@ -30,7 +30,7 @@ nectoproxy start
 
 ### Configure Your Browser/System
 
-1. Set your HTTP proxy to `127.0.0.1:8888`
+1. Set your HTTP proxy to `localhost:8888`
 2. Install the CA certificate to inspect HTTPS traffic:
    ```bash
    nectoproxy cert --install
@@ -80,7 +80,7 @@ nectoproxy start
 nectoproxy start [options]
   -p, --port <port>       Proxy port (default: 8888)
   -u, --ui-port <port>    Web UI port (default: 8889)
-  --host <host>           Host to bind to (default: 127.0.0.1)
+  --host <host>           Host to bind to (default: 0.0.0.0)
   --no-open               Don't auto-open browser
 
 # Certificate management

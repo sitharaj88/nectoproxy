@@ -75,7 +75,7 @@ If the certificate is installed, this command will display its details including
 ### Via Browser
 
 1. Open Microsoft Edge or Google Chrome (both use the Windows certificate store).
-2. Make sure your proxy is set to `127.0.0.1:8888`.
+2. Make sure your proxy is set to `localhost:8888`.
 3. Navigate to any HTTPS website (e.g., `https://example.com`).
 4. The page should load without any certificate warnings.
 5. Click the lock icon in the address bar to inspect the certificate chain.

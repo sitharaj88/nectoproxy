@@ -10,16 +10,18 @@ This tutorial shows you how to capture and inspect HTTP/HTTPS traffic from iOS a
 - Your computer and mobile device connected to the **same Wi-Fi network**
 - Physical access to the mobile device you want to debug
 
-## Step 1: Start NectoProxy with Network Access
+## Step 1: Start NectoProxy
 
-By default, NectoProxy only listens on `127.0.0.1` (localhost), which means only your computer can use it. To allow your phone to connect, you need to bind to all network interfaces:
+NectoProxy binds to all network interfaces (`0.0.0.0`) by default, so your phone can connect without any special flags:
 
 ```bash
-nectoproxy start --host 0.0.0.0
+nectoproxy start
 ```
 
-::: danger
-Binding to `0.0.0.0` exposes the proxy to your entire local network. Only do this on trusted networks (e.g., your home or office Wi-Fi). Never do this on public Wi-Fi.
+NectoProxy will display your LAN IP address at startup (e.g., `http://192.168.1.42:8888`). Note this address -- you will need it to configure your phone.
+
+::: danger Security Note
+Since NectoProxy listens on all interfaces by default, it is accessible to your entire local network. Only use it on trusted networks (e.g., your home or office Wi-Fi). If you want to restrict to localhost only, use `--host 127.0.0.1`.
 :::
 
 ## Step 2: Find Your Computer's IP Address
@@ -149,7 +151,7 @@ Things to verify:
 If traffic is not appearing, double-check:
 1. Your phone is on the **same Wi-Fi network** as your computer.
 2. The proxy settings are saved (try opening a website in the phone's browser).
-3. NectoProxy was started with `--host 0.0.0.0`.
+3. NectoProxy is not restricted to localhost (avoid using `--host 127.0.0.1` when debugging mobile).
 4. Your computer's firewall is not blocking port 8888.
 :::
 

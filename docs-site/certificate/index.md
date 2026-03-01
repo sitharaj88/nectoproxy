@@ -23,7 +23,7 @@ When NectoProxy intercepts an HTTPS request, the following process occurs:
 5. **The response flows back** through NectoProxy, which can inspect and optionally modify it before forwarding it to your browser.
 
 ::: tip Key Point
-NectoProxy only intercepts traffic that is explicitly routed through its proxy. It does not interfere with any traffic that does not pass through `127.0.0.1:8888` (or whichever address you configured).
+NectoProxy only intercepts traffic that is explicitly routed through its proxy. It does not interfere with any traffic that does not pass through the proxy address (default: `0.0.0.0:8888`).
 :::
 
 ## Certificate Location

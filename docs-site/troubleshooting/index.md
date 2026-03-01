@@ -76,7 +76,7 @@ sudo iptables -L -n | grep 8888
 netsh advfirewall firewall show rule name=all | findstr 8888
 ```
 
-Make sure ports 8888 and 8889 are open for inbound connections if you are using `--host 0.0.0.0`.
+Make sure ports 8888 and 8889 are open for inbound connections. NectoProxy binds to all interfaces (`0.0.0.0`) by default, so firewall rules must allow inbound connections on these ports when accessing from other devices.
 
 ## Troubleshooting Pages
 

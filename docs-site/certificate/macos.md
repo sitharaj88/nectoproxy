@@ -62,7 +62,7 @@ If the certificate is found, the output will display its details.
 ### Via Browser
 
 1. Open Safari or Chrome.
-2. Make sure your proxy is set to `127.0.0.1:8888`.
+2. Make sure your proxy is set to `localhost:8888`.
 3. Navigate to any HTTPS website (e.g., `https://example.com`).
 4. The page should load without any certificate warnings.
 5. Click the lock icon in the address bar to verify the certificate chain includes the NectoProxy CA.

@@ -30,16 +30,16 @@ You should see output similar to:
 ```
   NectoProxy v0.1.0
 
-  Proxy server running on http://127.0.0.1:8888
-  Web UI available at  http://127.0.0.1:8889
+  Proxy Server: http://192.168.1.42:8888
+  Web UI:       http://192.168.1.42:8889
 ```
 
-NectoProxy starts two services:
+NectoProxy automatically detects your LAN IP address and displays it at startup. It starts two services:
 
 | Service | Default Address | Purpose |
 |---|---|---|
-| **Proxy Server** | `127.0.0.1:8888` | The HTTP/HTTPS proxy that intercepts traffic |
-| **Web UI** | `127.0.0.1:8889` | The browser-based dashboard for viewing traffic |
+| **Proxy Server** | `localhost:8888` | The HTTP/HTTPS proxy that intercepts traffic |
+| **Web UI** | `localhost:8889` | The browser-based dashboard for viewing traffic |
 
 The Web UI opens automatically in your default browser.
 
@@ -51,11 +51,11 @@ Point your browser (or system) HTTP proxy to NectoProxy so that traffic flows th
 
 **Option A: System-wide proxy (recommended for quick testing)**
 
-Configure your operating system's network proxy settings to use `127.0.0.1` on port `8888` for both HTTP and HTTPS traffic.
+Configure your operating system's network proxy settings to use `localhost` on port `8888` for both HTTP and HTTPS traffic.
 
-- **macOS**: System Settings > Network > Wi-Fi > Details > Proxies > Enable Web Proxy (HTTP) and Secure Web Proxy (HTTPS), set server to `127.0.0.1` and port to `8888`.
-- **Windows**: Settings > Network & Internet > Proxy > Manual proxy setup > Use a proxy server > Address `127.0.0.1`, Port `8888`.
-- **Linux**: Network Settings > Network Proxy > Manual > HTTP/HTTPS Proxy `127.0.0.1:8888`.
+- **macOS**: System Settings > Network > Wi-Fi > Details > Proxies > Enable Web Proxy (HTTP) and Secure Web Proxy (HTTPS), set server to `localhost` and port to `8888`.
+- **Windows**: Settings > Network & Internet > Proxy > Manual proxy setup > Use a proxy server > Address `localhost`, Port `8888`.
+- **Linux**: Network Settings > Network Proxy > Manual > HTTP/HTTPS Proxy `localhost:8888`.
 
 **Option B: Browser-only proxy extension**
 
@@ -63,11 +63,11 @@ Use a browser extension like [FoxyProxy](https://getfoxyproxy.org/) or [Proxy Sw
 
 Set the proxy to:
 - **Protocol**: HTTP
-- **Server**: `127.0.0.1`
+- **Server**: `localhost`
 - **Port**: `8888`
 
 ::: warning HTTPS Proxy Setting
-Make sure you configure **both** HTTP and HTTPS proxy settings to point to `127.0.0.1:8888`. NectoProxy handles HTTPS interception via the HTTP CONNECT method, so the HTTPS proxy address is the same as the HTTP proxy address.
+Make sure you configure **both** HTTP and HTTPS proxy settings to point to `localhost:8888`. NectoProxy handles HTTPS interception via the HTTP CONNECT method, so the HTTPS proxy address is the same as the HTTP proxy address.
 :::
 
 ## Step 4: Install the CA Certificate
@@ -101,7 +101,7 @@ sudo security add-trusted-cert -d -r trustRoot \
 
 With the proxy configured and the CA certificate installed, start browsing. Every HTTP and HTTPS request will appear in the NectoProxy Web UI in real time.
 
-Open the Web UI at [http://127.0.0.1:8889](http://127.0.0.1:8889) and you will see:
+Open the Web UI at [http://localhost:8889](http://localhost:8889) and you will see:
 
 1. **Traffic List** -- A live-updating list of all intercepted requests showing method, URL, status code, size, and timing.
 2. **Request Details** -- Click any request to inspect its full headers, body (with syntax highlighting), timing breakdown, and TLS information.
@@ -110,7 +110,7 @@ Open the Web UI at [http://127.0.0.1:8889](http://127.0.0.1:8889) and you will s
 ::: details What If I Don't See Any Traffic?
 If requests are not appearing in the Web UI:
 
-1. **Verify proxy settings** -- Confirm your browser is actually routing through `127.0.0.1:8888`. Visit `http://httpbin.org/ip` and check if requests appear.
+1. **Verify proxy settings** -- Confirm your browser is actually routing through `localhost:8888`. Visit `http://httpbin.org/ip` and check if requests appear.
 2. **Check NectoProxy is running** -- Ensure the terminal window running `nectoproxy start` is still active.
 3. **Firewall issues** -- Some firewalls or security software may block local proxy connections. Temporarily disable them to test.
 4. **HTTPS without certificate** -- If HTTP requests appear but HTTPS do not, you need to install the CA certificate (Step 4).

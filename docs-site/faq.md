@@ -109,13 +109,11 @@ If you configure your **system proxy** settings to point to NectoProxy, then all
 
 ### Can others on my network see my traffic?
 
-By default, NectoProxy binds to `127.0.0.1` (localhost only), which means only your local machine can connect. No one else on your network can access the proxy or the Web UI.
-
-If you start NectoProxy with `--host 0.0.0.0`, anyone on your local network can:
+By default, NectoProxy binds to `0.0.0.0` (all interfaces), which means devices on your local network can connect. Anyone on your local network can:
 - Route their traffic through your proxy
 - View the Web UI and see captured traffic
 
-Only bind to `0.0.0.0` on trusted networks.
+To restrict access to only your local machine, start with `--host 127.0.0.1`. Only use the default on trusted networks.
 
 ### How do I remove the CA certificate?
 
@@ -133,7 +131,7 @@ sudo update-ca-certificates --fresh
 
 ### Can I use NectoProxy on a shared network?
 
-Yes, but keep it bound to `127.0.0.1` (the default). If you need to proxy mobile devices, use `--host 0.0.0.0` only temporarily and on networks you trust.
+Yes, but on shared or untrusted networks, restrict to localhost with `--host 127.0.0.1`.
 
 ---
 
@@ -141,7 +139,7 @@ Yes, but keep it bound to `127.0.0.1` (the default). If you need to proxy mobile
 
 ### Can NectoProxy capture mobile traffic?
 
-Yes. Start NectoProxy with `--host 0.0.0.0`, configure your phone's Wi-Fi proxy settings to point to your computer's IP address and port 8888, and install the CA certificate on the phone. See the [Debugging Mobile Apps](./guides/debugging-mobile) tutorial for detailed instructions.
+Yes. NectoProxy listens on all interfaces by default, so just run `nectoproxy start`, configure your phone's Wi-Fi proxy settings to point to your computer's IP address (shown at startup) and port 8888, and install the CA certificate on the phone. See the [Debugging Mobile Apps](./guides/debugging-mobile) tutorial for detailed instructions.
 
 ### Does NectoProxy support WebSockets?
 
@@ -210,7 +208,7 @@ Disk usage depends on how much traffic you capture. The database starts at a few
 Yes. NectoProxy can run on a headless server. Start it with:
 
 ```bash
-nectoproxy start --host 0.0.0.0 --no-open
+nectoproxy start --no-open
 ```
 
 Access the Web UI from any browser using the server's IP address and UI port (default 8889). Make sure the appropriate ports are open in your server's firewall.

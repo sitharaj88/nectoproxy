@@ -60,24 +60,24 @@ Controls which network interface the proxy binds to.
 
 | Property | Value |
 |----------|-------|
-| **Default** | `127.0.0.1` |
+| **Default** | `0.0.0.0` |
 | **CLI flag** | `--host <host>` |
 
 | Value | Behavior |
 |-------|----------|
+| `0.0.0.0` | Listen on all network interfaces (default). Other devices on the LAN can connect. NectoProxy displays the detected LAN IP address at startup. |
 | `127.0.0.1` | Listen on localhost only. Only the local machine can use the proxy. This is the most secure option. |
-| `0.0.0.0` | Listen on all network interfaces. Other devices on the LAN (phones, tablets, other computers) can connect through the proxy. |
 
 ```bash
-# Bind to localhost only (default, secure)
-nectoproxy start --host 127.0.0.1
+# Default: bind to all interfaces (LAN access enabled)
+nectoproxy start
 
-# Bind to all interfaces (required for mobile debugging)
-nectoproxy start --host 0.0.0.0
+# Bind to localhost only (more secure, no LAN access)
+nectoproxy start --host 127.0.0.1
 ```
 
-::: danger
-Binding to `0.0.0.0` exposes the proxy to your entire local network. Only do this on trusted networks. Anyone on the same network can route traffic through your proxy and see the NectoProxy Web UI.
+::: warning Default Network Exposure
+By default, NectoProxy binds to `0.0.0.0`, which exposes the proxy to your entire local network. If you are on an untrusted network, use `--host 127.0.0.1` to restrict access to the local machine only.
 :::
 
 ## Body and Timeout Limits
@@ -196,7 +196,7 @@ If the breakpoint timeout is too short, you may not have enough time to inspect 
 |---------|---------|----------|---------|:----------------:|
 | Proxy port | `8888` | `-p, --port` | `proxyPort` | Yes |
 | UI port | `8889` | `-u, --ui-port` | `uiPort` | Yes |
-| Host binding | `127.0.0.1` | `--host` | -- | Yes |
+| Host binding | `0.0.0.0` | `--host` | -- | Yes |
 | Max body size | 10 MB | -- | `maxBodySize` | No |
 | Request timeout | 30,000 ms | -- | `requestTimeout` | No |
 | Auto-record | `true` | -- | `recording` | No |
