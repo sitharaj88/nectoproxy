@@ -207,8 +207,7 @@ program
       console.log();
 
       // Display certificate info
-      const caPath = certManager.getCACertificatePath();
-      console.log(chalk.white('  CA Certificate:'), chalk.cyan(caPath));
+      console.log(chalk.white('  CA Certificate:'), chalk.cyan(`http://${displayHost}:${uiPort}/api/certificates/ca`));
       console.log(chalk.dim('  Install the CA certificate to inspect HTTPS traffic.'));
       console.log(chalk.dim(`  Run: ${chalk.white('nectoproxy cert --install')} for instructions.`));
       console.log();

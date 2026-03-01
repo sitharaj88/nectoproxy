@@ -1,6 +1,6 @@
 {
   "name": "nectoproxy",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "description": "A powerful HTTP/HTTPS debugging proxy with Web UI",
   "keywords": ["proxy", "http", "https", "debugging", "mitm", "charles"],
