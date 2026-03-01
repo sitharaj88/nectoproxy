@@ -4,6 +4,8 @@ A powerful HTTP/HTTPS debugging proxy with a modern Web UI. A free, open-source 
 
 **Intercept, inspect, modify, and replay HTTP/HTTPS traffic** with real-time monitoring, traffic rules, breakpoints, and more.
 
+**Documentation:** [https://sitharaj88.github.io/nectoproxy/](https://sitharaj88.github.io/nectoproxy/)
+
 ## Installation
 
 ```bash
