@@ -3,6 +3,7 @@ import { Globe, Copy, Check, Smartphone, QrCode, Shield } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { getSettings, updateSettings, resetSettings, getLocalIPs, type AppSettings, type LocalIPAddress } from '@/services/api';
+import { copyToClipboard } from '@/utils/clipboard';
 import { UpstreamProxyConfig } from './UpstreamProxyConfig';
 import { SSLPassthroughPanel } from './SSLPassthroughPanel';
 
@@ -50,22 +51,10 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   }, [isOpen, setSettings, setLoading, setError]);
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedIP(text);
-      setTimeout(() => setCopiedIP(null), 2000);
-    } catch {
-      // Fallback for older browsers
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopiedIP(text);
-      setTimeout(() => setCopiedIP(null), 2000);
-    }
+  const handleCopyIP = async (text: string) => {
+    await copyToClipboard(text);
+    setCopiedIP(text);
+    setTimeout(() => setCopiedIP(null), 2000);
   };
 
   // Track changes
@@ -336,7 +325,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                             Port: {localSettings.proxyPort}
                           </span>
                           <button
-                            onClick={() => copyToClipboard(`${ip.address}:${localSettings.proxyPort}`)}
+                            onClick={() => handleCopyIP(`${ip.address}:${localSettings.proxyPort}`)}
                             className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
                             title="Copy IP:Port"
                           >

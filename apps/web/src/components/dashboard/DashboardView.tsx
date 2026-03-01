@@ -26,8 +26,8 @@ export function DashboardView() {
   const stats = usePerformanceStats();
 
   return (
-    <div className="h-full overflow-auto p-4 bg-gray-900">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="h-full w-full overflow-auto p-4 bg-gray-900">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-white flex items-center gap-2">

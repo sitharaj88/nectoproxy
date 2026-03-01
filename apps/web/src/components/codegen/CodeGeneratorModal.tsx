@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { X, Copy, Check, Code2 } from 'lucide-react';
 import { languages, type GeneratorInput } from './generators';
 import type { TrafficEntry } from '@nectoproxy/shared';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface CodeGeneratorModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export function CodeGeneratorModal({
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(generated.code);
+      await copyToClipboard(generated.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -65,7 +66,7 @@ export function CodeGeneratorModal({
         </div>
 
         {/* Request Info */}
-        <div className="px-4 py-2 bg-gray-900/50 border-b border-gray-700">
+        <div className="px-4 py-2 bg-gray-700 border-b border-gray-700">
           <div className="flex items-center gap-2 text-sm">
             <span className="font-mono text-blue-400">{entry.method}</span>
             <span className="text-gray-300 truncate">{entry.url}</span>
@@ -116,13 +117,13 @@ export function CodeGeneratorModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700 bg-gray-900/30">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700 bg-gray-700">
           <span className="text-sm text-gray-400">
             Language: <span className="text-gray-300">{generated.language}</span>
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium transition-colors"
+            className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
           >
             Close
           </button>

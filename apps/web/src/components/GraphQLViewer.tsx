@@ -77,7 +77,7 @@ function CollapsibleSection({ title, defaultOpen = false, children, badge }: Col
     <div className="border border-gray-700 rounded-md overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 w-full px-3 py-2 bg-gray-800 hover:bg-gray-750 text-sm font-medium text-gray-300 transition-colors"
+        className="flex items-center gap-2 w-full px-3 py-2 bg-gray-800 hover:bg-gray-700 text-sm font-medium text-gray-300 transition-colors"
       >
         {isOpen ? (
           <ChevronDown className="w-4 h-4 text-gray-500" />

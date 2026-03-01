@@ -15,7 +15,7 @@ export function CodeGeneratorButton({ entry, requestBody }: CodeGeneratorButtonP
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 px-2 py-1 rounded text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+        className="flex items-center gap-1.5 px-2 py-1 rounded text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors"
         title="Generate code from this request"
         aria-label="Generate code"
       >

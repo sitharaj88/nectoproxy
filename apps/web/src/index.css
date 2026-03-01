@@ -44,6 +44,14 @@
   background-color: rgba(249, 250, 251, 0.5) !important;
 }
 
+.light .bg-gray-900\/50 {
+  background-color: rgba(243, 244, 246, 0.5) !important;
+}
+
+.light .bg-gray-900\/30 {
+  background-color: rgba(243, 244, 246, 0.3) !important;
+}
+
 .light .hover\:bg-gray-800:hover {
   background-color: #f3f4f6 !important;
 }

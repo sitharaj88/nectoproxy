@@ -44,7 +44,7 @@ function DropdownMenu({ onExport, onImport, onSnapshot }: { onExport: () => void
         <MoreVertical className="w-4 h-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-gray-750 border border-gray-600 rounded-lg shadow-xl z-50 py-1 overflow-hidden">
+        <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1 overflow-hidden">
           <button
             onClick={() => { onExport(); setOpen(false); }}
             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 transition-colors"

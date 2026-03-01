@@ -8,6 +8,7 @@ import { css } from '@codemirror/lang-css';
 import { EditorView } from '@codemirror/view';
 import { Copy, Check, WrapText, Code2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface CodeViewerProps {
   content: string;
@@ -154,7 +155,7 @@ export function CodeViewer({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(displayContent);
+      await copyToClipboard(displayContent);
       setCopied(true);
       toast.success('Copied to clipboard');
       setTimeout(() => setCopied(false), 2000);

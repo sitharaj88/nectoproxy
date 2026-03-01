@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TrafficEntry } from '@nectoproxy/shared';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface TrafficContextMenuProps {
   entry: TrafficEntry;
@@ -30,7 +31,7 @@ export function TrafficContextMenu({
   onFilterByHost,
 }: TrafficContextMenuProps) {
   const copyUrl = () => {
-    navigator.clipboard.writeText(entry.url);
+    copyToClipboard(entry.url);
     toast.success('URL copied to clipboard');
   };
 
@@ -44,7 +45,7 @@ export function TrafficContextMenu({
       curl += ` \\\n  ${headers}`;
     }
 
-    navigator.clipboard.writeText(curl);
+    copyToClipboard(curl);
     toast.success('Copied as cURL');
   };
 
@@ -58,7 +59,7 @@ export function TrafficContextMenu({
     }
 
     const code = `fetch('${entry.url}', ${JSON.stringify(options, null, 2)})`;
-    navigator.clipboard.writeText(code);
+    copyToClipboard(code);
     toast.success('Copied as fetch');
   };
 

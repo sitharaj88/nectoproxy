@@ -328,7 +328,7 @@ export function BreakpointEditor({ breakpoint, onSave, onClose }: BreakpointEdit
                   {conditions.map((condition, index) => (
                     <div
                       key={index}
-                      className="p-3 bg-gray-750 border border-gray-600 rounded-md space-y-2"
+                      className="p-3 bg-gray-700 border border-gray-600 rounded-md space-y-2"
                     >
                       {/* Separator label between conditions */}
                       {index > 0 && (

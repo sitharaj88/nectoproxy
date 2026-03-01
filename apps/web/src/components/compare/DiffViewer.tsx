@@ -326,7 +326,7 @@ function OverviewTab({
 
       {/* Properties table */}
       <div className="bg-gray-800 rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[140px_1fr_1fr] text-xs font-medium text-gray-400 px-4 py-2 bg-gray-750 border-b border-gray-700">
+        <div className="grid grid-cols-[140px_1fr_1fr] text-xs font-medium text-gray-400 px-4 py-2 bg-gray-700 border-b border-gray-700">
           <div>Property</div>
           <div>Request A</div>
           <div>Request B</div>

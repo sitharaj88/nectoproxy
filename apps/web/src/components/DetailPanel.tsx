@@ -11,6 +11,7 @@ import { isGraphQLRequest, parseGraphQLRequest } from '@/utils/graphql';
 import { isGRPCRequest, parseGRPCRequest } from '@/utils/grpc';
 import { AnnotationsPanel } from './AnnotationsPanel';
 import { CodeViewer } from './CodeViewer';
+import { copyToClipboard } from '@/utils/clipboard';
 
 type Tab = 'headers' | 'request' | 'response' | 'timing' | 'security' | 'messages' | 'annotations';
 
@@ -54,7 +55,7 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
+    await copyToClipboard(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
