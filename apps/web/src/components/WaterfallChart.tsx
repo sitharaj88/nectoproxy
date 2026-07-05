@@ -1,6 +1,8 @@
 import { useMemo, useRef, useEffect } from 'react';
+import { BarChart3 } from 'lucide-react';
 import type { TrafficEntry } from '@nectoproxy/shared';
 import { useActiveEntries, useTrafficStore } from '@/stores/trafficStore';
+import { EmptyState } from './ui/EmptyState';
 
 interface WaterfallChartProps {
   maxEntries?: number;
@@ -44,9 +46,11 @@ export function WaterfallChart({ maxEntries = 100 }: WaterfallChartProps) {
 
   if (!chartData) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        No traffic to display
-      </div>
+      <EmptyState
+        icon={BarChart3}
+        title="Nothing to chart yet"
+        description="The waterfall view will populate once requests start flowing through the proxy."
+      />
     );
   }
 

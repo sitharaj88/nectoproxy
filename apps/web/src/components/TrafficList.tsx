@@ -5,7 +5,8 @@ import { useCompareStore } from '@/stores/compareStore';
 import { useRulesStore } from '@/stores/rulesStore';
 import { TrafficContextMenu } from './TrafficContextMenu';
 import type { TrafficEntry, Rule } from '@nectoproxy/shared';
-import { Loader2, Square, CheckSquare, ArrowLeftRight, X, Gauge } from 'lucide-react';
+import { Loader2, Square, CheckSquare, ArrowLeftRight, X, Gauge, Network } from 'lucide-react';
+import { EmptyState } from './ui/EmptyState';
 import { isGraphQLRequest, parseGraphQLRequest } from '@/utils/graphql';
 import { isGRPCRequest } from '@/utils/grpc';
 
@@ -270,14 +271,21 @@ export function TrafficList({ searchInputRef: _searchInputRef, onOpenCompare }: 
 
   if (entries.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500">
-        <div className="text-center">
-          <p className="text-lg">No requests captured yet</p>
-          <p className="text-sm mt-2">
-            Configure your browser or application to use the proxy
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        icon={Network}
+        title="Waiting for traffic"
+        description={
+          <div className="space-y-2">
+            <p>
+              Set your system or browser HTTP proxy to <code className="px-1 py-0.5 rounded bg-gray-800 text-gray-300">localhost:8888</code>,
+              then make a request.
+            </p>
+            <p>
+              For HTTPS, install the CA certificate via the download button in the header.
+            </p>
+          </div>
+        }
+      />
     );
   }
 
@@ -321,15 +329,18 @@ export function TrafficList({ searchInputRef: _searchInputRef, onOpenCompare }: 
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-gray-800 border-b border-gray-700 text-xs text-gray-400 font-medium">
-        {isCompareMode && <div className="w-6" />}
-        <div className="w-12 text-center">Status</div>
-        <div className="w-24">Method</div>
-        <div className="w-12">Proto</div>
-        <div className="w-48">Host</div>
-        <div className="flex-1">Path</div>
-        <div className="w-20 text-right">Time</div>
-        <div className="w-20 text-right">Size</div>
+      <div
+        role="row"
+        className="flex items-center gap-2 px-3 py-2 bg-gray-800 border-b border-gray-700 text-xs text-gray-400 font-medium"
+      >
+        {isCompareMode && <div className="w-6" aria-hidden="true" />}
+        <div className="w-12 text-center" title="HTTP response status code">Status</div>
+        <div className="w-24" title="HTTP request method (GET, POST, …) and protocol badge (GraphQL/gRPC)">Method</div>
+        <div className="w-12" title="URL protocol (http, https, ws, wss)">Proto</div>
+        <div className="w-48" title="Request host">Host</div>
+        <div className="flex-1" title="Path and query — for GraphQL, also the operation name">Path</div>
+        <div className="w-20 text-right" title="Request duration">Time</div>
+        <div className="w-20 text-right" title="Response body size">Size</div>
       </div>
 
       {/* Virtualized list */}

@@ -5,14 +5,19 @@
  * When the Web UI is accessed via a LAN IP (e.g. http://192.168.x.x:8889),
  * the clipboard API is unavailable. This utility falls back to the legacy
  * execCommand('copy') approach using a temporary textarea.
+ *
+ * Returns true on success, false on failure.
  */
-export async function copyToClipboard(text: string): Promise<void> {
+export async function copyToClipboard(text: string): Promise<boolean> {
   if (navigator.clipboard && window.isSecureContext) {
-    await navigator.clipboard.writeText(text);
-    return;
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to legacy path
+    }
   }
 
-  // Fallback for non-secure contexts
   const textarea = document.createElement('textarea');
   textarea.value = text;
   textarea.style.position = 'fixed';
@@ -22,9 +27,13 @@ export async function copyToClipboard(text: string): Promise<void> {
   textarea.focus();
   textarea.select();
 
+  let ok = false;
   try {
-    document.execCommand('copy');
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
   } finally {
     document.body.removeChild(textarea);
   }
+  return ok;
 }

@@ -1,15 +1,41 @@
-import { useEffect, useState } from 'react';
-import { Globe, Copy, Check, Smartphone, QrCode, Shield } from 'lucide-react';
+import { useEffect, useState, useId, useCallback } from 'react';
+import { Globe, Smartphone, QrCode, Shield, Loader2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { getSettings, updateSettings, resetSettings, getLocalIPs, type AppSettings, type LocalIPAddress } from '@/services/api';
-import { copyToClipboard } from '@/utils/clipboard';
 import { UpstreamProxyConfig } from './UpstreamProxyConfig';
 import { SSLPassthroughPanel } from './SSLPassthroughPanel';
+import { Modal } from './ui/Modal';
+import { SettingsSkeleton } from './ui/Skeleton';
+import { CopyButton } from './ui/CopyButton';
+import { toast } from './ui/Toaster';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+const PORT_MIN = 1;
+const PORT_MAX = 65535;
+const TIMEOUT_MIN = 0;
+const BODY_SIZE_MIN = 1024;
+
+function clampInt(value: string, min: number, max?: number): number | null {
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed)) return null;
+  if (parsed < min) return min;
+  if (max !== undefined && parsed > max) return max;
+  return parsed;
+}
+
+function validateSettings(s: AppSettings): string | null {
+  if (s.proxyPort < PORT_MIN || s.proxyPort > PORT_MAX) return `Proxy Port must be between ${PORT_MIN} and ${PORT_MAX}.`;
+  if (s.uiPort < PORT_MIN || s.uiPort > PORT_MAX) return `UI Port must be between ${PORT_MIN} and ${PORT_MAX}.`;
+  if (s.proxyPort === s.uiPort) return 'Proxy Port and UI Port must differ.';
+  if (s.requestTimeout < 0) return 'Request Timeout cannot be negative.';
+  if (s.maxBodySize < BODY_SIZE_MIN) return `Max Body Size must be at least ${BODY_SIZE_MIN} bytes.`;
+  if (s.breakpointTimeout < 0) return 'Breakpoint Timeout cannot be negative.';
+  return null;
 }
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
@@ -18,13 +44,20 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setLocalError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [showUpstreamProxy, setShowUpstreamProxy] = useState(false);
   const [showSSLPassthrough, setShowSSLPassthrough] = useState(false);
   const [localIPs, setLocalIPs] = useState<LocalIPAddress[]>([]);
-  const [copiedIP, setCopiedIP] = useState<string | null>(null);
   const [selectedQRIP, setSelectedQRIP] = useState<string>('');
 
-  // Load settings and IPs on mount
+  const proxyPortId = useId();
+  const uiPortId = useId();
+  const timeoutId = useId();
+  const bodySizeId = useId();
+  const breakpointTimeoutId = useId();
+  const themeId = useId();
+  const qrSelectId = useId();
+
   useEffect(() => {
     async function loadSettings() {
       setLoading(true);
@@ -51,17 +84,11 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   }, [isOpen, setSettings, setLoading, setError]);
 
-  const handleCopyIP = async (text: string) => {
-    await copyToClipboard(text);
-    setCopiedIP(text);
-    setTimeout(() => setCopiedIP(null), 2000);
-  };
-
-  // Track changes
   useEffect(() => {
     if (settings && localSettings) {
       const changed = JSON.stringify(settings) !== JSON.stringify(localSettings);
       setHasChanges(changed);
+      setValidationError(changed ? validateSettings(localSettings) : null);
     }
   }, [settings, localSettings]);
 
@@ -73,6 +100,11 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   const handleSave = async () => {
     if (!localSettings || !hasChanges) return;
+    const invalid = validateSettings(localSettings);
+    if (invalid) {
+      setValidationError(invalid);
+      return;
+    }
 
     setSaving(true);
     setLocalError(null);
@@ -80,6 +112,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       const response = await updateSettings(localSettings);
       setSettings(response.settings);
       setHasChanges(false);
+      toast.success('Settings saved');
     } catch (err) {
       setLocalError((err as Error).message);
     } finally {
@@ -88,6 +121,9 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   };
 
   const handleReset = async () => {
+    if (hasChanges && !window.confirm('Reset all settings to defaults? Unsaved changes will be lost.')) {
+      return;
+    }
     setSaving(true);
     setLocalError(null);
     try {
@@ -95,6 +131,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       setSettings(response.settings);
       setLocalSettings(response.settings);
       setHasChanges(false);
+      toast.success('Settings reset to defaults');
     } catch (err) {
       setLocalError((err as Error).message);
     } finally {
@@ -102,134 +139,195 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   };
 
-  if (!isOpen) return null;
+  const guardClose = useCallback(() => {
+    if (hasChanges) {
+      return window.confirm('Close without saving? Unsaved changes will be discarded.');
+    }
+    return true;
+  }, [hasChanges]);
+
+  const footer = (
+    <div className="flex justify-between items-center">
+      <button
+        type="button"
+        onClick={handleReset}
+        disabled={saving}
+        className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md disabled:opacity-50"
+      >
+        Reset to Defaults
+      </button>
+      <div className="flex items-center gap-2">
+        {hasChanges && !validationError && (
+          <span className="text-xs text-gray-500" aria-live="polite">Unsaved changes</span>
+        )}
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!hasChanges || saving || !!validationError}
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          {saving ? 'Saving…' : 'Save Changes'}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-[600px] max-h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white">Settings</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Error message */}
-        {error && (
-          <div className="p-3 bg-red-900/30 text-red-400 text-sm">
-            {error}
-            <button
-              onClick={() => setLocalError(null)}
-              className="ml-2 text-red-300 hover:text-red-100"
-            >
-              Dismiss
-            </button>
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={hasChanges ? 'Settings *' : 'Settings'}
+        size="md"
+        maxHeight="85vh"
+        beforeClose={guardClose}
+        footer={footer}
+      >
+        {(error || validationError) && (
+          <div
+            className="mx-4 mt-4 p-3 rounded bg-red-900/30 border border-red-700/40 text-red-400 text-sm"
+            role="alert"
+          >
+            {validationError ?? error}
+            {error && !validationError && (
+              <button
+                type="button"
+                onClick={() => setLocalError(null)}
+                className="ml-2 underline text-red-300 hover:text-red-100"
+              >
+                Dismiss
+              </button>
+            )}
           </div>
         )}
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-4 space-y-6">
+        <div className="p-4 space-y-6">
           {localSettings ? (
             <>
               {/* Proxy Settings */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Proxy Settings</h3>
+              <section aria-labelledby="proxy-heading">
+                <h3 id="proxy-heading" className="text-sm font-medium text-gray-300 mb-3">
+                  Proxy Settings
+                </h3>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">Proxy Port</label>
-                      <p className="text-xs text-gray-500">Port for the proxy server</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <label htmlFor={proxyPortId} className="text-sm text-gray-300">
+                        Proxy Port
+                      </label>
+                      <p className="text-xs text-gray-500">Port for the proxy server (1–65535)</p>
                     </div>
                     <input
+                      id={proxyPortId}
                       type="number"
+                      min={PORT_MIN}
+                      max={PORT_MAX}
                       value={localSettings.proxyPort}
-                      onChange={(e) => handleChange('proxyPort', parseInt(e.target.value, 10))}
+                      onChange={(e) => handleChange('proxyPort', clampInt(e.target.value, PORT_MIN, PORT_MAX) ?? localSettings.proxyPort)}
                       className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">UI Port</label>
-                      <p className="text-xs text-gray-500">Port for the Web UI</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <label htmlFor={uiPortId} className="text-sm text-gray-300">UI Port</label>
+                      <p className="text-xs text-gray-500">Port for the Web UI (1–65535)</p>
                     </div>
                     <input
+                      id={uiPortId}
                       type="number"
+                      min={PORT_MIN}
+                      max={PORT_MAX}
                       value={localSettings.uiPort}
-                      onChange={(e) => handleChange('uiPort', parseInt(e.target.value, 10))}
+                      onChange={(e) => handleChange('uiPort', clampInt(e.target.value, PORT_MIN, PORT_MAX) ?? localSettings.uiPort)}
                       className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">Request Timeout</label>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <label htmlFor={timeoutId} className="text-sm text-gray-300">Request Timeout</label>
                       <p className="text-xs text-gray-500">Max time to wait for response (ms)</p>
                     </div>
                     <input
+                      id={timeoutId}
                       type="number"
+                      min={TIMEOUT_MIN}
                       value={localSettings.requestTimeout}
-                      onChange={(e) => handleChange('requestTimeout', parseInt(e.target.value, 10))}
+                      onChange={(e) => handleChange('requestTimeout', clampInt(e.target.value, TIMEOUT_MIN) ?? localSettings.requestTimeout)}
                       className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">Max Body Size</label>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <label htmlFor={bodySizeId} className="text-sm text-gray-300">Max Body Size</label>
                       <p className="text-xs text-gray-500">Maximum request/response body size (bytes)</p>
                     </div>
                     <input
+                      id={bodySizeId}
                       type="number"
+                      min={BODY_SIZE_MIN}
                       value={localSettings.maxBodySize}
-                      onChange={(e) => handleChange('maxBodySize', parseInt(e.target.value, 10))}
+                      onChange={(e) => handleChange('maxBodySize', clampInt(e.target.value, BODY_SIZE_MIN) ?? localSettings.maxBodySize)}
                       className="w-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">Upstream Proxy</label>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <span className="text-sm text-gray-300">Upstream Proxy</span>
                       <p className="text-xs text-gray-500">Route traffic through another proxy server</p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => setShowUpstreamProxy(true)}
                       className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-white text-sm"
                     >
-                      <Globe className="w-4 h-4" />
+                      <Globe className="w-4 h-4" aria-hidden="true" />
                       Configure
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">SSL Passthrough</label>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <span className="text-sm text-gray-300">SSL Passthrough</span>
                       <p className="text-xs text-gray-500">Bypass MITM for specified domains</p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => setShowSSLPassthrough(true)}
                       className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-white text-sm"
                     >
-                      <Shield className="w-4 h-4" />
+                      <Shield className="w-4 h-4" aria-hidden="true" />
                       Configure
                     </button>
                   </div>
                 </div>
-              </div>
+              </section>
 
               {/* Behavior Settings */}
-              <div className="border-t border-gray-700 pt-6">
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Behavior</h3>
+              <section aria-labelledby="behavior-heading" className="border-t border-gray-700 pt-6">
+                <h3 id="behavior-heading" className="text-sm font-medium text-gray-300 mb-3">Behavior</h3>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">Auto-record Traffic</label>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <span className="text-sm text-gray-300">Auto-record Traffic</span>
                       <p className="text-xs text-gray-500">Automatically record requests on startup</p>
                     </div>
                     <button
+                      type="button"
+                      role="switch"
+                      aria-checked={localSettings.recording}
+                      aria-label="Auto-record traffic"
                       onClick={() => handleChange('recording', !localSettings.recording)}
                       className={`w-10 h-6 rounded-full transition-colors ${
                         localSettings.recording ? 'bg-blue-600' : 'bg-gray-600'
@@ -243,12 +341,16 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">Auto-open Browser</label>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <span className="text-sm text-gray-300">Auto-open Browser</span>
                       <p className="text-xs text-gray-500">Open Web UI in browser on startup</p>
                     </div>
                     <button
+                      type="button"
+                      role="switch"
+                      aria-checked={localSettings.autoOpenBrowser}
+                      aria-label="Auto-open browser"
                       onClick={() => handleChange('autoOpenBrowser', !localSettings.autoOpenBrowser)}
                       className={`w-10 h-6 rounded-full transition-colors ${
                         localSettings.autoOpenBrowser ? 'bg-blue-600' : 'bg-gray-600'
@@ -262,31 +364,34 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">Breakpoint Timeout</label>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <label htmlFor={breakpointTimeoutId} className="text-sm text-gray-300">Breakpoint Timeout</label>
                       <p className="text-xs text-gray-500">Auto-continue breakpoints after (ms)</p>
                     </div>
                     <input
+                      id={breakpointTimeoutId}
                       type="number"
+                      min={0}
                       value={localSettings.breakpointTimeout}
-                      onChange={(e) => handleChange('breakpointTimeout', parseInt(e.target.value, 10))}
+                      onChange={(e) => handleChange('breakpointTimeout', clampInt(e.target.value, 0) ?? localSettings.breakpointTimeout)}
                       className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
                     />
                   </div>
                 </div>
-              </div>
+              </section>
 
               {/* Appearance Settings */}
-              <div className="border-t border-gray-700 pt-6">
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Appearance</h3>
+              <section aria-labelledby="appearance-heading" className="border-t border-gray-700 pt-6">
+                <h3 id="appearance-heading" className="text-sm font-medium text-gray-300 mb-3">Appearance</h3>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-sm text-gray-300">Theme</label>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <label htmlFor={themeId} className="text-sm text-gray-300">Theme</label>
                       <p className="text-xs text-gray-500">Color theme for the UI</p>
                     </div>
                     <select
+                      id={themeId}
                       value={localSettings.theme}
                       onChange={(e) => handleChange('theme', e.target.value as AppSettings['theme'])}
                       className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
@@ -297,12 +402,12 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </select>
                   </div>
                 </div>
-              </div>
+              </section>
 
               {/* Mobile Configuration */}
-              <div className="border-t border-gray-700 pt-6">
-                <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-                  <Smartphone className="w-4 h-4" />
+              <section aria-labelledby="mobile-heading" className="border-t border-gray-700 pt-6">
+                <h3 id="mobile-heading" className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                  <Smartphone className="w-4 h-4" aria-hidden="true" />
                   Mobile Configuration
                 </h3>
                 <p className="text-xs text-gray-500 mb-4">
@@ -311,33 +416,24 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 </p>
                 <div className="space-y-2">
                   {localIPs.length > 0 ? (
-                    localIPs.map((ip) => (
-                      <div
-                        key={`${ip.name}-${ip.address}`}
-                        className="flex items-center justify-between p-3 bg-gray-900 rounded-md"
-                      >
-                        <div>
-                          <span className="text-sm text-white font-mono">{ip.address}</span>
-                          <span className="text-xs text-gray-500 ml-2">({ip.name})</span>
+                    localIPs.map((ip) => {
+                      const value = `${ip.address}:${localSettings.proxyPort}`;
+                      return (
+                        <div
+                          key={`${ip.name}-${ip.address}`}
+                          className="flex items-center justify-between p-3 bg-gray-900 rounded-md"
+                        >
+                          <div>
+                            <span className="text-sm text-white font-mono">{ip.address}</span>
+                            <span className="text-xs text-gray-500 ml-2">({ip.name})</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">Port: {localSettings.proxyPort}</span>
+                            <CopyButton text={value} label="Address" />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">
-                            Port: {localSettings.proxyPort}
-                          </span>
-                          <button
-                            onClick={() => handleCopyIP(`${ip.address}:${localSettings.proxyPort}`)}
-                            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                            title="Copy IP:Port"
-                          >
-                            {copiedIP === `${ip.address}:${localSettings.proxyPort}` ? (
-                              <Check className="w-4 h-4 text-green-400" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="text-sm text-gray-500 p-3 bg-gray-900 rounded-md">
                       No network interfaces found
@@ -349,11 +445,10 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                   Don't forget to install the CA certificate for HTTPS traffic.
                 </p>
 
-                {/* QR Code for Certificate Download */}
                 {localIPs.length > 0 && selectedQRIP && (
                   <div className="mt-5 p-4 bg-gray-900 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
-                      <QrCode className="w-4 h-4" />
+                      <QrCode className="w-4 h-4" aria-hidden="true" />
                       Certificate QR Code
                     </h4>
                     <p className="text-xs text-gray-500 mb-3">
@@ -361,17 +456,21 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </p>
 
                     {localIPs.length > 1 && (
-                      <select
-                        value={selectedQRIP}
-                        onChange={(e) => setSelectedQRIP(e.target.value)}
-                        className="w-full mb-3 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
-                      >
-                        {localIPs.map((ip) => (
-                          <option key={`${ip.name}-${ip.address}`} value={ip.address}>
-                            {ip.address} ({ip.name})
-                          </option>
-                        ))}
-                      </select>
+                      <>
+                        <label htmlFor={qrSelectId} className="sr-only">Network interface for QR code</label>
+                        <select
+                          id={qrSelectId}
+                          value={selectedQRIP}
+                          onChange={(e) => setSelectedQRIP(e.target.value)}
+                          className="w-full mb-3 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                        >
+                          {localIPs.map((ip) => (
+                            <option key={`${ip.name}-${ip.address}`} value={ip.address}>
+                              {ip.address} ({ip.name})
+                            </option>
+                          ))}
+                        </select>
+                      </>
                     )}
 
                     <div className="flex flex-col items-center gap-3">
@@ -388,53 +487,23 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                     </div>
                   </div>
                 )}
-              </div>
+              </section>
             </>
           ) : (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-600 border-t-blue-500" />
-            </div>
+            <SettingsSkeleton />
           )}
         </div>
+      </Modal>
 
-        {/* Footer */}
-        <div className="flex justify-between p-4 border-t border-gray-700">
-          <button
-            onClick={handleReset}
-            disabled={saving}
-            className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md disabled:opacity-50"
-          >
-            Reset to Defaults
-          </button>
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={!hasChanges || saving}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Upstream Proxy Configuration Modal */}
       <UpstreamProxyConfig
         isOpen={showUpstreamProxy}
         onClose={() => setShowUpstreamProxy(false)}
       />
 
-      {/* SSL Passthrough Configuration Modal */}
       <SSLPassthroughPanel
         isOpen={showSSLPassthrough}
         onClose={() => setShowSSLPassthrough(false)}
       />
-    </div>
+    </>
   );
 }

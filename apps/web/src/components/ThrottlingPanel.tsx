@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Modal } from './ui/Modal';
 import {
   X,
   Plus,
@@ -291,24 +292,32 @@ export function ThrottlingPanel({ isOpen, onClose }: ThrottlingPanelProps) {
     ? customBytesPerSecond
     : selectedPreset.bytesPerSecond;
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-          <h3 className="text-lg font-medium flex items-center gap-2">
-            <Activity className="w-5 h-5 text-orange-400" />
-            Per-URL Throttling
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1 rounded hover:bg-gray-700 text-gray-400"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const footer = (
+    <div className="flex items-center justify-between text-sm text-gray-500">
+      <div className="flex items-center gap-2">
+        <Activity className="w-4 h-4" aria-hidden="true" />
+        Per-URL throttling applies different speeds to specific URLs
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-gray-300"
+      >
+        Close
+      </button>
+    </div>
+  );
 
-        {/* Active Rules Count Banner */}
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Per-URL Throttling"
+      titleIcon={<Activity className="w-5 h-5 text-orange-400" aria-hidden="true" />}
+      size="lg"
+      footer={footer}
+    >
+      <>
         {throttleRules.filter((r) => r.enabled).length > 0 && (
           <div className="mx-4 mt-4 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center gap-3">
             <Activity className="w-5 h-5 text-orange-400 flex-shrink-0" />
@@ -683,21 +692,7 @@ export function ThrottlingPanel({ isOpen, onClose }: ThrottlingPanelProps) {
             </button>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4" />
-            Per-URL throttling applies different speeds to specific URLs
-          </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-gray-300"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
+      </>
+    </Modal>
   );
 }

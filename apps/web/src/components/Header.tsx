@@ -80,9 +80,12 @@ export function Header({ isConnected, onToggleRules, showRules, onToggleBreakpoi
         <div className="flex-1" />
 
         {/* Capture Controls */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Capture controls">
           <button
+            type="button"
             onClick={() => setPaused(!isPaused)}
+            aria-pressed={isPaused}
+            aria-label={isPaused ? 'Resume capture' : 'Pause capture'}
             className={`p-1.5 rounded transition-colors ${
               isPaused
                 ? 'bg-green-600 hover:bg-green-700 text-white'
@@ -90,53 +93,67 @@ export function Header({ isConnected, onToggleRules, showRules, onToggleBreakpoi
             }`}
             title={isPaused ? 'Resume capture' : 'Pause capture'}
           >
-            {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+            {isPaused ? <Play className="w-3.5 h-3.5" aria-hidden="true" /> : <Pause className="w-3.5 h-3.5" aria-hidden="true" />}
           </button>
 
           <button
+            type="button"
             onClick={clearEntries}
+            aria-label="Clear all requests"
             className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
-            title="Clear all requests"
+            title="Clear all requests (⌘⇧X)"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
 
         <div className="w-px h-5 bg-gray-600 shrink-0" />
 
         {/* Feature Toggles */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Panels">
           <button
+            type="button"
             onClick={onToggleRules}
+            aria-pressed={!!showRules}
+            aria-label={showRules ? 'Hide rules panel' : 'Show rules panel'}
             className={`p-1.5 rounded transition-colors ${
               showRules
                 ? 'bg-blue-600 hover:bg-blue-700 text-white'
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
             }`}
-            title={showRules ? 'Hide Rules' : 'Show Rules'}
+            title={`${showRules ? 'Hide' : 'Show'} Rules (⌘⇧R)`}
           >
-            <ListFilter className="w-3.5 h-3.5" />
+            <ListFilter className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
 
           <button
+            type="button"
             onClick={onToggleBreakpoints}
+            aria-pressed={!!showBreakpoints}
+            aria-label={showBreakpoints ? 'Hide breakpoints panel' : 'Show breakpoints panel'}
             className={`relative p-1.5 rounded transition-colors ${
               showBreakpoints
                 ? 'bg-red-600 hover:bg-red-700 text-white'
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
             }`}
-            title={showBreakpoints ? 'Hide Breakpoints' : 'Show Breakpoints'}
+            title={`${showBreakpoints ? 'Hide' : 'Show'} Breakpoints (⌘⇧B)`}
           >
-            <Octagon className="w-3.5 h-3.5" />
+            <Octagon className="w-3.5 h-3.5" aria-hidden="true" />
             {pendingHits.length > 0 && (
-              <span className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 text-[10px] font-bold text-white bg-red-500 rounded-full">
+              <span
+                className="absolute -top-1 -right-1 flex items-center justify-center w-3.5 h-3.5 text-[10px] font-bold text-white bg-red-500 rounded-full"
+                aria-label={`${pendingHits.length} pending breakpoint hits`}
+              >
                 {pendingHits.length}
               </span>
             )}
           </button>
 
           <button
+            type="button"
             onClick={onToggleNetwork}
+            aria-pressed={!!showNetwork}
+            aria-label={hasActiveNetworkProfile ? 'Network throttling active' : 'Network conditioning'}
             className={`relative p-1.5 rounded transition-colors ${
               hasActiveNetworkProfile
                 ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
@@ -146,25 +163,26 @@ export function Header({ isConnected, onToggleRules, showRules, onToggleBreakpoi
             }`}
             title={hasActiveNetworkProfile ? 'Network Throttling Active' : 'Network Conditioning'}
           >
-            <Gauge className="w-3.5 h-3.5" />
+            <Gauge className="w-3.5 h-3.5" aria-hidden="true" />
             {hasActiveNetworkProfile && (
-              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-yellow-400" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-yellow-400" aria-hidden="true" />
             )}
           </button>
 
           <button
+            type="button"
             onClick={onToggleThrottling}
+            aria-label={hasActiveThrottleRules ? 'Per-URL throttling active' : 'Per-URL throttling'}
             className={`relative p-1.5 rounded transition-colors ${
               hasActiveThrottleRules
                 ? 'bg-orange-600 hover:bg-orange-700 text-white'
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
             }`}
             title={hasActiveThrottleRules ? 'Per-URL Throttling Active' : 'Per-URL Throttling'}
-            aria-label="Per-URL Throttling"
           >
-            <Activity className="w-3.5 h-3.5" />
+            <Activity className="w-3.5 h-3.5" aria-hidden="true" />
             {hasActiveThrottleRules && (
-              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-orange-400" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-orange-400" aria-hidden="true" />
             )}
           </button>
         </div>
@@ -187,42 +205,48 @@ export function Header({ isConnected, onToggleRules, showRules, onToggleBreakpoi
 
         {/* View Mode Toggle */}
         {onViewModeChange && (
-          <div className="flex items-center bg-gray-700 rounded shrink-0">
+          <div className="flex items-center bg-gray-700 rounded shrink-0" role="group" aria-label="View mode">
             <button
+              type="button"
               onClick={() => onViewModeChange('list')}
+              aria-pressed={viewMode === 'list'}
               className={`p-1.5 rounded-l transition-colors ${
                 viewMode === 'list'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-400 hover:text-gray-200'
               }`}
-              title="List View"
-              aria-label="List View"
+              title="List view"
+              aria-label="List view"
             >
-              <List className="w-3.5 h-3.5" />
+              <List className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={() => onViewModeChange('waterfall')}
+              aria-pressed={viewMode === 'waterfall'}
               className={`p-1.5 transition-colors ${
                 viewMode === 'waterfall'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-400 hover:text-gray-200'
               }`}
-              title="Waterfall View"
-              aria-label="Waterfall View"
+              title="Waterfall view"
+              aria-label="Waterfall view"
             >
-              <BarChart3 className="w-3.5 h-3.5" />
+              <BarChart3 className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={() => onViewModeChange('dashboard')}
+              aria-pressed={viewMode === 'dashboard'}
               className={`p-1.5 rounded-r transition-colors ${
                 viewMode === 'dashboard'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-400 hover:text-gray-200'
               }`}
-              title="Performance Dashboard"
-              aria-label="Performance Dashboard"
+              title="Performance dashboard"
+              aria-label="Performance dashboard"
             >
-              <PieChart className="w-3.5 h-3.5" />
+              <PieChart className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -232,53 +256,58 @@ export function Header({ isConnected, onToggleRules, showRules, onToggleBreakpoi
           {/* Command Palette */}
           {onOpenCommandPalette && (
             <button
+              type="button"
               onClick={onOpenCommandPalette}
               className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
-              title="Command Palette (⌘K)"
+              title="Command palette (⌘K)"
               aria-label="Open command palette"
             >
-              <Command className="w-3.5 h-3.5" />
+              <Command className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           )}
 
           {/* Global Search */}
           {onOpenGlobalSearch && (
             <button
+              type="button"
               onClick={onOpenGlobalSearch}
               className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
-              title="Search across all sessions (⇧F)"
-              aria-label="Global search"
+              title="Search across all sessions (⌘⇧F)"
+              aria-label="Open global search"
             >
-              <Search className="w-3.5 h-3.5" />
+              <Search className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           )}
 
           <button
+            type="button"
             onClick={handleDownloadCert}
             className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
-            title="Download CA Certificate"
-            aria-label="Download CA Certificate"
+            title="Download CA certificate"
+            aria-label="Download CA certificate"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
 
           {/* Theme Toggle */}
           <button
+            type="button"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           >
-            {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            {theme === 'dark' ? <Sun className="w-3.5 h-3.5" aria-hidden="true" /> : <Moon className="w-3.5 h-3.5" aria-hidden="true" />}
           </button>
 
           <button
+            type="button"
             onClick={onToggleSettings}
             className="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
-            title="Settings"
-            aria-label="Settings"
+            title="Settings (⌘,)"
+            aria-label="Open settings"
           >
-            <Settings className="w-3.5 h-3.5" />
+            <Settings className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>

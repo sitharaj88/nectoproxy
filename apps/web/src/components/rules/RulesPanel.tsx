@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, ListFilter } from 'lucide-react';
 import { useRulesStore } from '@/stores/rulesStore';
 import { getRules } from '@/services/api';
 import { subscribeToRules } from '@/services/socket';
 import { RulesList } from './RulesList';
 import { RuleEditor } from './RuleEditor';
+import { EmptyState } from '../ui/EmptyState';
 
 interface RulesPanelProps {
   onClose: () => void;
@@ -24,13 +25,11 @@ export function RulesPanel({ onClose }: RulesPanelProps) {
   } = useRulesStore();
 
   useEffect(() => {
-    // Load initial rules
     setLoading(true);
     getRules()
       .then(({ rules }) => setRules(rules))
       .finally(() => setLoading(false));
 
-    // Subscribe to rule events
     const unsubscribe = subscribeToRules(
       (rule) => addRule(rule),
       (rule) => updateRule(rule),
@@ -47,51 +46,74 @@ export function RulesPanel({ onClose }: RulesPanelProps) {
     setEditorOpen(true);
   };
 
+  const hasRules = rules.length > 0;
+
   return (
-    <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col">
-      {/* Header */}
+    <aside
+      className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col"
+      aria-label="Rules panel"
+    >
       <div className="flex items-center justify-between p-3 border-b border-gray-700">
         <h2 className="font-medium">Rules</h2>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleNewRule}
             className="p-1 hover:bg-gray-700 rounded"
-            title="Add Rule"
+            title="Add rule"
+            aria-label="Add rule"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-5 h-5" aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={onClose}
             className="p-1 hover:bg-gray-700 rounded"
-            title="Close"
+            title="Close rules panel"
+            aria-label="Close rules panel"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      {/* Rules List */}
-      <div className="flex-1 overflow-auto">
-        <RulesList rules={rules} />
-      </div>
-
-      {/* Empty State */}
-      {rules.length === 0 && (
-        <div className="flex-1 flex items-center justify-center p-4 text-gray-500 text-center">
-          <div>
-            <p>No rules configured</p>
+      {hasRules ? (
+        <div className="flex-1 overflow-auto">
+          <RulesList rules={rules} />
+        </div>
+      ) : (
+        <EmptyState
+          icon={ListFilter}
+          title="No rules yet"
+          description={
+            <div className="space-y-2 text-left">
+              <p>
+                Rules let you intercept matching requests and apply actions like
+                mock, block, redirect, modify headers/body, or throttle.
+              </p>
+              <ul className="text-xs text-gray-500 list-disc list-inside space-y-0.5">
+                <li>Mock — return a custom response</li>
+                <li>Block — reject the request</li>
+                <li>Map Local / Remote — redirect</li>
+                <li>Modify — rewrite headers or body</li>
+                <li>Delay / Throttle — slow it down</li>
+              </ul>
+            </div>
+          }
+          action={
             <button
+              type="button"
               onClick={handleNewRule}
-              className="mt-2 text-blue-400 hover:text-blue-300"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md"
             >
+              <Plus className="w-4 h-4" aria-hidden="true" />
               Create your first rule
             </button>
-          </div>
-        </div>
+          }
+        />
       )}
 
-      {/* Rule Editor Modal */}
       {isEditorOpen && <RuleEditor />}
-    </div>
+    </aside>
   );
 }

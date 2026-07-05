@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, Copy, Check, Play } from 'lucide-react';
+import { X, Play, MousePointerClick } from 'lucide-react';
 import { useSelectedEntry, useTrafficStore } from '@/stores/trafficStore';
 import { WebSocketMessagesViewer } from './WebSocketMessagesViewer';
 import { ReplayEditor } from './ReplayEditor';
@@ -11,7 +11,8 @@ import { isGraphQLRequest, parseGraphQLRequest } from '@/utils/graphql';
 import { isGRPCRequest, parseGRPCRequest } from '@/utils/grpc';
 import { AnnotationsPanel } from './AnnotationsPanel';
 import { CodeViewer } from './CodeViewer';
-import { copyToClipboard } from '@/utils/clipboard';
+import { CopyButton } from './ui/CopyButton';
+import { EmptyState } from './ui/EmptyState';
 
 type Tab = 'headers' | 'request' | 'response' | 'timing' | 'security' | 'messages' | 'annotations';
 
@@ -51,26 +52,6 @@ function getContentType(headers: Record<string, string | string[]> | null): stri
   return Array.isArray(ct) ? ct[0] : ct;
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await copyToClipboard(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="p-1 rounded hover:bg-gray-700 text-gray-400 transition-colors"
-      title="Copy to clipboard"
-    >
-      {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-    </button>
-  );
-}
-
 export function DetailPanel() {
   const entry = useSelectedEntry();
   const setSelected = useTrafficStore((state) => state.setSelected);
@@ -79,9 +60,11 @@ export function DetailPanel() {
 
   if (!entry) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        <p>Select a request to view details</p>
-      </div>
+      <EmptyState
+        icon={MousePointerClick}
+        title="No request selected"
+        description="Pick a row from the traffic list to inspect its headers, body, timing, and security details."
+      />
     );
   }
 
@@ -119,6 +102,7 @@ export function DetailPanel() {
           </div>
         </div>
         <div className="flex items-center gap-1 ml-2">
+          <CopyButton text={entry.url} label="URL" />
           {!isWebSocket && (
             <>
               <CodeGeneratorButton
@@ -126,28 +110,37 @@ export function DetailPanel() {
                 requestBody={bodyToString(entry.requestBody)}
               />
               <button
+                type="button"
                 onClick={() => setShowReplay(true)}
-                className="p-1 rounded hover:bg-gray-700 text-gray-400 transition-colors"
+                aria-label="Replay request"
                 title="Replay Request"
+                className="p-1 rounded hover:bg-gray-700 text-gray-400 transition-colors"
               >
-                <Play className="w-4 h-4" />
+                <Play className="w-4 h-4" aria-hidden="true" />
               </button>
             </>
           )}
           <button
+            type="button"
             onClick={() => setSelected(null)}
+            aria-label="Close detail panel"
             className="p-1 rounded hover:bg-gray-700 text-gray-400"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-700">
+      <div className="flex border-b border-gray-700" role="tablist" aria-label="Request details">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`tabpanel-${tab.id}`}
+            id={`tab-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.id
@@ -182,7 +175,7 @@ export function DetailPanel() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-300">Request Headers</h3>
-                <CopyButton text={formatHeaders(entry.requestHeaders)} />
+                <CopyButton text={formatHeaders(entry.requestHeaders)} label="Request headers" />
               </div>
               <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap break-all overflow-hidden">
                 {formatHeaders(entry.requestHeaders)}
@@ -193,7 +186,7 @@ export function DetailPanel() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-medium text-gray-300">Response Headers</h3>
-                  <CopyButton text={formatHeaders(entry.responseHeaders)} />
+                  <CopyButton text={formatHeaders(entry.responseHeaders)} label="Response headers" />
                 </div>
                 <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap break-all overflow-hidden">
                   {formatHeaders(entry.responseHeaders)}
