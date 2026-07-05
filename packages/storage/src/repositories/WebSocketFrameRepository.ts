@@ -2,6 +2,7 @@ import { eq, desc } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { getDatabase } from '../db/connection.js';
 import { wsFrames } from '../db/schema.js';
+import { encodeBody, decodeBody } from '../db/bodyCodec.js';
 import type { WebSocketFrame } from '@nectoproxy/shared';
 
 export interface WebSocketFrameCreateInput {
@@ -26,7 +27,7 @@ export class WebSocketFrameRepository {
       timestamp: now,
       direction: input.direction,
       opcode: input.opcode,
-      data: input.data,
+      data: encodeBody(input.data),
       isBinary: input.isBinary,
       length: input.length,
     });
@@ -57,7 +58,7 @@ export class WebSocketFrameRepository {
       timestamp: row.timestamp.getTime(),
       direction: row.direction as 'client-to-server' | 'server-to-client',
       opcode: row.opcode,
-      data: row.data,
+      data: decodeBody(row.data),
       isBinary: row.isBinary,
       length: row.length,
     }));
@@ -78,7 +79,7 @@ export class WebSocketFrameRepository {
       timestamp: row.timestamp.getTime(),
       direction: row.direction as 'client-to-server' | 'server-to-client',
       opcode: row.opcode,
-      data: row.data,
+      data: decodeBody(row.data),
       isBinary: row.isBinary,
       length: row.length,
     };

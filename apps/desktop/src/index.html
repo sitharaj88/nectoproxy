@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NectoProxy</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 50% 30%, #1b2735 0%, #090a0f 100%);
+        color: #e6edf3;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .splash {
+        text-align: center;
+        padding: 2rem;
+        max-width: 480px;
+      }
+      .logo {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+      }
+      .logo span {
+        color: #4f9cf9;
+      }
+      .status {
+        margin-top: 1.5rem;
+        font-size: 0.95rem;
+        color: #9aa7b4;
+        min-height: 1.4em;
+      }
+      .spinner {
+        margin: 1.75rem auto 0;
+        width: 34px;
+        height: 34px;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-top-color: #4f9cf9;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+      }
+      .error {
+        margin-top: 1.5rem;
+        color: #ff8080;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        display: none;
+        white-space: pre-wrap;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="splash">
+      <div class="logo">Necto<span>Proxy</span></div>
+      <div class="status" id="status">Starting the proxy engine…</div>
+      <div class="spinner" id="spinner"></div>
+      <div class="error" id="error"></div>
+    </div>
+    <script>
+      // Called from Rust (see `report_error` in src-tauri/src/lib.rs) if the
+      // sidecar fails to start or exits before the UI is ready.
+      window.nectoReportError = function (message) {
+        var status = document.getElementById("status");
+        var spinner = document.getElementById("spinner");
+        var error = document.getElementById("error");
+        if (status) status.textContent = "Could not launch NectoProxy";
+        if (spinner) spinner.style.display = "none";
+        if (error) {
+          error.textContent = message;
+          error.style.display = "block";
+        }
+      };
+    </script>
+  </body>
+</html>

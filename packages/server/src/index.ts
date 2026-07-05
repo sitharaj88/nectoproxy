@@ -4,3 +4,4 @@ export { setProfileChangeCallback as setNetworkProfileChangeCallback } from './r
 export { setUpstreamProxyChangeCallback } from './routes/upstream-proxy.js';
 export { setSSLPassthroughChangeCallback } from './routes/ssl-passthrough.js';
 export { setDnsMappingsChangeCallback } from './routes/dns.js';
+export { setWebSocketSendHandler, type WebSocketSendHandler } from './routes/websocket.js';

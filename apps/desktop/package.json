@@ -1,0 +1,22 @@
+{
+  "name": "@nectoproxy/desktop",
+  "version": "0.1.2",
+  "private": true,
+  "description": "Native desktop shell for NectoProxy (Tauri v2)",
+  "license": "MIT",
+  "author": {
+    "name": "Sitharaj Seenivasan",
+    "url": "https://sitharaj.in"
+  },
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "icons": "tauri icon src-tauri/icons/icon.png",
+    "build": "node -e \"console.log('[@nectoproxy/desktop] Skipping turbo build. The desktop app is built with Rust via: pnpm --filter @nectoproxy/desktop tauri build')\""
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

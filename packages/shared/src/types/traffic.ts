@@ -138,6 +138,14 @@ export interface WebSocketFrame {
   data: Buffer | null;
   isBinary: boolean;
   length: number;
+  injected?: boolean; // true when the frame was manually injected via the send API
+}
+
+// Request body for injecting a WebSocket frame into a live connection
+export interface WebSocketSendRequest {
+  direction: 'to-client' | 'to-server';
+  data: string; // text payload, or base64-encoded bytes when isBinary is true
+  isBinary?: boolean;
 }
 
 export type WebSocketOpcode = 1 | 2 | 8 | 9 | 10;

@@ -16,6 +16,7 @@ export interface WebSocketContext {
   startTime: number;
   clientSocket: net.Socket;
   serverSocket?: WebSocket;
+  clientWebSocket?: WebSocket;
   frameCount: number;
 }
 
@@ -80,6 +81,8 @@ export class WebSocketHandler extends EventEmitter {
     const wss = new WebSocketServer({ noServer: true });
 
     wss.handleUpgrade(req, socket, head, (clientWs: WebSocket) => {
+      ctx.clientWebSocket = clientWs;
+
       this.emit('websocket:open', {
         trafficId,
         id: ctx.id,
@@ -279,6 +282,66 @@ export class WebSocketHandler extends EventEmitter {
       socket.destroy();
       this.cleanup(ctx.id);
     });
+  }
+
+  /**
+   * Inject a frame into a live WebSocket connection.
+   *
+   * @param trafficId  Identifies the connection to inject into.
+   * @param direction  'to-server' writes on the upstream socket (appears as a
+   *                   client-to-server frame); 'to-client' writes on the
+   *                   client-facing socket (appears as a server-to-client frame).
+   * @param data       Payload to send (string for text, Buffer for binary).
+   * @param opcode     WebSocket opcode; defaults to 1 (text) or 2 (binary based on data type).
+   * @returns          true if the frame was written, false if no open connection was found.
+   */
+  sendFrame(
+    trafficId: string,
+    direction: 'to-client' | 'to-server',
+    data: string | Buffer,
+    opcode?: number
+  ): boolean {
+    // The connection map is keyed by internal id, so look up by trafficId.
+    let ctx: WebSocketContext | undefined;
+    for (const c of this.activeConnections.values()) {
+      if (c.trafficId === trafficId) {
+        ctx = c;
+        break;
+      }
+    }
+
+    if (!ctx) {
+      return false;
+    }
+
+    const target = direction === 'to-server' ? ctx.serverSocket : ctx.clientWebSocket;
+    if (!target || target.readyState !== WebSocket.OPEN) {
+      return false;
+    }
+
+    const buffer = typeof data === 'string' ? Buffer.from(data) : data;
+    const isBinary = Buffer.isBuffer(data);
+    const resolvedOpcode = opcode ?? (isBinary ? 2 : 1);
+
+    target.send(buffer, { binary: resolvedOpcode === 2 });
+
+    ctx.frameCount++;
+
+    const frame: WebSocketFrame = {
+      id: uuid(),
+      trafficId,
+      timestamp: Date.now(),
+      direction: direction === 'to-server' ? 'client-to-server' : 'server-to-client',
+      opcode: resolvedOpcode,
+      data: buffer,
+      isBinary: resolvedOpcode === 2,
+      length: buffer.length,
+      injected: true,
+    };
+
+    this.emit('websocket:frame', frame);
+
+    return true;
   }
 
   private cleanup(id: string): void {

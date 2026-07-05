@@ -42,6 +42,10 @@ export interface ProxyContext {
   port: number;
   path: string;
   error?: Error;
+  /** Negotiated TLS protocol version (e.g. "TLSv1.3"), null for plain HTTP. */
+  tlsVersion?: string | null;
+  /** True when the intercepted request arrived over an HTTP/2 session. */
+  http2?: boolean;
 }
 
 const DEFAULT_CONFIG: ProxyServerConfig = {
@@ -547,6 +551,7 @@ h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
         host,
         port
       );
+      ctx.http2 = true;
       // Setup magic host works over the intercepted connection too.
       if (SETUP_HOSTS.has(ctx.host.toLowerCase())) {
         this.handleSetupRequest(ctx);
@@ -586,10 +591,14 @@ h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
   private createContextFromTls(
     clientReq: http.IncomingMessage,
     clientRes: http.ServerResponse,
-    _tlsSocket: tls.TLSSocket,
+    tlsSocket: tls.TLSSocket,
     host: string,
     port: number
   ): ProxyContext {
+    const tlsVersion =
+      tlsSocket && typeof tlsSocket.getProtocol === 'function'
+        ? tlsSocket.getProtocol()
+        : null;
     return {
       id: uuid(),
       startTime: Date.now(),
@@ -601,6 +610,7 @@ h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
       host,
       port,
       path: clientReq.url || '/',
+      tlsVersion,
     };
   }
 
@@ -757,7 +767,18 @@ h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
     });
   }
 
+  private isGrpcRequest(ctx: ProxyContext): boolean {
+    const ct = String(ctx.clientRequest.headers['content-type'] || '').toLowerCase();
+    return ct.startsWith('application/grpc');
+  }
+
   private async forwardHttpsRequest(ctx: ProxyContext, ruleResult?: RuleResult): Promise<void> {
+    // gRPC requires HTTP/2 end-to-end (framing + trailers). When an h2 client
+    // sends gRPC, forward to the origin over HTTP/2 instead of downgrading to h1.
+    if (ctx.http2 && this.isGrpcRequest(ctx) && !this.upstreamProxyAgent) {
+      return this.forwardHttp2Upstream(ctx, ruleResult);
+    }
+
     const resolvedHost = this.resolveDns(ctx.host);
 
     // Use upstream proxy if configured and not bypassed
@@ -803,6 +824,132 @@ h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
         proxyReq.write(ctx.requestBody);
       }
       proxyReq.end();
+    });
+  }
+
+  /**
+   * Strip pseudo-headers (":status" etc.) and connection-specific headers that
+   * are illegal in an HTTP/2 response, so they can be written to an h2 client.
+   */
+  private sanitizeH2ResponseHeaders(
+    headers: Record<string, unknown>
+  ): Record<string, string | string[]> {
+    const illegal = new Set(['connection', 'keep-alive', 'transfer-encoding', 'upgrade', 'proxy-connection']);
+    const out: Record<string, string | string[]> = {};
+    for (const [key, value] of Object.entries(headers)) {
+      if (key.startsWith(':')) continue;
+      if (illegal.has(key.toLowerCase())) continue;
+      if (value === undefined || value === null) continue;
+      out[key] = value as string | string[];
+    }
+    return out;
+  }
+
+  /**
+   * Forward a gRPC / HTTP/2 request to the origin over HTTP/2 and relay the
+   * response — including trailers (where gRPC carries grpc-status) — back to the
+   * h2 client. The body is buffered (unary RPCs); streaming RPCs are captured up
+   * to maxBodySize. On any h2 error the request fails with 502 via handleError.
+   */
+  private async forwardHttp2Upstream(ctx: ProxyContext, _ruleResult?: RuleResult): Promise<void> {
+    const resolvedHost = this.resolveDns(ctx.host);
+    // TLS SNI must not be an IP literal; only set servername for hostnames.
+    const isIpHost = net.isIP(ctx.host) !== 0;
+    const client = http2.connect(`https://${ctx.host}:${ctx.port}`, {
+      host: resolvedHost,
+      ...(isIpHost ? {} : { servername: ctx.host }),
+      rejectUnauthorized: false,
+    });
+
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const done = (err?: Error) => {
+        if (settled) return;
+        settled = true;
+        try { client.close(); } catch { /* ignore */ }
+        if (err) reject(err);
+        else resolve();
+      };
+
+      client.on('error', (err) => done(err));
+
+      const reqHeaders: Record<string, string | string[]> = {
+        ...this.filterHeaders(ctx.clientRequest.headers), // strips pseudo + hop-by-hop
+        ':method': ctx.clientRequest.method || 'POST',
+        ':path': ctx.path,
+        ':authority': ctx.host,
+        ':scheme': 'https',
+      };
+      // Host is redundant with :authority in h2 and can be rejected.
+      delete (reqHeaders as Record<string, unknown>).host;
+
+      const h2req = client.request(reqHeaders);
+
+      let status = 200;
+      let respHeaders: Record<string, unknown> = {};
+      let trailerHeaders: Record<string, unknown> = {};
+      const chunks: Buffer[] = [];
+      let collected = 0;
+      let truncated = false;
+
+      h2req.on('response', (headers) => {
+        respHeaders = headers as Record<string, unknown>;
+        status = Number(headers[':status']) || 200;
+      });
+
+      h2req.on('trailers', (trailers) => {
+        trailerHeaders = trailers as Record<string, unknown>;
+      });
+
+      h2req.on('data', (chunk: Buffer) => {
+        if (collected < this.config.maxBodySize) {
+          const remaining = this.config.maxBodySize - collected;
+          chunks.push(chunk.length <= remaining ? chunk : chunk.subarray(0, remaining));
+          if (chunk.length > remaining) truncated = true;
+        } else {
+          truncated = true;
+        }
+        collected += chunk.length;
+      });
+
+      h2req.on('end', () => {
+        const body = chunks.length ? Buffer.concat(chunks) : null;
+        ctx.responseBody = body;
+
+        const res = ctx.clientResponse as unknown as http2.Http2ServerResponse;
+        const outHeaders = this.sanitizeH2ResponseHeaders(respHeaders);
+        try {
+          res.writeHead(status, outHeaders);
+          if (body) res.write(body);
+          const outTrailers = this.sanitizeH2ResponseHeaders(trailerHeaders);
+          if (Object.keys(outTrailers).length > 0) {
+            res.addTrailers(outTrailers as Record<string, string>);
+          }
+          res.end();
+        } catch (err) {
+          done(err as Error);
+          return;
+        }
+
+        if (truncated) {
+          this.emit('bodyTruncated', { size: collected, maxSize: this.config.maxBodySize });
+        }
+        // Synthesize a server response shape for capture (headers + trailers).
+        ctx.serverResponse = {
+          statusCode: status,
+          statusMessage: '',
+          headers: { ...outHeaders, ...this.sanitizeH2ResponseHeaders(trailerHeaders) },
+        } as unknown as http.IncomingMessage;
+        this.emitTrafficUpdate(ctx);
+        done();
+      });
+
+      h2req.on('error', (err) => done(err));
+
+      if (ctx.requestBody && ctx.requestBody.length > 0) {
+        h2req.write(ctx.requestBody);
+      }
+      h2req.end();
     });
   }
 
@@ -1275,7 +1422,7 @@ h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
       responseBodySize: null,
       duration: null,
       remoteAddress: ctx.clientRequest.socket?.remoteAddress || null,
-      tlsVersion: null,
+      tlsVersion: ctx.tlsVersion ?? null,
       error: null,
       isComplete: false,
       isMocked,

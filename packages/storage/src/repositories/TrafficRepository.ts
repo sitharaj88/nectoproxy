@@ -1,12 +1,33 @@
 import { eq, and, like, gte, lte, inArray, desc, asc, sql, or, count as drizzleCount } from 'drizzle-orm';
 import { getDatabase } from '../db/connection.js';
 import { traffic, sessions } from '../db/schema.js';
+import { encodeBody, decodeBody } from '../db/bodyCodec.js';
 import type { TrafficEntry, TrafficQuery, TrafficStats } from '@nectoproxy/shared';
+
+const DEFAULT_MAX_TRAFFIC = 50000;
+// How many rows over the cap we tolerate before pruning, so we don't run a
+// DELETE on every insert once the cap is reached.
+const DEFAULT_PRUNE_BUFFER = 512;
+
+function readMaxTraffic(): number {
+  const parsed = parseInt(process.env.NECTO_MAX_TRAFFIC ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_TRAFFIC;
+}
+
+function readPruneBuffer(): number {
+  const parsed = parseInt(process.env.NECTO_TRAFFIC_PRUNE_BUFFER ?? '', 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_PRUNE_BUFFER;
+}
 
 export class TrafficRepository {
   private get db() {
     return getDatabase();
   }
+
+  // In-memory per-session row counts used to decide when to prune, avoiding a
+  // COUNT(*) on every insert. Lazily seeded from the DB the first time a
+  // session is seen by this instance.
+  private sessionCounts = new Map<string, number>();
 
   async create(entry: TrafficEntry): Promise<void> {
     await this.db.insert(traffic).values({
@@ -19,12 +40,12 @@ export class TrafficRepository {
       host: entry.host,
       path: entry.path,
       requestHeaders: entry.requestHeaders,
-      requestBody: entry.requestBody,
+      requestBody: encodeBody(entry.requestBody),
       requestBodySize: entry.requestBodySize,
       status: entry.status,
       statusText: entry.statusText,
       responseHeaders: entry.responseHeaders,
-      responseBody: entry.responseBody,
+      responseBody: encodeBody(entry.responseBody),
       responseBodySize: entry.responseBodySize,
       duration: entry.duration,
       remoteAddress: entry.remoteAddress,
@@ -35,6 +56,44 @@ export class TrafficRepository {
       isBreakpointed: entry.isBreakpointed,
       isTruncated: entry.isTruncated,
     });
+
+    await this.enforceRetention(entry.sessionId);
+  }
+
+  /**
+   * Enforce the per-session row cap by deleting the oldest rows beyond the cap.
+   * Uses an in-memory counter so the actual DELETE runs only occasionally
+   * (once the count drifts a buffer past the cap), not on every insert.
+   */
+  private async enforceRetention(sessionId: string): Promise<void> {
+    const cap = readMaxTraffic();
+
+    let known = this.sessionCounts.get(sessionId);
+    if (known === undefined) {
+      // Seed from the DB (includes rows inserted before this process started).
+      const rows = await this.db
+        .select({ c: drizzleCount() })
+        .from(traffic)
+        .where(eq(traffic.sessionId, sessionId));
+      known = rows[0]?.c ?? 0;
+    } else {
+      known += 1;
+    }
+    this.sessionCounts.set(sessionId, known);
+
+    if (known <= cap + readPruneBuffer()) {
+      return;
+    }
+
+    // Delete everything except the newest `cap` rows for this session.
+    await this.db.delete(traffic).where(
+      and(
+        eq(traffic.sessionId, sessionId),
+        sql`${traffic.id} NOT IN (SELECT id FROM traffic WHERE session_id = ${sessionId} ORDER BY timestamp DESC LIMIT ${cap})`
+      )
+    );
+
+    this.sessionCounts.set(sessionId, cap);
   }
 
   async update(id: string, updates: Partial<TrafficEntry>): Promise<void> {
@@ -43,7 +102,7 @@ export class TrafficRepository {
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.statusText !== undefined) updateData.statusText = updates.statusText;
     if (updates.responseHeaders !== undefined) updateData.responseHeaders = updates.responseHeaders;
-    if (updates.responseBody !== undefined) updateData.responseBody = updates.responseBody;
+    if (updates.responseBody !== undefined) updateData.responseBody = encodeBody(updates.responseBody);
     if (updates.responseBodySize !== undefined) updateData.responseBodySize = updates.responseBodySize;
     if (updates.duration !== undefined) updateData.duration = updates.duration;
     if (updates.error !== undefined) updateData.error = updates.error;
@@ -177,6 +236,7 @@ export class TrafficRepository {
 
   async deleteBySession(sessionId: string): Promise<void> {
     await this.db.delete(traffic).where(eq(traffic.sessionId, sessionId));
+    this.sessionCounts.delete(sessionId);
   }
 
   async delete(id: string): Promise<boolean> {
@@ -291,12 +351,12 @@ export class TrafficRepository {
       host: row.host,
       path: row.path,
       requestHeaders: row.requestHeaders || {},
-      requestBody: row.requestBody,
+      requestBody: decodeBody(row.requestBody),
       requestBodySize: row.requestBodySize,
       status: row.status,
       statusText: row.statusText,
       responseHeaders: row.responseHeaders,
-      responseBody: row.responseBody,
+      responseBody: decodeBody(row.responseBody),
       responseBodySize: row.responseBodySize,
       duration: row.duration,
       remoteAddress: row.remoteAddress,

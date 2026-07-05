@@ -89,6 +89,7 @@ export interface WebSocketFrameEvent {
   data: string | null; // base64 encoded for JSON transport
   isBinary: boolean;
   length: number;
+  injected?: boolean; // true when the frame was manually injected via the send API
 }
 
 export interface WebSocketCloseEvent {

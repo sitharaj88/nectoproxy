@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { networkInterfaces } from 'node:os';
 import { CertificateManager } from '@nectoproxy/certs';
 import { ProxyServer } from '@nectoproxy/core';
-import { createApp, setNetworkProfileChangeCallback, setUpstreamProxyChangeCallback, setSSLPassthroughChangeCallback, setDnsMappingsChangeCallback } from '@nectoproxy/server';
+import { createApp, setNetworkProfileChangeCallback, setUpstreamProxyChangeCallback, setSSLPassthroughChangeCallback, setDnsMappingsChangeCallback, setWebSocketSendHandler } from '@nectoproxy/server';
 import { SessionRepository, TrafficRepository, SSLPassthroughRepository, DnsMappingRepository, getDatabase } from '@nectoproxy/storage';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -156,8 +156,14 @@ program
           data: frame.data ? frame.data.toString('base64') : null,
           isBinary: frame.isBinary,
           length: frame.length,
+          injected: frame.injected,
         });
       });
+
+      // Allow the server API to inject frames into live WebSocket connections
+      setWebSocketSendHandler((trafficId, direction, data, isBinary) =>
+        webSocketHandler.sendFrame(trafficId, direction, data, isBinary ? 2 : 1)
+      );
 
       webSocketHandler.on('websocket:close', (data) => {
         appInstance.socketServer.emitWebSocketClose(data);

@@ -1,0 +1,21 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capability for the NectoProxy desktop main window.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "nectoproxy",
+          "cmd": "nectoproxy",
+          "args": true
+        }
+      ]
+    },
+    "shell:allow-kill"
+  ]
+}

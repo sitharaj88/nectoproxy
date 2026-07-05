@@ -290,6 +290,7 @@ export interface WebSocketFrameResponse {
   data: string | null; // base64 encoded
   isBinary: boolean;
   length: number;
+  injected?: boolean;
 }
 
 export async function getWebSocketFrames(
@@ -308,6 +309,22 @@ export async function getWebSocketFrameCount(
   trafficId: string
 ): Promise<{ count: number }> {
   return fetchJson(`/websocket/${trafficId}/count`);
+}
+
+export interface WebSocketSendInput {
+  direction: 'to-client' | 'to-server';
+  data: string; // text payload, or base64-encoded bytes when isBinary is true
+  isBinary?: boolean;
+}
+
+export async function sendWebSocketFrame(
+  trafficId: string,
+  input: WebSocketSendInput
+): Promise<{ success: boolean }> {
+  return fetchJson(`/websocket/${trafficId}/send`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
 }
 
 // HAR Export/Import API

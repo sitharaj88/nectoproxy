@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
-import { getWebSocketFrames, type WebSocketFrameResponse } from '../services/api';
+import {
+  getWebSocketFrames,
+  sendWebSocketFrame,
+  type WebSocketFrameResponse,
+} from '../services/api';
 import { subscribeToWebSocket } from '../services/socket';
 import type { WebSocketFrameEvent } from '@nectoproxy/shared';
 
@@ -23,6 +27,31 @@ export function WebSocketMessagesViewer({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFrame, setSelectedFrame] = useState<WebSocketFrameResponse | null>(null);
+
+  // Composer state (frame injection)
+  const [composerText, setComposerText] = useState('');
+  const [composerDirection, setComposerDirection] = useState<'to-client' | 'to-server'>('to-server');
+  const [composerBinary, setComposerBinary] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  async function handleSend() {
+    if (!composerText.trim() || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      await sendWebSocketFrame(trafficId, {
+        direction: composerDirection,
+        data: composerText,
+        isBinary: composerBinary,
+      });
+      setComposerText('');
+    } catch (err) {
+      setSendError((err as Error).message);
+    } finally {
+      setSending(false);
+    }
+  }
 
   useEffect(() => {
     async function loadFrames() {
@@ -57,6 +86,7 @@ export function WebSocketMessagesViewer({
               data: event.data,
               isBinary: event.isBinary,
               length: event.length,
+              injected: event.injected,
             },
           ]);
         }
@@ -124,10 +154,76 @@ export function WebSocketMessagesViewer({
     );
   }
 
+  const composer = (
+    <div className="border-t border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="inline-flex rounded overflow-hidden border border-gray-300 dark:border-gray-600 text-xs">
+          <button
+            type="button"
+            onClick={() => setComposerDirection('to-server')}
+            className={`px-2 py-1 ${
+              composerDirection === 'to-server'
+                ? 'bg-blue-500 text-white'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            ↑ To Server
+          </button>
+          <button
+            type="button"
+            onClick={() => setComposerDirection('to-client')}
+            className={`px-2 py-1 ${
+              composerDirection === 'to-client'
+                ? 'bg-blue-500 text-white'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            ↓ To Client
+          </button>
+        </div>
+        <label className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
+          <input
+            type="checkbox"
+            checked={composerBinary}
+            onChange={(e) => setComposerBinary(e.target.checked)}
+          />
+          Binary (base64)
+        </label>
+        {sendError && (
+          <span className="text-xs text-red-500 truncate">{sendError}</span>
+        )}
+      </div>
+      <div className="flex items-end gap-2">
+        <textarea
+          value={composerText}
+          onChange={(e) => setComposerText(e.target.value)}
+          placeholder={
+            composerBinary
+              ? 'Base64-encoded bytes to send…'
+              : 'Message to send…'
+          }
+          rows={2}
+          className="flex-1 resize-y rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-xs font-mono text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={sending || !composerText.trim()}
+          className="px-3 py-2 rounded bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {sending ? 'Sending…' : 'Send'}
+        </button>
+      </div>
+    </div>
+  );
+
   if (frames.length === 0) {
     return (
-      <div className="p-4 text-gray-500 text-sm text-center">
-        No WebSocket messages captured yet.
+      <div className="flex flex-col h-full">
+        <div className="flex-1 flex items-center justify-center p-4 text-gray-500 text-sm text-center">
+          No WebSocket messages captured yet.
+        </div>
+        {composer}
       </div>
     );
   }
@@ -167,7 +263,7 @@ export function WebSocketMessagesViewer({
                     : ''
                 }`}
               >
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 whitespace-nowrap">
                   {frame.direction === 'client-to-server' ? (
                     <span
                       className="text-green-600 dark:text-green-400"
@@ -181,6 +277,14 @@ export function WebSocketMessagesViewer({
                       title="Server to Client"
                     >
                       ↓
+                    </span>
+                  )}
+                  {frame.injected && (
+                    <span
+                      className="ml-1 inline-flex items-center px-1 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                      title="Manually injected frame"
+                    >
+                      sent
                     </span>
                   )}
                 </td>
@@ -270,6 +374,9 @@ export function WebSocketMessagesViewer({
           received
         </span>
       </div>
+
+      {/* Frame Composer */}
+      {composer}
     </div>
   );
 }
