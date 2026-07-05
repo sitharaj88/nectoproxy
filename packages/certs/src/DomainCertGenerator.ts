@@ -57,6 +57,12 @@ export class DomainCertGenerator {
     // Set issuer from CA certificate
     cert.setIssuer(this.caCert.subject.attributes);
 
+    // The Authority Key Identifier must reference the CA's Subject Key
+    // Identifier so strict verifiers (OpenSSL, curl --cacert, Node
+    // NODE_EXTRA_CA_CERTS) can link leaf → CA. Passing `keyIdentifier: true`
+    // would (incorrectly) derive it from the leaf's own key.
+    const caSubjectKeyId = this.caCert.generateSubjectKeyIdentifier().getBytes();
+
     // Set extensions
     const altNames = this.generateAltNames(domain);
     cert.setExtensions([
@@ -81,7 +87,7 @@ export class DomainCertGenerator {
       },
       {
         name: 'authorityKeyIdentifier',
-        keyIdentifier: true,
+        keyIdentifier: caSubjectKeyId,
         authorityCertIssuer: true,
         serialNumber: this.caCert.serialNumber,
       },
