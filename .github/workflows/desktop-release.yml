@@ -92,7 +92,7 @@ jobs:
         run: pnpm --filter @nectoproxy/desktop tauri icon apps/desktop/src-tauri/icons/icon.png
 
       - name: Build desktop app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Uncomment and provide these secrets to enable the updater signing:
