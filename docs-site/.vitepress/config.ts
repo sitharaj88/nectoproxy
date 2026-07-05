@@ -73,6 +73,7 @@ export default defineConfig({
             { text: 'nectoproxy start', link: '/cli/start' },
             { text: 'nectoproxy cert', link: '/cli/cert' },
             { text: 'nectoproxy sessions', link: '/cli/sessions' },
+            { text: 'nectoproxy mcp', link: '/cli/mcp' },
           ]
         }
       ],
@@ -92,9 +93,18 @@ export default defineConfig({
           text: 'Protocol Support',
           items: [
             { text: 'WebSocket Support', link: '/features/websocket-support' },
+            { text: 'HTTP/2 & gRPC', link: '/features/http2-grpc' },
             { text: 'SSL Passthrough', link: '/features/ssl-passthrough' },
             { text: 'DNS Mapping', link: '/features/dns-mapping' },
             { text: 'Upstream Proxy', link: '/features/upstream-proxy' },
+          ]
+        },
+        {
+          text: 'Security & Integrations',
+          items: [
+            { text: 'Security & Session Token', link: '/features/security' },
+            { text: 'Mobile Device Capture', link: '/features/mobile-devices' },
+            { text: 'MCP / AI Integration', link: '/features/mcp' },
           ]
         },
         {

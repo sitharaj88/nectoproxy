@@ -190,4 +190,108 @@ describe('TrafficRepository body compression + retention', () => {
       expect(remaining.length).toBe(10);
     });
   });
+
+  describe('searchGlobal body search (compressed blobs)', () => {
+    it('finds a substring that appears only in a large compressed request body', async () => {
+      // Large enough to be gzip-compressed on disk; the needle exists nowhere
+      // in url/host/path/headers, only inside the body bytes.
+      const needle = 'SECRET_NEEDLE_IN_REQUEST';
+      const requestBody = Buffer.from('a'.repeat(50_000) + needle + 'b'.repeat(50_000));
+      const entry = makeEntry(sessionId, {
+        url: 'http://example.com/upload',
+        path: '/upload',
+        requestBody,
+        requestBodySize: requestBody.length,
+      });
+      await repo.create(entry);
+
+      // Sanity: it is actually stored compressed, not as plaintext.
+      const stored = encodeBody(requestBody)!;
+      expect(stored[0]).toBe(0x01);
+
+      // Not requesting body -> should NOT match.
+      const withoutBody = await repo.searchGlobal({ query: needle, searchIn: ['url'] });
+      expect(withoutBody.total).toBe(0);
+      expect(withoutBody.entries).toHaveLength(0);
+
+      // Requesting body -> should match.
+      const withBody = await repo.searchGlobal({ query: needle, searchIn: ['url', 'body'] });
+      expect(withBody.total).toBe(1);
+      expect(withBody.entries).toHaveLength(1);
+      expect(withBody.entries[0].id).toBe(entry.id);
+    });
+
+    it('finds a substring that appears only in a large compressed response body', async () => {
+      const needle = 'SECRET_NEEDLE_IN_RESPONSE';
+      const responseBody = Buffer.from('x'.repeat(40_000) + needle + 'y'.repeat(40_000));
+      const entry = makeEntry(sessionId, {
+        url: 'http://example.com/download',
+        path: '/download',
+        responseBody,
+        responseBodySize: responseBody.length,
+      });
+      await repo.create(entry);
+
+      const result = await repo.searchGlobal({ query: needle, searchIn: ['body'] });
+      expect(result.total).toBe(1);
+      expect(result.entries[0].id).toBe(entry.id);
+      expect(result.sessionNames[sessionId]).toBe('test-session');
+    });
+
+    it('body substring search is case-insensitive (mirrors SQL LIKE)', async () => {
+      const responseBody = Buffer.from('z'.repeat(30_000) + 'MixedCaseToken' + 'z'.repeat(30_000));
+      const entry = makeEntry(sessionId, {
+        url: 'http://example.com/case',
+        path: '/case',
+        responseBody,
+        responseBodySize: responseBody.length,
+      });
+      await repo.create(entry);
+
+      const lower = await repo.searchGlobal({ query: 'mixedcasetoken', searchIn: ['body'] });
+      expect(lower.total).toBe(1);
+      expect(lower.entries[0].id).toBe(entry.id);
+
+      const upper = await repo.searchGlobal({ query: 'MIXEDCASETOKEN', searchIn: ['body'] });
+      expect(upper.total).toBe(1);
+      expect(upper.entries[0].id).toBe(entry.id);
+    });
+
+    it('body search still honors method/status filters and url matches', async () => {
+      const needle = 'FILTERED_NEEDLE';
+      const body = Buffer.from('q'.repeat(30_000) + needle + 'q'.repeat(30_000));
+      const getEntry = makeEntry(sessionId, {
+        method: 'GET',
+        status: 200,
+        url: 'http://example.com/get',
+        path: '/get',
+        responseBody: body,
+        responseBodySize: body.length,
+      });
+      const postEntry = makeEntry(sessionId, {
+        method: 'POST',
+        status: 500,
+        url: 'http://example.com/post',
+        path: '/post',
+        responseBody: body,
+        responseBodySize: body.length,
+      });
+      await repo.create(getEntry);
+      await repo.create(postEntry);
+
+      // Both bodies contain the needle, but restrict to POST only.
+      const onlyPost = await repo.searchGlobal({
+        query: needle,
+        searchIn: ['body'],
+        methods: ['POST'],
+      });
+      expect(onlyPost.total).toBe(1);
+      expect(onlyPost.entries[0].id).toBe(postEntry.id);
+
+      // A url-only match (needle absent from url) combined with body search
+      // still returns via the body path for both rows.
+      const both = await repo.searchGlobal({ query: needle, searchIn: ['url', 'body'] });
+      expect(both.total).toBe(2);
+    });
+  });
 });

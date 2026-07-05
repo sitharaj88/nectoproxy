@@ -150,7 +150,7 @@ export class WebSocketHandler extends EventEmitter {
         });
 
         if (clientWs.readyState === WebSocket.OPEN) {
-          clientWs.close(code, reason);
+          this.closeSocket(clientWs, code, reason);
         }
 
         this.cleanup(ctx.id);
@@ -159,7 +159,7 @@ export class WebSocketHandler extends EventEmitter {
       // Handle client close
       clientWs.on('close', (code: number, reason: Buffer) => {
         if (serverWs.readyState === WebSocket.OPEN) {
-          serverWs.close(code, reason);
+          this.closeSocket(serverWs, code, reason);
         }
       });
 
@@ -342,6 +342,23 @@ export class WebSocketHandler extends EventEmitter {
     this.emit('websocket:frame', frame);
 
     return true;
+  }
+
+  /**
+   * Forward a close to the peer socket with a valid code. Codes 1005/1006/1015
+   * are reserved and must never be sent; a clean close (no code) is used instead.
+   * Without this, a peer that closes with no status (1005) throws in `ws.close`.
+   */
+  private closeSocket(ws: WebSocket, code: number, reason: Buffer): void {
+    try {
+      if (!code || code === 1005 || code === 1006 || code === 1015 || code < 1000 || code > 4999) {
+        ws.close();
+      } else {
+        ws.close(code, reason);
+      }
+    } catch {
+      ws.terminate();
+    }
   }
 
   private cleanup(id: string): void {

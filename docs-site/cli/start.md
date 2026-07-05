@@ -14,16 +14,18 @@ nectoproxy start [options]
 |---|---|---|---|
 | `--port <port>` | `-p` | `8888` | Port for the HTTP/HTTPS proxy server |
 | `--ui-port <port>` | `-u` | `8889` | Port for the Web UI dashboard |
-| `--host <host>` | | `0.0.0.0` | Host address to bind to (all interfaces) |
+| `--host <host>` | | `0.0.0.0` | Host to bind the **proxy** port to (all interfaces, so LAN devices can capture) |
+| `--ui-host <host>` | | `127.0.0.1` | Host to bind the **Web UI / control-plane API** to (localhost only by default) |
+| `--http2` | | `false` | Enable experimental HTTP/2 interception (see [HTTP/2 & gRPC](/features/http2-grpc)) |
 | `--no-open` | | | Do not automatically open the Web UI in the default browser |
 
 ## Default Behavior
 
 When you run `nectoproxy start` without any options:
 
-1. The **proxy server** starts on all network interfaces (`0.0.0.0:8888`).
-2. The **Web UI** starts on all network interfaces (`0.0.0.0:8889`).
-3. Your **default browser** opens automatically to the Web UI URL.
+1. The **proxy server** starts on all network interfaces (`0.0.0.0:8888`), so phones and other LAN devices can route traffic through it.
+2. The **Web UI / control-plane API** starts on **localhost only** (`127.0.0.1:8889`) and is protected by a randomly generated **session token**.
+3. Your **default browser** opens automatically to the tokenized Web UI URL.
 
 NectoProxy automatically detects your LAN IP address and displays it at startup.
 
@@ -34,11 +36,18 @@ nectoproxy start
 Output:
 
 ```
-  NectoProxy v0.1.0
+  NectoProxy - HTTP/HTTPS Debugging Proxy
 
   Proxy Server: http://192.168.1.42:8888
-  Web UI:       http://192.168.1.42:8889
+  Web UI:       http://localhost:8889/?token=3f9c1a...e7
+  Session:      Session 7/5/2026
+
+  Mobile Setup: http://necto.setup
 ```
+
+::: tip Session Token
+The Web UI URL includes a `?token=...` query parameter. This token authenticates every control-plane request and is regenerated on each start. See [Security & Session Token](/features/security) for the full security model.
+:::
 
 ## Examples
 
@@ -69,21 +78,54 @@ Change the default ports when:
 - Your organization has port allocation policies.
 :::
 
-### Localhost Only (Restrict Network Access)
+### Proxy Host vs. UI Host
 
-By default, NectoProxy binds to all network interfaces (`0.0.0.0`), making it accessible from other devices on your local network. If you want to restrict access to only the local machine:
+NectoProxy binds two independent surfaces with two separate flags:
+
+| Flag | Default | Controls |
+|---|---|---|
+| `--host` | `0.0.0.0` | The **proxy** port -- kept LAN-reachable so devices can capture traffic |
+| `--ui-host` | `127.0.0.1` | The **Web UI / control-plane API** -- localhost only by default |
+
+This split lets phones and other devices use the proxy while the powerful control plane stays private to your machine.
+
+### Restrict the Proxy to Localhost
+
+If you do not need LAN devices to capture and want the proxy reachable only from the local machine:
 
 ```bash
 nectoproxy start --host 127.0.0.1
 ```
 
-::: tip Security Consideration
-Binding to `127.0.0.1` ensures only the local machine can use the proxy and access the Web UI. This is the most secure option when you do not need LAN access.
+::: warning Proxy Network Exposure
+By default the proxy listens on all interfaces (`0.0.0.0`), which exposes it to your entire local network. This is intentional so mobile devices can capture, but only rely on it on trusted networks. Use `--host 127.0.0.1` on untrusted networks.
 :::
 
-::: warning Default Network Exposure
-By default, NectoProxy listens on all interfaces (`0.0.0.0`), which exposes it to your entire local network. Only use the default on trusted networks. Use `--host 127.0.0.1` on untrusted networks.
+### Expose the Web UI on a LAN
+
+The control plane is localhost-only by default. To view the Web UI from another machine, bind it to a reachable interface:
+
+```bash
+# Expose the UI on all interfaces
+nectoproxy start --ui-host 0.0.0.0
+
+# Or bind it to a specific LAN IP
+nectoproxy start --ui-host 192.168.1.42
+```
+
+::: danger Exposing the Control Plane
+The Web UI can control the proxy and read every captured request. When it is not localhost-bound, NectoProxy prints a loud warning and still requires the session token, but anyone with the token URL gains full control. Prefer `--ui-host 127.0.0.1` and an SSH tunnel for remote access. See [Security & Session Token](/features/security).
 :::
+
+### Enable HTTP/2 Interception
+
+Turn on experimental HTTP/2 (and unary gRPC) interception:
+
+```bash
+nectoproxy start --http2
+```
+
+HTTP/2 is off by default. HTTP/1.1 clients continue to work when it is enabled. See [HTTP/2 & gRPC](/features/http2-grpc) for what works and the known limitations.
 
 ### Without Auto-Opening Browser
 

@@ -88,28 +88,27 @@ The exact steps vary slightly between Android manufacturers (Samsung, Pixel, One
 
 ## Step 4: Install the CA Certificate
 
-Without the CA certificate, your phone will show security errors for all HTTPS traffic. NectoProxy provides two convenient ways to install the certificate.
+Without the CA certificate, your phone will show security errors for all HTTPS traffic. Because the Web UI binds to localhost by default, the proxy serves a device-setup page on the magic host **`http://necto.setup`** -- it works even though the UI is not reachable from the phone.
 
-### Method A: QR Code (Recommended)
+### Method A: `http://necto.setup` (Recommended)
 
-1. In the NectoProxy Web UI, open **Settings** (gear icon).
-2. Scroll down to **Mobile Configuration**.
-3. A **QR Code** is displayed that links to the certificate download URL.
-4. Open the **Camera app** on your phone and point it at the QR code.
-5. Tap the notification/link that appears to open it in the browser.
-6. Follow the prompts to download and install the certificate.
-
-### Method B: Manual URL
-
-1. On your phone's browser (with the proxy already configured), navigate to:
+1. With the proxy already configured on your phone, open a browser and go to:
 
    ```
-   http://<your-computer-ip>:8889/api/certificates/download
+   http://necto.setup
    ```
 
-   For example: `http://192.168.1.42:8889/api/certificates/download`
+2. The proxy returns a setup page with two options:
+   - **iOS:** tap **Install profile** to download the one-tap `.mobileconfig`.
+   - **Android / Desktop:** tap **Download certificate** to get the `.crt`.
 
-2. The certificate file will download.
+### Method B: Scan the QR Code
+
+When you run `nectoproxy start`, the CLI prints a scannable **QR code** that encodes `http://necto.setup`.
+
+1. Point your phone's **Camera app** at the QR code in the terminal.
+2. Tap the link that appears to open `http://necto.setup`.
+3. Follow the prompts to download and install the certificate.
 
 ### Installing the Downloaded Certificate
 
@@ -157,14 +156,13 @@ If traffic is not appearing, double-check:
 
 ## Step 6: Using the QR Code Feature
 
-The QR code in the Settings panel encodes the certificate download URL. This is the fastest way to get the certificate onto your phone:
+The `nectoproxy start` output includes a scannable QR code that encodes `http://necto.setup`. This is the fastest way to reach the setup page from your phone:
 
-1. Open NectoProxy Settings (gear icon).
-2. If you have multiple network interfaces, select the correct one from the dropdown above the QR code.
-3. Point your phone's camera at the QR code.
-4. The URL resolves to `http://<ip>:<uiPort>/api/certificates/download`.
+1. Make sure the phone's proxy is already pointed at your machine (Step 3).
+2. Point your phone's camera at the QR code printed in the terminal.
+3. Tap the link to open `http://necto.setup`, then install the CA.
 
-The QR code updates automatically when you change the selected IP address or UI port.
+Because the setup page is served by the proxy itself, this works even though the Web UI binds to localhost by default.
 
 ## Cleaning Up
 

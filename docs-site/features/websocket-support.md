@@ -140,6 +140,36 @@ WebSocket frames are displayed in the NectoProxy UI **in real time** as they are
 
 The frame list auto-scrolls to keep the most recent frame visible, with an option to pause auto-scrolling when you want to examine earlier frames.
 
+## Frame Injection
+
+The WebSocket viewer is no longer inspect-only. A **frame composer** lets you send (inject) your own frames into a live WebSocket connection, in either direction, without touching the client or server code.
+
+This is invaluable for exercising message handlers, simulating server pushes, or reproducing edge cases that are hard to trigger from the real endpoints.
+
+### Composing a Frame
+
+1. Open a live WebSocket connection in the detail panel (the connection must still be open).
+2. Use the **frame composer** to set:
+   - **Direction** -- `to-client` (as if the server sent it) or `to-server` (as if the client sent it).
+   - **Payload type** -- **text** (sent as UTF-8) or **binary** (entered as base64 and decoded before sending).
+   - **Content** -- the frame payload.
+3. Send the frame. It is injected into the live connection and also appears in the frame list, tagged as injected so you can distinguish it from captured traffic.
+
+### Direction Semantics
+
+| Direction | Effect |
+|---|---|
+| `to-client` | The frame is delivered to the client as though the server sent it |
+| `to-server` | The frame is delivered to the origin server as though the client sent it |
+
+::: tip Requires a live connection
+Injection only works while the WebSocket connection is still open. If the connection has already closed, there is nothing to inject into and the request returns a `404`.
+:::
+
+::: details Under the hood
+The composer calls `POST /api/websocket/:trafficId/send` with a JSON body of `{ direction, data, isBinary }`. Binary payloads are base64-encoded in `data` and decoded server-side before injection. See the [WebSocket Frames API](/api/websocket#inject-a-frame) for the full endpoint reference.
+:::
+
 ## Filtering WebSocket Traffic
 
 ### In the Traffic List

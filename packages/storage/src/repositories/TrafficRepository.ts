@@ -1,10 +1,27 @@
-import { eq, and, like, gte, lte, inArray, desc, asc, sql, or, count as drizzleCount } from 'drizzle-orm';
+import {
+  eq,
+  and,
+  like,
+  gte,
+  lte,
+  inArray,
+  desc,
+  asc,
+  sql,
+  or,
+  count as drizzleCount,
+  getTableColumns,
+} from 'drizzle-orm';
 import { getDatabase } from '../db/connection.js';
 import { traffic, sessions } from '../db/schema.js';
 import { encodeBody, decodeBody } from '../db/bodyCodec.js';
 import type { TrafficEntry, TrafficQuery, TrafficStats } from '@nectoproxy/shared';
 
 const DEFAULT_MAX_TRAFFIC = 50000;
+// Max rows scanned+decoded for a body-content search (see searchGlobal). Bodies
+// are compressed on disk, so body matching happens in JS after decoding rather
+// than in SQL; this caps how much we pull into memory per search.
+const BODY_SEARCH_SCAN_CAP = 20000;
 // How many rows over the cap we tolerate before pruning, so we don't run a
 // DELETE on every insert once the cap is reached.
 const DEFAULT_PRUNE_BUFFER = 512;
@@ -256,88 +273,127 @@ export class TrafficRepository {
 
     const searchPattern = `%${query}%`;
 
-    // Build search conditions based on searchIn
-    const searchConditions = [];
+    // ---- SQL-searchable text fields (url/host/path, and optionally headers) ----
+    // SQLite's LIKE is case-insensitive for ASCII, so these matches are
+    // effectively case-insensitive; we mirror that for the body match below.
+    const sqlSearchConditions = [
+      like(traffic.url, searchPattern),
+      like(traffic.host, searchPattern),
+      like(traffic.path, searchPattern),
+    ];
 
-    // Always search in url and host
-    searchConditions.push(like(traffic.url, searchPattern));
-    searchConditions.push(like(traffic.host, searchPattern));
-    searchConditions.push(like(traffic.path, searchPattern));
-
-    // Search in headers if requested
     if (searchIn.includes('headers')) {
-      searchConditions.push(sql`CAST(${traffic.requestHeaders} AS TEXT) LIKE ${searchPattern}`);
-      searchConditions.push(sql`CAST(${traffic.responseHeaders} AS TEXT) LIKE ${searchPattern}`);
+      sqlSearchConditions.push(sql`CAST(${traffic.requestHeaders} AS TEXT) LIKE ${searchPattern}`);
+      sqlSearchConditions.push(sql`CAST(${traffic.responseHeaders} AS TEXT) LIKE ${searchPattern}`);
     }
 
-    // Search in body if requested
-    if (searchIn.includes('body')) {
-      searchConditions.push(sql`CAST(${traffic.requestBody} AS TEXT) LIKE ${searchPattern}`);
-      searchConditions.push(sql`CAST(${traffic.responseBody} AS TEXT) LIKE ${searchPattern}`);
-    }
+    // OR of everything we can match directly in SQL. Always non-empty.
+    const sqlSearchOr = or(...sqlSearchConditions)!;
 
-    // Combine search conditions with OR (match any field)
-    const searchOr = or(...searchConditions);
-
-    // Build additional filter conditions
-    const filterConditions = [];
-    if (searchOr) {
-      filterConditions.push(searchOr);
-    }
-
+    // Non-search filters (method/status), AND-ed with the search match.
+    const otherConditions = [];
     if (methods && methods.length > 0) {
-      filterConditions.push(inArray(traffic.method, methods));
+      otherConditions.push(inArray(traffic.method, methods));
     }
-
     if (statusCodes && statusCodes.length > 0) {
       const statusInts = statusCodes.map((s) => parseInt(s, 10));
-      filterConditions.push(inArray(traffic.status, statusInts));
+      otherConditions.push(inArray(traffic.status, statusInts));
     }
 
-    const whereClause = filterConditions.length > 0 ? and(...filterConditions) : undefined;
+    const bodyRequested = searchIn.includes('body');
 
-    // Get total count
-    const countResult = await this.db
-      .select({ total: drizzleCount() })
+    // ---- Fast path: no body search — everything is doable in SQL ----
+    if (!bodyRequested) {
+      const whereClause = and(sqlSearchOr, ...otherConditions);
+
+      const countResult = await this.db
+        .select({ total: drizzleCount() })
+        .from(traffic)
+        .where(whereClause);
+      const total = countResult[0]?.total || 0;
+
+      const rows = await this.db
+        .select()
+        .from(traffic)
+        .where(whereClause)
+        .orderBy(desc(traffic.timestamp))
+        .limit(limit)
+        .offset(offset);
+
+      return {
+        entries: rows.map((row) => this.mapToTrafficEntry(row)),
+        total,
+        sessionNames: await this.fetchSessionNames(rows.map((r) => r.sessionId)),
+      };
+    }
+
+    // ---- Body search path ----
+    // Bodies are stored as marker-prefixed, optionally gzip-compressed blobs
+    // (see bodyCodec.ts), so a substring cannot be matched in SQL against the
+    // stored bytes. We instead scan the rows that pass the non-body filters,
+    // decode each body, and match in JS. A row matches if the SQL-searchable
+    // fields match (evaluated in SQL via `sqlMatch`) OR the decoded body
+    // contains the query (case-insensitive, mirroring SQLite LIKE).
+    //
+    // Limitation: to avoid loading an unbounded number of rows into memory,
+    // we scan at most BODY_SEARCH_SCAN_CAP most-recent rows that pass the
+    // method/status filters. If a session has more matching rows than the cap,
+    // older body-only matches beyond the window are not counted. The common
+    // case (recent traffic) stays correct.
+    const scanWhere = otherConditions.length > 0 ? and(...otherConditions) : undefined;
+    const needle = query.toLowerCase();
+
+    const candidates = await this.db
+      .select({
+        ...getTableColumns(traffic),
+        sqlMatch: sql<number>`CASE WHEN (${sqlSearchOr}) THEN 1 ELSE 0 END`,
+      })
       .from(traffic)
-      .where(whereClause);
-
-    const total = countResult[0]?.total || 0;
-
-    // Get paginated results
-    let queryBuilder = this.db.select().from(traffic);
-
-    if (whereClause) {
-      queryBuilder = queryBuilder.where(whereClause) as typeof queryBuilder;
-    }
-
-    queryBuilder = queryBuilder
+      .where(scanWhere)
       .orderBy(desc(traffic.timestamp))
-      .limit(limit)
-      .offset(offset) as typeof queryBuilder;
+      .limit(BODY_SEARCH_SCAN_CAP);
 
-    const result = await queryBuilder;
+    const matched = candidates.filter((row) => {
+      if (row.sqlMatch === 1) {
+        return true;
+      }
+      const reqBody = decodeBody(row.requestBody);
+      if (reqBody && reqBody.toString('utf8').toLowerCase().includes(needle)) {
+        return true;
+      }
+      const resBody = decodeBody(row.responseBody);
+      if (resBody && resBody.toString('utf8').toLowerCase().includes(needle)) {
+        return true;
+      }
+      return false;
+    });
 
-    // Collect unique session IDs and fetch session names
-    const sessionIds = [...new Set(result.map((row) => row.sessionId))];
+    const total = matched.length;
+    const page = matched.slice(offset, offset + limit);
+
+    return {
+      entries: page.map((row) => this.mapToTrafficEntry(row)),
+      total,
+      sessionNames: await this.fetchSessionNames(page.map((r) => r.sessionId)),
+    };
+  }
+
+  private async fetchSessionNames(sessionIds: string[]): Promise<Record<string, string>> {
+    const uniqueIds = [...new Set(sessionIds)];
     const sessionNames: Record<string, string> = {};
 
-    if (sessionIds.length > 0) {
+    if (uniqueIds.length > 0) {
       const sessionResults = await this.db
         .select({ id: sessions.id, name: sessions.name })
         .from(sessions)
-        .where(inArray(sessions.id, sessionIds));
+        .where(inArray(sessions.id, uniqueIds));
 
       for (const s of sessionResults) {
         sessionNames[s.id] = s.name;
       }
     }
 
-    return {
-      entries: result.map((row) => this.mapToTrafficEntry(row)),
-      total,
-      sessionNames,
-    };
+    return sessionNames;
   }
 
   private mapToTrafficEntry(row: typeof traffic.$inferSelect): TrafficEntry {

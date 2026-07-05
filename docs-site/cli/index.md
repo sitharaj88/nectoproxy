@@ -19,23 +19,26 @@ nectoproxy --help
 
 ## Commands
 
-NectoProxy provides three commands:
+NectoProxy provides four commands:
 
 | Command | Description | Details |
 |---|---|---|
 | [`start`](/cli/start) | Start the proxy server and Web UI | The primary command. Launches the MITM proxy and opens the browser-based dashboard. |
 | [`cert`](/cli/cert) | Manage CA certificates | View certificate info, get installation instructions, print paths, and clear the domain certificate cache. |
 | [`sessions`](/cli/sessions) | Manage traffic sessions | List, create, and delete named sessions for organizing captured traffic. |
+| [`mcp`](/cli/mcp) | Start the MCP server for AI assistants | Runs a Model Context Protocol stdio server exposing traffic, rules, and replay to tools like Claude. |
 
 ## Quick Reference
 
 The following table summarizes every command and option available in NectoProxy:
 
 ```bash
-# Start the proxy (default: proxy on 8888, UI on 8889)
+# Start the proxy (default: proxy on 0.0.0.0:8888, UI on 127.0.0.1:8889)
 nectoproxy start
 nectoproxy start -p 9090 -u 9091       # Custom ports
-nectoproxy start --host 127.0.0.1      # Restrict to localhost only
+nectoproxy start --host 127.0.0.1      # Restrict the proxy to localhost only
+nectoproxy start --ui-host 0.0.0.0     # Expose the Web UI on the LAN (see warning)
+nectoproxy start --http2               # Enable experimental HTTP/2 interception
 nectoproxy start --no-open             # Don't auto-open browser
 
 # Certificate management
@@ -49,6 +52,11 @@ nectoproxy sessions                    # List all sessions
 nectoproxy sessions --list             # List all sessions (explicit)
 nectoproxy sessions --create "Debug"   # Create a new session named "Debug"
 nectoproxy sessions --delete <id>      # Delete a session by ID
+
+# MCP server for AI assistants (needs the session token from `start`)
+nectoproxy mcp --token <token>                     # Start the MCP stdio server
+nectoproxy mcp --token <token> --url http://127.0.0.1:8889
+NECTO_TOKEN=<token> nectoproxy mcp                 # Token via environment variable
 
 # General
 nectoproxy --version                   # Print version

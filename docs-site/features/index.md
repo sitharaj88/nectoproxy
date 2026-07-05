@@ -39,7 +39,11 @@ NectoProxy goes beyond basic HTTP proxying to support additional protocols and a
 
 ### [WebSocket Support](./websocket-support)
 
-Full inspection of WebSocket (WS) and secure WebSocket (WSS) connections. Capture and display individual frames including text, binary, ping, pong, and close frames. Track frame direction (client-to-server or server-to-client), view opcode information, and stream frames in real time as they are exchanged.
+Full inspection of WebSocket (WS) and secure WebSocket (WSS) connections. Capture and display individual frames including text, binary, ping, pong, and close frames. Track frame direction (client-to-server or server-to-client), view opcode information, and stream frames in real time. A frame composer lets you inject your own text or binary frames into a live connection in either direction.
+
+### [HTTP/2 & gRPC](./http2-grpc)
+
+Experimental HTTP/2 interception (enabled with `--http2`). HTTP/2 clients are handled natively while HTTP/1.1 clients keep working. Ordinary h2 traffic is forwarded to origins over HTTP/1.1; unary gRPC is forwarded end-to-end over HTTP/2 with `grpc-status` trailers relayed.
 
 ### [SSL Passthrough](./ssl-passthrough)
 
@@ -82,6 +86,24 @@ Automated security analysis of captured traffic. Four built-in scanners check fo
 ### [Annotations](./annotations)
 
 Add text notes and color-coded tags to any traffic entry. Mark important requests, leave context for teammates, or organize findings during a debugging session. Annotations are searchable and timestamped, making it easy to revisit specific observations later.
+
+---
+
+## Security & Integrations
+
+Access control and ways to plug NectoProxy into devices and AI tooling.
+
+### [Security & Session Token](./security)
+
+The control-plane Web UI and API bind to `127.0.0.1` by default and are protected by a per-run session token, with CORS locked down and DNS-rebinding protection. The proxy port stays LAN-reachable for device capture. Separate `--host` and `--ui-host` flags control each surface, and there is a documented, warned path for intentionally exposing the UI on a LAN.
+
+### [Mobile Device Capture](./mobile-devices)
+
+Capture HTTPS traffic from iOS and Android devices. Point the device's proxy at your machine, then browse to `http://necto.setup` (served by the proxy itself, so it works even with the UI on localhost) to install the CA -- a one-tap iOS `.mobileconfig` profile or an Android/desktop `.crt`. The CLI prints a scannable QR code for the setup page.
+
+### [MCP / AI Integration](./mcp)
+
+A Model Context Protocol (MCP) stdio server (`nectoproxy mcp`) exposes captured traffic, the rules engine, and request replay to AI assistants like Claude Desktop and Claude Code. Nine tools cover listing/searching/inspecting traffic, aggregate stats, creating and toggling rules, and replaying requests.
 
 ---
 

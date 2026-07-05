@@ -10,6 +10,7 @@ The WebSocket Frames API provides access to captured WebSocket message frames. W
 | `GET` | `/api/websocket/frame/:id` | Get a specific frame |
 | `GET` | `/api/websocket/:trafficId/count` | Get frame count for a connection |
 | `DELETE` | `/api/websocket/:trafficId/frames` | Delete all frames for a connection |
+| `POST` | `/api/websocket/:trafficId/send` | Inject a frame into a live connection |
 
 ---
 
@@ -194,6 +195,64 @@ curl -X DELETE http://localhost:8889/api/websocket/traffic-uuid-1/frames
   "success": true
 }
 ```
+
+---
+
+## Inject a Frame
+
+```
+POST /api/websocket/:trafficId/send
+```
+
+Inject a frame into a **live** WebSocket connection, in either direction. Use this to simulate server pushes or client messages without touching the real endpoints. The connection identified by `trafficId` must still be open.
+
+### Path Parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `trafficId` | `string` | Traffic entry ID of the open WebSocket connection |
+
+### Request Body
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `direction` | `string` | Yes | `"to-client"` (as if from the server) or `"to-server"` (as if from the client) |
+| `data` | `string` | Yes | The payload. Plain text when `isBinary` is false; base64-encoded when `isBinary` is true |
+| `isBinary` | `boolean` | No | Whether `data` is base64-encoded binary. Defaults to `false` |
+
+### Example Request
+
+```bash
+# Send a text frame to the client
+curl -X POST http://localhost:8889/api/websocket/traffic-uuid-1/send \
+  -H "Content-Type: application/json" \
+  -d '{"direction":"to-client","data":"{\"type\":\"ping\"}","isBinary":false}'
+
+# Send a binary frame to the server (data is base64-encoded)
+curl -X POST http://localhost:8889/api/websocket/traffic-uuid-1/send \
+  -H "Content-Type: application/json" \
+  -d '{"direction":"to-server","data":"iVBORw0KGgo=","isBinary":true}'
+```
+
+### Response `200 OK`
+
+```json
+{
+  "success": true
+}
+```
+
+### Error Responses
+
+| Status | Condition |
+|---|---|
+| `400 Bad Request` | `direction` is not `to-client`/`to-server`, or `data` is not a string |
+| `404 Not Found` | No open WebSocket connection exists for this traffic entry |
+| `503 Service Unavailable` | The WebSocket send handler is not available (proxy not wired for injection) |
+
+::: tip Binary payloads
+For binary frames, base64-encode the raw bytes in the `data` field and set `isBinary` to `true`. NectoProxy decodes it back to binary before injecting the frame.
+:::
 
 ---
 

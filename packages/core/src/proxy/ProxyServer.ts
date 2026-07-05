@@ -1219,7 +1219,12 @@ h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
       return;
     }
 
-    ctx.clientResponse.writeHead(status, statusText, headers);
+    // HTTP/2 has no status message (RFC 7540 §8.1.2.4) — omit it to avoid a warning.
+    if (ctx.http2) {
+      ctx.clientResponse.writeHead(status, headers);
+    } else {
+      ctx.clientResponse.writeHead(status, statusText, headers);
+    }
 
     if (responseBody) {
       ctx.clientResponse.write(responseBody);
@@ -1247,7 +1252,11 @@ h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
       // Let the connection chunk; a fixed content-length would truncate a stream.
       delete headers['content-length'];
 
-      ctx.clientResponse.writeHead(status, statusText, headers);
+      if (ctx.http2) {
+        ctx.clientResponse.writeHead(status, headers);
+      } else {
+        ctx.clientResponse.writeHead(status, statusText, headers);
+      }
       // Flush headers immediately so the client can start consuming events.
       if (typeof ctx.clientResponse.flushHeaders === 'function') {
         ctx.clientResponse.flushHeaders();

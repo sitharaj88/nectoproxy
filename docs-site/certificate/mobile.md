@@ -2,6 +2,10 @@
 
 This guide covers setting up the NectoProxy CA certificate on iOS and Android devices so you can inspect HTTPS traffic from mobile apps and browsers.
 
+::: tip Recommended: install via `http://necto.setup`
+Once the device's proxy points at your machine, browse to **`http://necto.setup`** to install the CA in a couple of taps -- a one-tap iOS `.mobileconfig` profile or an Android/desktop `.crt`. This page is served by the proxy itself, so it works even though the Web UI binds to localhost by default. The CLI also prints a scannable QR code for it. See [Mobile Device Capture](/features/mobile-devices) for the streamlined flow. The manual steps below remain available if you prefer them.
+:::
+
 ## Prerequisites
 
 Before setting up a mobile device, ensure:
@@ -45,9 +49,9 @@ Before setting up a mobile device, ensure:
 ### Step 2: Download the CA Certificate
 
 1. Open **Safari** (you must use Safari -- other browsers will not trigger the certificate install flow).
-2. Navigate to: `http://<your-computer-ip>:8889/cert`
-   - For example: `http://192.168.1.100:8889/cert`
-   - This URL is served by the NectoProxy Web UI and provides the CA certificate for download.
+2. Navigate to: `http://necto.setup`
+   - This page is served by the proxy itself, so it works even when the Web UI is bound to localhost. Tap **Install profile** to download the one-tap `.mobileconfig`.
+   - Alternatively, open `http://necto.setup/mobileconfig` directly.
 
 ::: tip Alternative: Transfer the Certificate File
 If the download URL does not work, you can transfer the `ca.pem` file to your iOS device via AirDrop, email, or iCloud Drive, then open it from the Files app.
@@ -112,9 +116,9 @@ On iOS, you must both **install** the profile (Step 3) and **enable trust** (Ste
 ### Step 2: Download the CA Certificate
 
 1. Open your browser (Chrome works well).
-2. Navigate to: `http://<your-computer-ip>:8889/cert`
-   - For example: `http://192.168.1.100:8889/cert`
-3. The certificate file (`ca.pem` or `ca.crt`) will download to your device.
+2. Navigate to: `http://necto.setup`
+   - Tap **Download certificate** to get `nectoproxy-ca.crt`, or open `http://necto.setup/download` directly.
+   - This page is served by the proxy itself, so it works even when the Web UI is bound to localhost.
 
 ::: tip Alternative: Transfer the File
 You can also transfer the `ca.pem` file to your device via USB, email, or cloud storage. Rename it to `nectoproxy-ca.crt` before transferring, as Android recognizes the `.crt` extension more reliably.
@@ -195,10 +199,11 @@ Starting with Android 7 (Nougat), Google changed how user-installed CA certifica
 
 ### Certificate Download URL Not Working
 
-If `http://<ip>:8889/cert` does not work:
+If `http://necto.setup` does not load:
 
-- Try accessing the NectoProxy Web UI directly: `http://<ip>:8889`. If this does not load, there is a network connectivity issue.
-- Manually transfer the certificate file from `~/.nectoproxy/certs/ca.pem` to your mobile device.
+- Confirm the device's HTTP proxy is set to your computer's IP and the proxy port (default `8888`). The setup page only appears when the request actually flows through the proxy.
+- Confirm your computer and device are on the same network and the firewall allows the proxy port.
+- As a fallback, manually transfer the certificate file from `~/.nectoproxy/certs/ca.pem` to your mobile device.
 
 ### iOS: "Profile Downloaded" Not Appearing
 

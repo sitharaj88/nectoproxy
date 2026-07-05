@@ -60,8 +60,20 @@ Single-resource responses return the resource directly or within a wrapper:
 
 ## Authentication
 
-::: tip No Authentication Required
-NectoProxy does not require authentication for API access. The proxy is designed as a local development tool. If you expose it on a network, ensure appropriate firewall rules are in place.
+The control-plane API is protected by a **session token**. NectoProxy generates a fresh token each time you run `nectoproxy start` and prints it in the Web UI URL (`http://localhost:8889/?token=<TOKEN>`). Every `/api/*` request must include it, supplied either way:
+
+```bash
+# Authorization header
+curl -H "Authorization: Bearer <TOKEN>" http://localhost:8889/api/traffic
+
+# Query parameter
+curl "http://localhost:8889/api/traffic?token=<TOKEN>"
+```
+
+Requests with a missing or invalid token receive `401 Unauthorized`. A few read-only certificate/health endpoints are exempt so device setup still works. The API also binds to `127.0.0.1` by default with CORS locked down and DNS-rebinding protection enabled.
+
+::: tip Full Security Model
+The curl examples elsewhere in this reference omit the token for brevity -- add `-H "Authorization: Bearer <TOKEN>"` (or `?token=<TOKEN>`) to each. See [Security & Session Token](/features/security) for the complete model.
 :::
 
 ## Error Response Format
