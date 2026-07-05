@@ -2,7 +2,9 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import open from 'open';
+import qrcode from 'qrcode-terminal';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { networkInterfaces } from 'node:os';
@@ -29,11 +31,18 @@ program
   .option('-p, --port <port>', 'Proxy server port', '8888')
   .option('-u, --ui-port <port>', 'Web UI port', '8889')
   .option('--no-open', 'Do not auto-open browser')
-  .option('--host <host>', 'Host to bind to', '0.0.0.0')
+  .option('--host <host>', 'Host to bind the proxy port to', '0.0.0.0')
+  .option('--ui-host <host>', 'Host to bind the Web UI / control-plane API to', '127.0.0.1')
+  .option('--http2', 'Enable experimental HTTP/2 interception (h2 clients, forwarded to origins over HTTP/1.1)', false)
   .action(async (options) => {
     const proxyPort = parseInt(options.port, 10);
     const uiPort = parseInt(options.uiPort, 10);
     const autoOpen = options.open !== false;
+    const uiHost = options.uiHost as string;
+
+    // Cryptographically-random session token, generated once per run. Protects
+    // the control-plane API and Socket.IO from unauthenticated access.
+    const sessionToken = crypto.randomBytes(32).toString('hex');
 
     console.log(chalk.bold.cyan('\n  NectoProxy - HTTP/HTTPS Debugging Proxy\n'));
 
@@ -65,6 +74,7 @@ program
       const proxyServer = new ProxyServer(certManager, {
         port: proxyPort,
         host: options.host,
+        enableHttp2: options.http2 === true,
       });
 
       // Create API server
@@ -73,8 +83,9 @@ program
       const webDistPath = path.resolve(__dirname, 'web-ui');
       const appInstance = createApp(certManager, {
         port: uiPort,
-        host: options.host,
+        host: uiHost,
         staticDir: webDistPath,
+        token: sessionToken,
       });
 
       // Connect proxy events to socket server and persist to database
@@ -190,31 +201,83 @@ program
 
       spinner.succeed('NectoProxy started successfully!\n');
 
-      // Resolve display host — show the machine's LAN IP instead of 0.0.0.0
-      let displayHost = options.host;
-      if (displayHost === '0.0.0.0') {
+      // Resolve LAN IP (used for display when a host is bound to 0.0.0.0)
+      const resolveLanIp = (): string => {
         const nets = networkInterfaces();
         const lanIp = Object.values(nets).flat().find(
           (n) => n && n.family === 'IPv4' && !n.internal
         );
-        displayHost = lanIp?.address ?? 'localhost';
+        return lanIp?.address ?? 'localhost';
+      };
+
+      // Proxy display host — show the machine's LAN IP instead of 0.0.0.0
+      let displayHost = options.host;
+      if (displayHost === '0.0.0.0') {
+        displayHost = resolveLanIp();
+      }
+
+      // UI/API display host — bound to ui-host (localhost by default)
+      let uiDisplayHost = uiHost;
+      if (uiHost === '0.0.0.0') {
+        uiDisplayHost = resolveLanIp();
+      } else if (uiHost === '127.0.0.1') {
+        uiDisplayHost = 'localhost';
+      }
+
+      const isUiLocal = uiHost === '127.0.0.1' || uiHost === 'localhost' || uiHost === '::1';
+      const uiUrl = `http://${uiDisplayHost}:${uiPort}/?token=${sessionToken}`;
+
+      // Warn loudly if the control plane is exposed on the network.
+      if (!isUiLocal) {
+        console.log(
+          chalk.bold.yellow(
+            '  WARNING: The Web UI / control-plane API is exposed on the network'
+          )
+        );
+        console.log(
+          chalk.bold.yellow(
+            `  (bound to ${uiHost}). It is protected by a session token, but anyone`
+          )
+        );
+        console.log(
+          chalk.bold.yellow(
+            '  with the token URL can control this proxy. Prefer --ui-host 127.0.0.1.'
+          )
+        );
+        console.log();
       }
 
       // Display info
       console.log(chalk.white('  Proxy Server:'), chalk.green(`http://${displayHost}:${proxyPort}`));
-      console.log(chalk.white('  Web UI:'), chalk.green(`http://${displayHost}:${uiPort}`));
+      console.log(chalk.white('  Web UI:'), chalk.green(uiUrl));
       console.log(chalk.white('  Session:'), chalk.yellow(session.name));
       console.log();
 
       // Display certificate info
-      console.log(chalk.white('  CA Certificate:'), chalk.cyan(`http://${displayHost}:${uiPort}/api/certificates/ca`));
+      console.log(chalk.white('  CA Certificate:'), chalk.cyan(`http://${uiDisplayHost}:${uiPort}/api/certificates/ca`));
       console.log(chalk.dim('  Install the CA certificate to inspect HTTPS traffic.'));
       console.log(chalk.dim(`  Run: ${chalk.white('nectoproxy cert --install')} for instructions.`));
       console.log();
 
+      // Mobile device setup: once a phone/tablet is pointed at the proxy, it can
+      // browse to this magic host to install the CA — works regardless of where
+      // the Web UI is bound.
+      const setupUrl = 'http://necto.setup';
+      console.log(chalk.white('  Mobile Setup:'), chalk.green(setupUrl));
+      console.log(chalk.dim(`  1. Set the device's HTTP proxy to ${chalk.white(`${displayHost}:${proxyPort}`)}`));
+      console.log(chalk.dim(`  2. Open ${chalk.white(setupUrl)} on the device (or scan below) and install the CA.`));
+      qrcode.generate(setupUrl, { small: true }, (qr: string) => {
+        console.log(
+          qr
+            .split('\n')
+            .map((line) => `  ${line}`)
+            .join('\n')
+        );
+      });
+      console.log();
+
       // Open browser
       if (autoOpen) {
-        const uiUrl = `http://${displayHost}:${uiPort}`;
         console.log(chalk.dim(`  Opening ${uiUrl} in your browser...`));
         await open(uiUrl);
       }
@@ -342,6 +405,35 @@ program
       }
     } catch (error) {
       console.error(chalk.red('Error:'), (error as Error).message);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('mcp')
+  .description('Start the Model Context Protocol (MCP) server over stdio for AI assistants')
+  .option('-u, --url <url>', 'NectoProxy control-plane API URL', process.env.NECTO_API_URL || 'http://127.0.0.1:8889')
+  .option('-t, --token <token>', 'Session token printed by `nectoproxy start` (or set NECTO_TOKEN)')
+  .action(async (options) => {
+    const token = (options.token as string | undefined) || process.env.NECTO_TOKEN;
+
+    if (!token) {
+      // stderr only — stdout is the JSON-RPC channel and must stay clean.
+      console.error(
+        chalk.red('Error:'),
+        'A session token is required. Pass --token <token> or set NECTO_TOKEN.'
+      );
+      console.error(
+        chalk.dim('  The token is printed by `nectoproxy start` (in the Web UI URL as ?token=...).')
+      );
+      process.exit(1);
+    }
+
+    try {
+      const { startMcpServer } = await import('@nectoproxy/mcp');
+      await startMcpServer({ apiUrl: options.url as string, token });
+    } catch (error) {
+      console.error(chalk.red('MCP server error:'), (error as Error).message);
       process.exit(1);
     }
   });

@@ -11,6 +11,7 @@ import type {
   WebSocketCloseEvent,
   WebSocketErrorEvent,
 } from '@nectoproxy/shared';
+import { getToken } from './token';
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -21,6 +22,7 @@ export function getSocket(): TypedSocket {
     socket = io(window.location.origin, {
       transports: ['websocket', 'polling'],
       autoConnect: true,
+      auth: { token: getToken() },
     });
 
     socket.on('connect', () => {

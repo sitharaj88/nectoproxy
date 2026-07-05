@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import http from 'node:http';
+import http2 from 'node:http2';
 import https from 'node:https';
 import net from 'node:net';
 import tls from 'node:tls';
@@ -19,6 +20,12 @@ export interface ProxyServerConfig {
   host: string;
   maxBodySize: number;
   timeout: number;
+  /**
+   * Enable HTTP/2 MITM. When on, intercepted TLS connections negotiate ALPN and
+   * h2 clients are handled over an HTTP/2 session (forwarded to origins over
+   * HTTP/1.1). Off by default so the battle-tested h1 path is unchanged.
+   */
+  enableHttp2: boolean;
 }
 
 export interface ProxyContext {
@@ -42,7 +49,11 @@ const DEFAULT_CONFIG: ProxyServerConfig = {
   host: '0.0.0.0',
   maxBodySize: 10 * 1024 * 1024, // 10MB
   timeout: 30000,
+  enableHttp2: false,
 };
+
+/** Hostnames a proxied device can request to reach the CA-install page. */
+const SETUP_HOSTS = new Set(['necto.setup', 'nectoproxy.local', 'necto.it']);
 
 export class ProxyServer extends EventEmitter {
   private config: ProxyServerConfig;
@@ -272,6 +283,13 @@ export class ProxyServer extends EventEmitter {
     const ctx = this.createContext(clientReq, clientRes, false);
     let isBreakpointed = false;
 
+    // Device-setup magic host: a proxied device can browse to http://necto.setup
+    // to install the CA, regardless of where the Web UI is bound (mitm.it-style).
+    if (SETUP_HOSTS.has(ctx.host.toLowerCase())) {
+      this.handleSetupRequest(ctx);
+      return;
+    }
+
     try {
       // Collect request body
       ctx.requestBody = await this.collectBody(clientReq, this.config.maxBodySize);
@@ -359,6 +377,61 @@ export class ProxyServer extends EventEmitter {
     }
   }
 
+  private handleSetupRequest(ctx: ProxyContext): void {
+    const res = ctx.clientResponse;
+    const pathname = ctx.path.split('?')[0];
+
+    try {
+      if (pathname === '/mobileconfig') {
+        const profile = this.certManager.getMobileConfig();
+        res.writeHead(200, {
+          'content-type': 'application/x-apple-aspen-config',
+          'content-disposition': 'attachment; filename="nectoproxy-ca.mobileconfig"',
+        });
+        res.end(profile);
+        return;
+      }
+
+      if (pathname === '/ca' || pathname === '/cert' || pathname === '/download') {
+        const pem = this.certManager.getCACertificatePem();
+        res.writeHead(200, {
+          'content-type': 'application/x-x509-ca-cert',
+          'content-disposition': 'attachment; filename="nectoproxy-ca.crt"',
+        });
+        res.end(pem);
+        return;
+      }
+
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      res.end(this.buildSetupHtml());
+    } catch (err) {
+      res.writeHead(500, { 'content-type': 'text/plain' });
+      res.end(`Setup error: ${(err as Error).message}`);
+    }
+  }
+
+  private buildSetupHtml(): string {
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NectoProxy - Install CA</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+max-width:600px;margin:0 auto;padding:24px;line-height:1.55;background:#0b0f17;color:#e6edf3}
+@media(prefers-color-scheme:light){body{background:#f6f8fa;color:#1f2328}}
+.card{border:1px solid rgba(128,128,128,.28);border-radius:14px;padding:18px;margin:14px 0;background:rgba(128,128,128,.06)}
+a.btn{display:inline-block;margin-top:10px;padding:11px 18px;border-radius:10px;background:#2f81f7;color:#fff;text-decoration:none;font-weight:600}
+h1{font-size:1.4rem}.note{font-size:.85rem;opacity:.7}</style></head><body>
+<h1>NectoProxy - Device Setup</h1>
+<p>Your device is routing through NectoProxy. Install the CA to inspect HTTPS traffic.</p>
+<div class="card"><h2>iPhone / iPad</h2>
+<p>Install the profile, then enable full trust under Settings &rarr; General &rarr; About &rarr; Certificate Trust Settings.</p>
+<a class="btn" href="/mobileconfig">Install profile</a></div>
+<div class="card"><h2>Android / Desktop</h2>
+<p>Download the certificate and add it as a trusted CA in your system settings.</p>
+<a class="btn" href="/download">Download certificate</a></div>
+<p class="note">Only install this on devices you own. It lets NectoProxy decrypt this device's HTTPS traffic.</p>
+</body></html>`;
+  }
+
   private async handleConnect(
     req: http.IncomingMessage,
     socket: net.Socket,
@@ -386,6 +459,14 @@ export class ProxyServer extends EventEmitter {
 
       // Acknowledge the CONNECT request
       socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+
+      // When HTTP/2 is enabled, negotiate ALPN and let an http2 secure server
+      // (with allowHTTP1) terminate TLS — it transparently handles both h2 and
+      // h1 clients through the same request path.
+      if (this.config.enableHttp2) {
+        this.createHttp2Session(socket, head, domainCert.key, domainCert.cert, host, port);
+        return;
+      }
 
       // Create a TLS socket from the existing socket
       const tlsSocket = new tls.TLSSocket(socket, {
@@ -431,6 +512,54 @@ export class ProxyServer extends EventEmitter {
 
     // Emit the socket to the server so it starts parsing HTTP from it
     server.emit('connection', tlsSocket);
+  }
+
+  private createHttp2Session(
+    socket: net.Socket,
+    head: Buffer,
+    key: string,
+    cert: string,
+    host: string,
+    port: number
+  ): void {
+    // allowHTTP1 lets the same server serve h1 clients that don't negotiate h2,
+    // so enabling HTTP/2 never breaks a plain-h1 client.
+    const server = http2.createSecureServer({
+      key,
+      cert,
+      allowHTTP1: true,
+    });
+
+    server.on('error', (err) => {
+      this.emit('tlsError', { host, port, error: err });
+    });
+    server.on('sessionError', (err) => {
+      this.emit('tlsError', { host, port, error: err });
+    });
+
+    // The http2 compatibility layer fires 'request' for BOTH h2 streams and h1
+    // requests, with req/res that are API-compatible with the h1 handler.
+    server.on('request', (req, res) => {
+      const ctx = this.createContextFromTls(
+        req as unknown as http.IncomingMessage,
+        res as unknown as http.ServerResponse,
+        req.socket as tls.TLSSocket,
+        host,
+        port
+      );
+      // Setup magic host works over the intercepted connection too.
+      if (SETUP_HOSTS.has(ctx.host.toLowerCase())) {
+        this.handleSetupRequest(ctx);
+        return;
+      }
+      this.handleHttpsRequest(ctx);
+    });
+
+    if (head.length > 0) {
+      socket.unshift(head);
+    }
+    // http2.createSecureServer terminates TLS itself, so emit the raw socket.
+    server.emit('connection', socket);
   }
 
   private createContext(
@@ -569,26 +698,30 @@ export class ProxyServer extends EventEmitter {
   }
 
   private async forwardRequest(ctx: ProxyContext, ruleResult?: RuleResult): Promise<void> {
-    const url = new URL(ctx.clientRequest.url || '/', `http://${ctx.host}`);
-    const resolvedHostname = this.resolveDns(url.hostname);
+    // Derive the target from ctx (host/port/path), not clientRequest.url, so that
+    // rules and breakpoints that rewrite the URL actually take effect on plain HTTP.
+    const resolvedHostname = this.resolveDns(ctx.host);
+    const headers = this.filterHeaders(ctx.clientRequest.headers);
+    // Keep the Host header consistent with the (possibly rewritten) target.
+    headers.host = ctx.port && ctx.port !== 80 ? `${ctx.host}:${ctx.port}` : ctx.host;
 
     const options: http.RequestOptions = {
       hostname: resolvedHostname,
-      port: url.port || 80,
-      path: url.pathname + url.search,
+      port: ctx.port || 80,
+      path: ctx.path,
       method: ctx.clientRequest.method,
-      headers: this.filterHeaders(ctx.clientRequest.headers),
+      headers,
       timeout: this.config.timeout,
     };
 
     // Use upstream proxy if configured and not bypassed
-    if (this.upstreamProxyAgent && !this.upstreamProxyAgent.shouldBypass(url.hostname)) {
+    if (this.upstreamProxyAgent && !this.upstreamProxyAgent.shouldBypass(ctx.host)) {
       const proxyConfig = this.upstreamProxyAgent.getConfig();
       if (proxyConfig.type === 'http' || proxyConfig.type === 'https') {
-        // For HTTP proxy, use the full URL as the path
+        // For an HTTP upstream proxy, use the absolute-form URI as the path.
         options.hostname = proxyConfig.host;
         options.port = proxyConfig.port;
-        options.path = ctx.clientRequest.url || '/';
+        options.path = this.buildUrl(ctx);
 
         // Add proxy auth if configured
         if (proxyConfig.auth) {
@@ -817,6 +950,15 @@ export class ProxyServer extends EventEmitter {
     proxyRes: http.IncomingMessage,
     _ruleResult?: RuleResult
   ): Promise<void> {
+    // Server-Sent Events and other long-lived streams must be passed through in
+    // real time — buffering until 'end' would hang them forever. Detect the
+    // event-stream content type and switch to a streaming passthrough that tees
+    // a capped copy of the bytes for the UI/log.
+    const contentType = String(proxyRes.headers['content-type'] || '').toLowerCase();
+    if (contentType.includes('text/event-stream')) {
+      return this.streamResponse(ctx, proxyRes);
+    }
+
     // Collect response body
     ctx.responseBody = await this.collectBody(proxyRes, this.config.maxBodySize);
 
@@ -941,6 +1083,70 @@ export class ProxyServer extends EventEmitter {
     this.emitTrafficUpdate(ctx);
   }
 
+  /**
+   * Stream a long-lived response (e.g. Server-Sent Events) straight through to
+   * the client as bytes arrive, while tee-ing a capped copy into ctx for the UI.
+   * Response-modifying rules and response breakpoints do not apply to streams —
+   * the body is unbounded, so there is nothing to buffer-and-rewrite.
+   */
+  private async streamResponse(
+    ctx: ProxyContext,
+    proxyRes: http.IncomingMessage
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const status = proxyRes.statusCode || 200;
+      const statusText = proxyRes.statusMessage;
+      const headers = this.filterHeaders(proxyRes.headers);
+      // Let the connection chunk; a fixed content-length would truncate a stream.
+      delete headers['content-length'];
+
+      ctx.clientResponse.writeHead(status, statusText, headers);
+      // Flush headers immediately so the client can start consuming events.
+      if (typeof ctx.clientResponse.flushHeaders === 'function') {
+        ctx.clientResponse.flushHeaders();
+      }
+
+      const chunks: Buffer[] = [];
+      let collected = 0;
+      let truncated = false;
+      const cap = this.config.maxBodySize;
+
+      proxyRes.on('data', (chunk: Buffer) => {
+        // Real-time passthrough to the client.
+        ctx.clientResponse.write(chunk);
+        // Capped tee for the UI/log.
+        if (collected < cap) {
+          const remaining = cap - collected;
+          chunks.push(chunk.length <= remaining ? chunk : chunk.subarray(0, remaining));
+          if (chunk.length > remaining) truncated = true;
+        } else {
+          truncated = true;
+        }
+        collected += chunk.length;
+      });
+
+      proxyRes.on('end', () => {
+        ctx.clientResponse.end();
+        ctx.responseBody = chunks.length ? Buffer.concat(chunks) : null;
+        if (truncated) {
+          this.emit('bodyTruncated', { size: collected, maxSize: cap });
+        }
+        this.emitTrafficUpdate(ctx);
+        resolve();
+      });
+
+      proxyRes.on('error', (err) => {
+        ctx.clientResponse.destroy();
+        reject(err);
+      });
+
+      // If the client goes away, tear down the upstream stream.
+      ctx.clientResponse.on('close', () => {
+        proxyRes.destroy();
+      });
+    });
+  }
+
   private async collectBody(
     stream: http.IncomingMessage,
     maxSize: number
@@ -1038,6 +1244,9 @@ export class ProxyServer extends EventEmitter {
     ];
 
     for (const [key, value] of Object.entries(headers)) {
+      // Drop HTTP/2 pseudo-headers (":method", ":path", ":scheme", ":authority")
+      // — they are illegal as HTTP/1.1 header tokens when forwarding upstream.
+      if (key.startsWith(':')) continue;
       if (!hopByHopHeaders.includes(key.toLowerCase()) && value !== undefined) {
         filtered[key] = value;
       }

@@ -3,6 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { CAGenerator, type CACertificate } from './CAGenerator.js';
 import { DomainCertGenerator, type DomainCertificate } from './DomainCertGenerator.js';
+import { buildMobileConfig, type MobileConfigOptions } from './MobileConfig.js';
 
 export interface CertificateManagerConfig {
   certsDir: string;
@@ -192,6 +193,14 @@ export class CertificateManager {
 
   getCACertificatePath(): string {
     return path.join(this.config.certsDir, 'ca.pem');
+  }
+
+  /**
+   * Build an Apple `.mobileconfig` profile embedding the CA, for one-tap trust
+   * installation on iOS/iPadOS/macOS devices.
+   */
+  getMobileConfig(options?: MobileConfigOptions): string {
+    return buildMobileConfig(this.getCACertificatePem(), options);
   }
 
   getCertsDirectory(): string {

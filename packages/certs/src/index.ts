@@ -8,3 +8,4 @@ export {
   CertificateManager,
   type CertificateManagerConfig,
 } from './CertificateManager.js';
+export { buildMobileConfig, type MobileConfigOptions } from './MobileConfig.js';

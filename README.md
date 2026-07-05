@@ -1,5 +1,9 @@
 # NectoProxy
 
+[![CI](https://github.com/sitharaj88/nectoproxy/actions/workflows/ci.yml/badge.svg)](https://github.com/sitharaj88/nectoproxy/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/nectoproxy.svg)](https://www.npmjs.com/package/nectoproxy)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A powerful HTTP/HTTPS debugging proxy with a modern Web UI. A free, open-source alternative to Charles Proxy and Fiddler.
 
 **Intercept, inspect, modify, and replay HTTP/HTTPS traffic** with real-time monitoring, traffic rules, breakpoints, and more.
@@ -17,6 +21,14 @@ Or run directly with npx:
 ```bash
 npx nectoproxy start
 ```
+
+### Install via Homebrew
+
+```bash
+brew install sitharaj88/tap/nectoproxy
+```
+
+> The Homebrew formula lives in [`Formula/nectoproxy.rb`](Formula/nectoproxy.rb) and installs the published npm package. Requires `node`.
 
 **Requirements:** Node.js 20 or later.
 
@@ -188,6 +200,22 @@ pnpm dev
 # Run tests
 pnpm test
 ```
+
+## Security
+
+NectoProxy separates its **control plane** (the Web UI and REST/WebSocket API you use to inspect traffic) from its **proxy port** (the port your clients connect through).
+
+- **Control plane binds to localhost by default.** The Web UI and API listen on `127.0.0.1` so they are not exposed to your local network. Only processes on your own machine can reach the dashboard and management API.
+- **Token-gated access.** The control plane requires a per-run session token. The UI is opened with the token and API/WebSocket requests must present it, so another user on your machine cannot drive your proxy or read captured traffic without the token.
+- **Proxy port stays LAN-reachable.** The actual proxy listener is intentionally still bindable on your network (e.g. `0.0.0.0:8888`) so you can point phones, tablets, and other devices at it for capture. Locking down the management surface does not prevent device debugging.
+
+Treat captured traffic as sensitive: it can contain credentials, tokens, and personal data. Only bind the proxy to networks you trust, and clear sessions (`nectoproxy sessions --delete`) when you're done.
+
+## Continuous Integration
+
+Every push to `main` and every pull request runs the [CI workflow](.github/workflows/ci.yml), which installs with a frozen lockfile and runs `pnpm build`, `pnpm lint`, and `pnpm test` on Node 20 and 22.
+
+Pushing a `v*` tag triggers the [release workflow](.github/workflows/release.yml), which builds, tests, and publishes the `nectoproxy` package to npm with [provenance](https://docs.npmjs.com/generating-provenance-statements) and creates a GitHub Release.
 
 ## Data Storage
 

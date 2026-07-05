@@ -14,15 +14,25 @@ import type {
   AnnotationCreateInput,
   AnnotationUpdateInput,
 } from '@nectoproxy/shared';
+import { getToken, withToken } from './token';
 
 const API_BASE = '/api';
+
+/** Build request headers including the session token, if available. */
+function authHeaders(extra?: HeadersInit): HeadersInit {
+  const token = getToken();
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  };
+}
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${url}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...authHeaders(options?.headers),
     },
   });
 
@@ -129,11 +139,11 @@ export async function deleteSession(id: string): Promise<void> {
 
 // Certificates API
 export function getCACertificateUrl(): string {
-  return `${API_BASE}/certificates/ca`;
+  return withToken(`${API_BASE}/certificates/ca`);
 }
 
 export function getCACertificateDownloadUrl(): string {
-  return `${API_BASE}/certificates/download`;
+  return withToken(`${API_BASE}/certificates/download`);
 }
 
 export async function getCACertificateInfo(): Promise<{ fingerprint: string; path: string }> {
@@ -302,12 +312,12 @@ export async function getWebSocketFrameCount(
 
 // HAR Export/Import API
 export function getHARExportUrl(sessionId: string): string {
-  return `${API_BASE}/har/export/${sessionId}`;
+  return withToken(`${API_BASE}/har/export/${sessionId}`);
 }
 
 // Snapshot Export API
 export function getSnapshotUrl(sessionId: string): string {
-  return `${API_BASE}/snapshot/${sessionId}`;
+  return withToken(`${API_BASE}/snapshot/${sessionId}`);
 }
 
 export async function exportSelectedAsSnapshot(
@@ -316,9 +326,9 @@ export async function exportSelectedAsSnapshot(
 ): Promise<Blob> {
   const response = await fetch(`${API_BASE}/snapshot/selected`, {
     method: 'POST',
-    headers: {
+    headers: authHeaders({
       'Content-Type': 'application/json',
-    },
+    }),
     body: JSON.stringify({ entryIds, sessionName }),
   });
 
@@ -336,9 +346,9 @@ export async function exportSelectedAsHAR(
 ): Promise<Blob> {
   const response = await fetch(`${API_BASE}/har/export`, {
     method: 'POST',
-    headers: {
+    headers: authHeaders({
       'Content-Type': 'application/json',
-    },
+    }),
     body: JSON.stringify({ entryIds, sessionName }),
   });
 
@@ -370,6 +380,7 @@ export async function importHAR(
 
   const response = await fetch(`${API_BASE}/har/import`, {
     method: 'POST',
+    headers: authHeaders(),
     body: formData,
   });
 
@@ -395,6 +406,7 @@ export async function validateHAR(file: File): Promise<HARValidationResult> {
 
   const response = await fetch(`${API_BASE}/har/validate`, {
     method: 'POST',
+    headers: authHeaders(),
     body: formData,
   });
 

@@ -1,6 +1,7 @@
 import type { ModifyRequestConfig } from '@nectoproxy/shared';
 import type { ActionHandler, RuleResult } from './types.js';
 import type { MatchContext } from '../RuleMatcher.js';
+import { runTransform } from '../sandbox.js';
 
 export class ModifyRequestAction implements ActionHandler<ModifyRequestConfig> {
   async executeRequest(config: ModifyRequestConfig, ctx: MatchContext): Promise<RuleResult> {
@@ -52,16 +53,18 @@ export class ModifyRequestAction implements ActionHandler<ModifyRequestConfig> {
       modifiedHeaders['content-length'] = String(modifiedBody.length);
     }
 
-    // Transform body using JavaScript function
+    // Transform body using a sandboxed JavaScript function
     if (config.transformBody && ctx.requestBody) {
-      try {
-        const transformFn = new Function('body', 'headers', config.transformBody);
-        const bodyStr = ctx.requestBody.toString('utf-8');
-        const result = transformFn(bodyStr, modifiedHeaders);
-        modifiedBody = Buffer.from(result);
+      const bodyStr = ctx.requestBody.toString('utf-8');
+      const result = runTransform(config.transformBody, {
+        body: bodyStr,
+        headers: modifiedHeaders,
+      });
+      if (result.ok && result.value !== undefined) {
+        modifiedBody = Buffer.from(result.value);
         modifiedHeaders['content-length'] = String(modifiedBody.length);
-      } catch (error) {
-        console.error('Body transform error:', error);
+      } else if (!result.ok) {
+        console.error('Body transform error:', result.error);
       }
     }
 

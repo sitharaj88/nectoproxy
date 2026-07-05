@@ -1,4 +1,5 @@
 import { Server as HttpServer } from 'node:http';
+import crypto from 'node:crypto';
 import { Server, Socket } from 'socket.io';
 import type {
   ServerToClientEvents,
@@ -14,6 +15,23 @@ import type {
 
 export type BreakpointResumeHandler = (hitId: string, resume: BreakpointResume) => void;
 
+export interface SocketServerOptions {
+  /** Session token required in socket.handshake.auth.token. */
+  token: string;
+  /** Hostnames considered same-origin/local for CORS validation. */
+  allowedHostnames: Set<string>;
+}
+
+/**
+ * Constant-time string comparison guarding against length mismatch.
+ */
+function timingSafeStrEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, 'utf-8');
+  const bb = Buffer.from(b, 'utf-8');
+  if (ab.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ab, bb);
+}
+
 export class SocketServer {
   private io: Server<ClientToServerEvents, ServerToClientEvents>;
   private trafficBuffer: TrafficEntry[] = [];
@@ -21,14 +39,46 @@ export class SocketServer {
   private bufferFlushMs = 100;
   private maxBufferSize = 50;
   private breakpointResumeHandler: BreakpointResumeHandler | null = null;
+  private token: string;
 
-  constructor(httpServer: HttpServer) {
+  constructor(httpServer: HttpServer, options: SocketServerOptions) {
+    this.token = options.token;
+    const allowedHostnames = options.allowedHostnames;
+
     this.io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
       cors: {
-        origin: '*',
+        // Same-origin only: reflect the request origin only when its hostname is
+        // one of our known-local hostnames (or when there is no Origin header,
+        // i.e. non-browser / same-origin clients).
+        origin: (origin, callback) => {
+          if (!origin) {
+            callback(null, true);
+            return;
+          }
+          try {
+            const { hostname } = new URL(origin);
+            if (allowedHostnames.has(hostname)) {
+              callback(null, true);
+              return;
+            }
+          } catch {
+            // fall through to rejection
+          }
+          callback(new Error('Origin not allowed'), false);
+        },
         methods: ['GET', 'POST'],
       },
       transports: ['websocket', 'polling'],
+    });
+
+    // Require the session token on every connection.
+    this.io.use((socket, next) => {
+      const provided = socket.handshake.auth?.token;
+      if (typeof provided === 'string' && timingSafeStrEqual(provided, this.token)) {
+        next();
+        return;
+      }
+      next(new Error('Unauthorized'));
     });
 
     this.setupEventHandlers();

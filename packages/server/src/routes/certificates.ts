@@ -33,6 +33,22 @@ export function createCertificatesRouter(certManager: CertificateManager): Route
     }
   });
 
+  // Download an Apple .mobileconfig profile (one-tap CA trust on iOS/iPadOS/macOS)
+  router.get('/mobileconfig', (_req: Request, res: Response) => {
+    try {
+      const profile = certManager.getMobileConfig();
+      res.setHeader('Content-Type', 'application/x-apple-aspen-config');
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename="nectoproxy-ca.mobileconfig"'
+      );
+      res.send(profile);
+    } catch (error) {
+      console.error('Error building mobileconfig profile:', error);
+      res.status(500).json({ error: 'Failed to build mobileconfig profile' });
+    }
+  });
+
   // Get CA certificate info
   router.get('/ca/info', (_req: Request, res: Response): void => {
     try {

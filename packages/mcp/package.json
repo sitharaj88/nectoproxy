@@ -1,0 +1,35 @@
+{
+  "name": "@nectoproxy/mcp",
+  "version": "0.1.2",
+  "private": true,
+  "description": "Model Context Protocol (MCP) server for NectoProxy - inspect traffic, manage rules, and replay requests from an AI assistant",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "nectoproxy-mcp": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@nectoproxy/shared": "workspace:*",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}
