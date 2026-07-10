@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { useSearchSuggestions, addRecentSearch, clearRecentSearches, type SearchSuggestion } from '@/hooks/useSearchSuggestions';
+import { Badge, Button, IconButton, Input, Kbd, cn, type BadgeProps } from '@/components/ui';
 
 interface SearchAutocompleteProps {
   value: string;
@@ -134,28 +135,28 @@ export const SearchAutocomplete = forwardRef<HTMLInputElement, SearchAutocomplet
       }
     };
 
-    const getTypeColor = (type: SearchSuggestion['type']) => {
+    const getTypeTone = (type: SearchSuggestion['type']): BadgeProps['tone'] => {
       switch (type) {
         case 'recent':
-          return 'bg-gray-600 text-gray-300';
+          return 'neutral';
         case 'host':
-          return 'bg-blue-600/30 text-blue-400';
+          return 'info';
         case 'path':
-          return 'bg-green-600/30 text-green-400';
+          return 'success';
         case 'filter':
-          return 'bg-purple-600/30 text-purple-400';
+          return 'accent';
         default:
-          return 'bg-gray-600 text-gray-300';
+          return 'neutral';
       }
     };
 
     return (
-      <div ref={containerRef} className={`relative ${className}`}>
+      <div ref={containerRef} className={cn('relative', className)}>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
+          <Input
             ref={ref}
             type="text"
+            sizeVariant="md"
             value={value}
             onChange={(e) => {
               onChange(e.target.value);
@@ -164,7 +165,8 @@ export const SearchAutocomplete = forwardRef<HTMLInputElement, SearchAutocomplet
             onFocus={() => setIsOpen(true)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full pl-9 pr-8 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            leftIcon={<Search className="w-4 h-4" />}
+            className="pr-8"
             aria-label="Search traffic"
             aria-expanded={isOpen}
             aria-autocomplete="list"
@@ -172,13 +174,13 @@ export const SearchAutocomplete = forwardRef<HTMLInputElement, SearchAutocomplet
             role="combobox"
           />
           {value && (
-            <button
+            <IconButton
+              label="Clear search"
+              tooltip={false}
+              icon={<X className="w-4 h-4" />}
               onClick={handleClear}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
-              aria-label="Clear search"
-            >
-              <X className="w-4 h-4" />
-            </button>
+              className="absolute right-0.5 top-1/2 -translate-y-1/2"
+            />
           )}
         </div>
 
@@ -191,20 +193,17 @@ export const SearchAutocomplete = forwardRef<HTMLInputElement, SearchAutocomplet
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden"
+              className="absolute z-50 w-full mt-1 bg-surface-overlay border border-edge rounded-md shadow-popover overflow-hidden"
             >
               {/* Group by type */}
               {suggestions.some((s) => s.type === 'recent') && (
-                <div className="px-3 py-1.5 flex items-center justify-between border-b border-gray-700">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <div className="px-3 py-1.5 flex items-center justify-between border-b border-edge">
+                  <span className="text-xs font-medium text-ink-muted uppercase tracking-wider">
                     Recent
                   </span>
-                  <button
-                    onClick={handleClearRecent}
-                    className="text-xs text-gray-500 hover:text-gray-300"
-                  >
+                  <Button variant="ghost" size="xs" onClick={handleClearRecent}>
                     Clear
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -219,32 +218,29 @@ export const SearchAutocomplete = forwardRef<HTMLInputElement, SearchAutocomplet
                     aria-selected={isSelected}
                     onClick={() => selectSuggestion(suggestion)}
                     onMouseEnter={() => setSelectedIndex(index)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-                      isSelected ? 'bg-gray-700' : 'hover:bg-gray-700/50'
-                    }`}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3 py-2 text-left transition-colors',
+                      isSelected ? 'bg-surface-raised' : 'hover:bg-surface-raised'
+                    )}
                   >
-                    <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <span className="flex-1 text-sm text-gray-200 truncate">
+                    <Icon className="w-4 h-4 text-ink-faint flex-shrink-0" />
+                    <span className="flex-1 text-sm text-ink truncate">
                       {suggestion.label}
                     </span>
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${getTypeColor(
-                        suggestion.type
-                      )}`}
-                    >
+                    <Badge tone={getTypeTone(suggestion.type)}>
                       {getTypeLabel(suggestion.type)}
-                    </span>
+                    </Badge>
                   </button>
                 );
               })}
 
               {/* Help text */}
-              <div className="px-3 py-2 border-t border-gray-700 flex items-center gap-2 text-[10px] text-gray-500">
-                <span className="px-1 py-0.5 bg-gray-700 rounded">↑↓</span>
+              <div className="px-3 py-2 border-t border-edge flex items-center gap-2 text-[10px] text-ink-muted">
+                <Kbd>↑↓</Kbd>
                 <span>Navigate</span>
-                <span className="px-1 py-0.5 bg-gray-700 rounded">↵</span>
+                <Kbd>↵</Kbd>
                 <span>Select</span>
-                <span className="px-1 py-0.5 bg-gray-700 rounded">esc</span>
+                <Kbd>esc</Kbd>
                 <span>Close</span>
               </div>
             </motion.div>

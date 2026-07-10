@@ -9,6 +9,7 @@ import {
 } from '../services/api';
 import { Modal } from './ui/Modal';
 import { toast } from './ui/Toaster';
+import { Button, Input, Switch, Badge } from './ui';
 
 interface SSLPassthroughPanelProps {
   isOpen: boolean;
@@ -114,13 +115,9 @@ export function SSLPassthroughPanel({ isOpen, onClose }: SSLPassthroughPanelProp
 
   const footer = (
     <div className="flex items-center justify-end">
-      <button
-        type="button"
-        onClick={onClose}
-        className="px-3 py-2 text-sm text-gray-400 hover:text-gray-300"
-      >
+      <Button variant="ghost" size="md" onClick={onClose}>
         Close
-      </button>
+      </Button>
     </div>
   );
 
@@ -129,25 +126,25 @@ export function SSLPassthroughPanel({ isOpen, onClose }: SSLPassthroughPanelProp
       isOpen={isOpen}
       onClose={onClose}
       title="SSL Passthrough"
-      titleIcon={<Shield className="w-5 h-5 text-primary-400" aria-hidden="true" />}
+      titleIcon={<Shield className="w-5 h-5 text-accent" aria-hidden="true" />}
       size="md"
       footer={footer}
     >
       <div className="p-4">
         {loading ? (
-          <div className="flex items-center justify-center h-32 gap-2 text-gray-500" role="status">
+          <div className="flex items-center justify-center h-32 gap-2 text-ink-muted" role="status">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span className="text-sm">Loading domains…</span>
           </div>
         ) : (
           <div className="space-y-4">
             {error && (
-              <div className="p-3 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-sm" role="alert">
+              <div className="p-3 rounded-md bg-danger/12 border border-danger/25 text-danger text-sm" role="alert">
                 {error}
               </div>
             )}
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-ink-muted">
               Domains listed here will bypass MITM interception. Their SSL/TLS traffic
               will pass through the proxy without being decrypted. Use wildcards like
               *.example.com to match all subdomains.
@@ -156,9 +153,10 @@ export function SSLPassthroughPanel({ isOpen, onClose }: SSLPassthroughPanelProp
             <div className="space-y-2">
               <label htmlFor={domainId} className="sr-only">Domain</label>
               <div className="flex gap-2">
-                <input
+                <Input
                   id={domainId}
                   type="text"
+                  sizeVariant="md"
                   value={newDomain}
                   onChange={(e) => setNewDomain(e.target.value)}
                   onKeyDown={(e) => {
@@ -168,22 +166,23 @@ export function SSLPassthroughPanel({ isOpen, onClose }: SSLPassthroughPanelProp
                     }
                   }}
                   placeholder="e.g., *.google.com or youtube.com"
-                  className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm"
+                  className="flex-1"
                 />
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  size="md"
                   onClick={handleAdd}
                   disabled={adding || !newDomain.trim()}
-                  className="flex items-center gap-1 px-3 py-2 bg-primary-600 hover:bg-primary-500 rounded-md text-sm disabled:opacity-50 text-white"
                 >
                   {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" aria-hidden="true" />}
                   Add
-                </button>
+                </Button>
               </div>
               <label htmlFor={reasonId} className="sr-only">Reason (optional)</label>
-              <input
+              <Input
                 id={reasonId}
                 type="text"
+                sizeVariant="md"
                 value={newReason}
                 onChange={(e) => setNewReason(e.target.value)}
                 onKeyDown={(e) => {
@@ -193,14 +192,13 @@ export function SSLPassthroughPanel({ isOpen, onClose }: SSLPassthroughPanelProp
                   }
                 }}
                 placeholder="Reason (optional)"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm"
               />
             </div>
 
-            <div className="border-t border-gray-700 pt-4">
+            <div className="border-t border-edge pt-4">
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-4 h-4 text-yellow-400" aria-hidden="true" />
-                <span className="text-sm font-medium text-gray-300">Quick Add</span>
+                <Zap className="w-4 h-4 text-warn" aria-hidden="true" />
+                <span className="text-sm font-medium text-ink">Quick Add</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {COMMON_DOMAINS.map((cd) => {
@@ -212,10 +210,10 @@ export function SSLPassthroughPanel({ isOpen, onClose }: SSLPassthroughPanelProp
                       onClick={() => handleQuickAdd(cd.domain, cd.reason)}
                       disabled={alreadyAdded}
                       title={alreadyAdded ? 'Already added' : `Add ${cd.domain}`}
-                      className={`px-2 py-1 text-xs rounded border ${
+                      className={`px-2 py-1 text-xs rounded border transition-colors ${
                         alreadyAdded
-                          ? 'bg-gray-700 border-gray-600 text-gray-500'
-                          : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500'
+                          ? 'bg-surface-raised border-edge text-ink-faint'
+                          : 'bg-surface-raised border-edge text-ink-secondary hover:bg-surface-overlay hover:border-edge-strong'
                       }`}
                     >
                       {cd.domain}
@@ -225,12 +223,12 @@ export function SSLPassthroughPanel({ isOpen, onClose }: SSLPassthroughPanelProp
               </div>
             </div>
 
-            <div className="border-t border-gray-700 pt-4">
-              <h4 className="text-sm font-medium text-gray-300 mb-2">
+            <div className="border-t border-edge pt-4">
+              <h4 className="text-sm font-medium text-ink mb-2">
                 Passthrough Domains ({domains.length})
               </h4>
               {domains.length === 0 ? (
-                <p className="text-sm text-gray-500 py-4 text-center">
+                <p className="text-sm text-ink-muted py-4 text-center">
                   No passthrough domains configured. Add domains above to bypass SSL interception.
                 </p>
               ) : (
@@ -238,47 +236,34 @@ export function SSLPassthroughPanel({ isOpen, onClose }: SSLPassthroughPanelProp
                   {domains.map((domain) => (
                     <div
                       key={domain.id}
-                      className="flex items-center justify-between p-3 bg-gray-900 rounded-md"
+                      className="flex items-center justify-between p-3 bg-canvas border border-edge-subtle rounded-md"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-mono text-white truncate">
+                          <span className="text-sm font-mono text-ink truncate">
                             {domain.domain}
                           </span>
                           {!domain.enabled && (
-                            <span className="text-xs px-1.5 py-0.5 bg-gray-700 text-gray-400 rounded">
-                              disabled
-                            </span>
+                            <Badge tone="neutral">disabled</Badge>
                           )}
                         </div>
                         {domain.reason && (
-                          <p className="text-xs text-gray-500 mt-0.5 truncate">
+                          <p className="text-xs text-ink-muted mt-0.5 truncate">
                             {domain.reason}
                           </p>
                         )}
                       </div>
                       <div className="flex items-center gap-2 ml-2 shrink-0">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={domain.enabled}
+                        <Switch
+                          checked={domain.enabled}
                           aria-label={`${domain.enabled ? 'Disable' : 'Enable'} ${domain.domain}`}
-                          onClick={() => handleToggle(domain.id)}
-                          className={`relative w-10 h-5 rounded-full transition-colors ${
-                            domain.enabled ? 'bg-primary-600' : 'bg-gray-600'
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                              domain.enabled ? 'left-5' : 'left-0.5'
-                            }`}
-                          />
-                        </button>
+                          onCheckedChange={() => handleToggle(domain.id)}
+                        />
                         <button
                           type="button"
                           onClick={() => handleDelete(domain.id)}
                           aria-label={`Delete ${domain.domain}`}
-                          className="p-1 text-gray-400 hover:text-red-400 rounded transition-colors"
+                          className="p-1 text-ink-muted hover:text-danger rounded transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

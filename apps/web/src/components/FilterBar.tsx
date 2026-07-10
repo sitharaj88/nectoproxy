@@ -3,6 +3,7 @@ import { X, Regex, FileText, ChevronDown, Clock, HardDrive, AlertCircle, Sliders
 import { useTrafficStore, useHasActiveFilters, type AdvancedFilter } from '@/stores/trafficStore';
 import { BUILT_IN_FILTER_PRESETS } from '@nectoproxy/shared';
 import { SearchAutocomplete } from './SearchAutocomplete';
+import { Input, IconButton, Tooltip, cn } from './ui';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
 const STATUS_GROUPS = ['2xx', '3xx', '4xx', '5xx'];
@@ -87,7 +88,7 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
   };
 
   return (
-    <div className="bg-gray-800 border-b border-gray-700 px-4 py-2">
+    <div className="bg-surface-raised border-b border-edge px-4 py-2">
       {/* Main filter row */}
       <div className="flex items-center gap-4">
         {/* Search with autocomplete */}
@@ -100,20 +101,22 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
             placeholder={filter.searchRegex ? "Regex pattern..." : "Filter by URL or host..."}
             className="flex-1"
           />
-          <button
-            type="button"
-            onClick={() => setFilter({ searchRegex: !filter.searchRegex })}
-            aria-pressed={filter.searchRegex}
-            aria-label={filter.searchRegex ? 'Disable regex mode' : 'Enable regex mode'}
-            className={`p-1.5 rounded transition-colors ${
-              filter.searchRegex
-                ? 'text-primary-400 bg-primary-500/20'
-                : 'text-gray-500 hover:text-gray-400 bg-gray-700'
-            }`}
-            title={filter.searchRegex ? 'Regex mode (click to disable)' : 'Enable regex mode'}
-          >
-            <Regex className="w-4 h-4" aria-hidden="true" />
-          </button>
+          <Tooltip content={filter.searchRegex ? 'Regex mode (click to disable)' : 'Enable regex mode'}>
+            <button
+              type="button"
+              onClick={() => setFilter({ searchRegex: !filter.searchRegex })}
+              aria-pressed={filter.searchRegex}
+              aria-label={filter.searchRegex ? 'Disable regex mode' : 'Enable regex mode'}
+              className={cn(
+                'inline-flex items-center justify-center h-7 w-7 rounded-md transition-colors',
+                filter.searchRegex
+                  ? 'text-accent bg-accent/15'
+                  : 'text-ink-faint hover:text-ink-secondary bg-surface-raised border border-edge'
+              )}
+            >
+              <Regex className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
 
         {/* Method filters */}
@@ -125,11 +128,12 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
               onClick={() => toggleMethod(method)}
               aria-pressed={filter.methods.includes(method)}
               aria-label={`Toggle ${method} filter`}
-              className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
+              className={cn(
+                'px-2 py-1 text-xs rounded font-medium border transition-colors',
                 filter.methods.includes(method)
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-              }`}
+                  ? 'bg-accent/15 text-accent border-accent/25'
+                  : 'bg-surface-raised text-ink-muted border-edge hover:bg-surface-overlay hover:text-ink'
+              )}
             >
               {method}
             </button>
@@ -138,39 +142,36 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
 
         {/* Status filters */}
         <div className="flex items-center gap-1" role="group" aria-label="Filter by HTTP status group">
-          {STATUS_GROUPS.map((status) => {
-            const colorClass = {
-              '2xx': filter.statuses.includes(status) ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600',
-              '3xx': filter.statuses.includes(status) ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600',
-              '4xx': filter.statuses.includes(status) ? 'bg-yellow-600' : 'bg-gray-700 hover:bg-gray-600',
-              '5xx': filter.statuses.includes(status) ? 'bg-red-600' : 'bg-gray-700 hover:bg-gray-600',
-            }[status];
-
-            return (
-              <button
-                key={status}
-                type="button"
-                onClick={() => toggleStatus(status)}
-                aria-pressed={filter.statuses.includes(status)}
-                aria-label={`Toggle ${status} status filter`}
-                className={`px-2 py-1 text-xs rounded font-medium transition-colors ${colorClass} ${
-                  filter.statuses.includes(status) ? 'text-white' : 'text-gray-400'
-                }`}
-              >
-                {status}
-              </button>
-            );
-          })}
+          {STATUS_GROUPS.map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => toggleStatus(status)}
+              aria-pressed={filter.statuses.includes(status)}
+              aria-label={`Toggle ${status} status filter`}
+              className={cn(
+                'px-2 py-1 text-xs rounded font-medium border transition-colors',
+                filter.statuses.includes(status)
+                  ? 'bg-accent/15 text-accent border-accent/25'
+                  : 'bg-surface-raised text-ink-muted border-edge hover:bg-surface-overlay hover:text-ink'
+              )}
+            >
+              {status}
+            </button>
+          ))}
         </div>
 
         {/* Presets dropdown */}
         <div className="relative">
           <button
+            type="button"
             onClick={() => setShowPresets(!showPresets)}
-            className="flex items-center gap-1 px-2 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition-colors"
+            aria-haspopup="menu"
+            aria-expanded={showPresets}
+            className="flex items-center gap-1 px-2 h-7 text-xs bg-surface-raised border border-edge hover:bg-surface-overlay hover:text-ink text-ink-secondary rounded-md transition-colors"
           >
             Presets
-            <ChevronDown className="w-3 h-3" />
+            <ChevronDown className={cn('w-3 h-3 transition-transform', showPresets && 'rotate-180')} />
           </button>
 
           {showPresets && (
@@ -179,16 +180,21 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
                 className="fixed inset-0 z-10"
                 onClick={() => setShowPresets(false)}
               />
-              <div className="absolute right-0 mt-1 w-56 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-20">
+              <div
+                role="menu"
+                className="absolute right-0 mt-1 w-56 bg-surface-overlay border border-edge rounded-md shadow-popover z-20 overflow-hidden"
+              >
                 {BUILT_IN_FILTER_PRESETS.map((preset, index) => (
                   <button
                     key={index}
+                    type="button"
+                    role="menuitem"
                     onClick={() => applyPreset(preset)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 transition-colors first:rounded-t-md last:rounded-b-md"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-surface-raised transition-colors"
                   >
-                    <div className="font-medium text-gray-200">{preset.name}</div>
+                    <div className="font-medium text-ink">{preset.name}</div>
                     {preset.description && (
-                      <div className="text-xs text-gray-500">{preset.description}</div>
+                      <div className="text-xs text-ink-muted">{preset.description}</div>
                     )}
                   </button>
                 ))}
@@ -203,31 +209,28 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
           onClick={() => setShowAdvanced(!showAdvanced)}
           aria-expanded={showAdvanced}
           aria-controls="filter-advanced-row"
-          className={`inline-flex items-center gap-1.5 px-2 py-1.5 text-xs rounded-md transition-colors ${
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2 h-7 text-xs rounded-md border transition-colors',
             showAdvanced
-              ? 'bg-primary-600 text-white'
-              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-          }`}
+              ? 'bg-accent/15 text-accent border-accent/25'
+              : 'bg-surface-raised text-ink-muted border-edge hover:bg-surface-overlay hover:text-ink'
+          )}
         >
           <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
           Advanced
           <ChevronDown
-            className={`w-3 h-3 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+            className={cn('w-3 h-3 transition-transform', showAdvanced && 'rotate-180')}
             aria-hidden="true"
           />
         </button>
 
         {/* Clear filters */}
         {hasActiveFilters && (
-          <button
-            type="button"
+          <IconButton
+            label="Clear all filters"
+            icon={<X className="w-4 h-4" aria-hidden="true" />}
             onClick={resetFilter}
-            className="p-1.5 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-400 transition-colors"
-            title="Clear all filters"
-            aria-label="Clear all filters"
-          >
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
+          />
         )}
       </div>
 
@@ -235,41 +238,42 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
       {showAdvanced && (
         <div
           id="filter-advanced-row"
-          className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-700 animate-fadeIn"
+          className="flex items-center gap-4 mt-3 pt-3 border-t border-edge animate-fadeIn"
         >
           {/* Body search */}
           <div className="relative flex-1 max-w-xs">
             <label htmlFor={bodySearchId} className="sr-only">Search in body</label>
-            <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
-            <input
+            <Input
               id={bodySearchId}
               type="text"
+              sizeVariant="md"
+              leftIcon={<FileText className="w-4 h-4" aria-hidden="true" />}
               placeholder={filter.bodySearchRegex ? 'Body regex...' : 'Search in body...'}
               value={filter.bodySearch}
               onChange={(e) => setFilter({ bodySearch: e.target.value })}
-              className={`w-full pl-9 pr-16 py-1.5 bg-gray-900 border rounded-md text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-primary-500 ${
-                filter.bodySearchRegex ? 'border-primary-500' : 'border-gray-700'
-              }`}
+              className={cn('pr-9', filter.bodySearchRegex && 'border-accent')}
             />
-            <button
-              type="button"
-              onClick={() => setFilter({ bodySearchRegex: !filter.bodySearchRegex })}
-              aria-pressed={filter.bodySearchRegex}
-              aria-label={filter.bodySearchRegex ? 'Disable body regex mode' : 'Enable body regex mode'}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-colors ${
-                filter.bodySearchRegex
-                  ? 'text-primary-400 bg-primary-500/20'
-                  : 'text-gray-500 hover:text-gray-400'
-              }`}
-              title={filter.bodySearchRegex ? 'Regex mode (click to disable)' : 'Enable regex mode'}
-            >
-              <Regex className="w-4 h-4" aria-hidden="true" />
-            </button>
+            <Tooltip content={filter.bodySearchRegex ? 'Regex mode (click to disable)' : 'Enable regex mode'}>
+              <button
+                type="button"
+                onClick={() => setFilter({ bodySearchRegex: !filter.bodySearchRegex })}
+                aria-pressed={filter.bodySearchRegex}
+                aria-label={filter.bodySearchRegex ? 'Disable body regex mode' : 'Enable body regex mode'}
+                className={cn(
+                  'absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded transition-colors',
+                  filter.bodySearchRegex
+                    ? 'text-accent bg-accent/15'
+                    : 'text-ink-faint hover:text-ink-secondary'
+                )}
+              >
+                <Regex className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </Tooltip>
           </div>
 
           {/* Protocol filters */}
           <div className="flex items-center gap-1" role="group" aria-label="Filter by protocol">
-            <span className="text-xs text-gray-500 mr-1" aria-hidden="true">Protocol:</span>
+            <span className="text-xs text-ink-muted mr-1" aria-hidden="true">Protocol:</span>
             {PROTOCOLS.map((protocol) => (
               <button
                 key={protocol}
@@ -277,11 +281,12 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
                 onClick={() => toggleProtocol(protocol)}
                 aria-pressed={filter.protocols.includes(protocol)}
                 aria-label={`Toggle ${protocol.toUpperCase()} protocol filter`}
-                className={`px-2 py-1 text-xs rounded font-medium transition-colors ${
+                className={cn(
+                  'px-2 py-1 text-xs rounded font-medium border transition-colors',
                   filter.protocols.includes(protocol)
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                }`}
+                    ? 'bg-accent/15 text-accent border-accent/25'
+                    : 'bg-surface-raised text-ink-muted border-edge hover:bg-surface-overlay hover:text-ink'
+                )}
               >
                 {protocol.toUpperCase()}
               </button>
@@ -290,57 +295,61 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
 
           {/* Duration filter */}
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-500" aria-hidden="true" />
+            <Clock className="w-4 h-4 text-ink-muted" aria-hidden="true" />
             <label htmlFor={minDurationId} className="sr-only">Minimum duration (ms)</label>
-            <input
+            <Input
               id={minDurationId}
               type="number"
               min={0}
+              sizeVariant="md"
               placeholder="Min ms"
               title="Minimum duration (ms)"
               value={filter.minDuration ?? ''}
               onChange={(e) => setFilter({ minDuration: e.target.value ? Number(e.target.value) : null })}
-              className="w-20 px-2 py-1 bg-gray-900 border border-gray-700 rounded-md text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-primary-500"
+              className="w-20"
             />
-            <span className="text-gray-500" aria-hidden="true">–</span>
+            <span className="text-ink-muted" aria-hidden="true">–</span>
             <label htmlFor={maxDurationId} className="sr-only">Maximum duration (ms)</label>
-            <input
+            <Input
               id={maxDurationId}
               type="number"
               min={0}
+              sizeVariant="md"
               placeholder="Max ms"
               title="Maximum duration (ms)"
               value={filter.maxDuration ?? ''}
               onChange={(e) => setFilter({ maxDuration: e.target.value ? Number(e.target.value) : null })}
-              className="w-20 px-2 py-1 bg-gray-900 border border-gray-700 rounded-md text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-primary-500"
+              className="w-20"
             />
           </div>
 
           {/* Size filter */}
           <div className="flex items-center gap-2">
-            <HardDrive className="w-4 h-4 text-gray-500" aria-hidden="true" />
+            <HardDrive className="w-4 h-4 text-ink-muted" aria-hidden="true" />
             <label htmlFor={minSizeId} className="sr-only">Minimum size (KB)</label>
-            <input
+            <Input
               id={minSizeId}
               type="number"
               min={0}
+              sizeVariant="md"
               placeholder="Min KB"
               title="Minimum response size (KB)"
               value={filter.minSize !== null ? filter.minSize / 1024 : ''}
               onChange={(e) => setFilter({ minSize: e.target.value ? Number(e.target.value) * 1024 : null })}
-              className="w-20 px-2 py-1 bg-gray-900 border border-gray-700 rounded-md text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-primary-500"
+              className="w-20"
             />
-            <span className="text-gray-500" aria-hidden="true">–</span>
+            <span className="text-ink-muted" aria-hidden="true">–</span>
             <label htmlFor={maxSizeId} className="sr-only">Maximum size (KB)</label>
-            <input
+            <Input
               id={maxSizeId}
               type="number"
               min={0}
+              sizeVariant="md"
               placeholder="Max KB"
               title="Maximum response size (KB)"
               value={filter.maxSize !== null ? filter.maxSize / 1024 : ''}
               onChange={(e) => setFilter({ maxSize: e.target.value ? Number(e.target.value) * 1024 : null })}
-              className="w-20 px-2 py-1 bg-gray-900 border border-gray-700 rounded-md text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-primary-500"
+              className="w-20"
             />
           </div>
 
@@ -364,13 +373,14 @@ export function FilterBar({ searchInputRef }: FilterBarProps) {
                 ? 'Currently hiding errors — click to show all'
                 : 'Currently showing all — click to filter errors only'
             }
-            className={`flex items-center gap-1 px-2 py-1 text-xs rounded font-medium transition-colors ${
+            className={cn(
+              'flex items-center gap-1 px-2 py-1 text-xs rounded font-medium border transition-colors',
               filter.hasError === true
-                ? 'bg-red-600 text-white'
+                ? 'bg-danger/15 text-danger border-danger/25'
                 : filter.hasError === false
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-            }`}
+                ? 'bg-success/15 text-success border-success/25'
+                : 'bg-surface-raised text-ink-muted border-edge hover:bg-surface-overlay hover:text-ink'
+            )}
             title={
               filter.hasError === true
                 ? 'Showing errors only'

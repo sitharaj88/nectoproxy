@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { PauseCircle } from 'lucide-react';
 import type { BreakpointHit, BreakpointResumeModifications } from '@nectoproxy/shared';
 import { resumeBreakpoint } from '../../services/socket';
 import { useBreakpointStore } from '../../stores/breakpointStore';
+import { Badge, Button, Input, Select, Tabs, EmptyState, cn } from '@/components/ui';
 
 interface InterceptedPanelProps {
   hits: BreakpointHit[];
@@ -74,57 +76,38 @@ export function InterceptedPanel({ hits, selectedHit: initialSelectedHit }: Inte
 
   if (hits.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-        <svg
-          className="w-16 h-16 mb-4 text-gray-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <p className="text-lg font-medium">No intercepted requests</p>
-        <p className="text-sm mt-1">Requests matching your breakpoints will appear here</p>
-      </div>
+      <EmptyState
+        icon={PauseCircle}
+        title="No intercepted requests"
+        description="Requests matching your breakpoints will appear here"
+      />
     );
   }
 
   return (
     <div className="flex h-full">
       {/* Hit list sidebar */}
-      <div className="w-64 border-r border-gray-700 overflow-auto">
-        <div className="p-2 text-xs text-gray-500 uppercase font-semibold">
+      <div className="w-64 border-r border-edge overflow-auto">
+        <div className="p-2 text-xs text-ink-muted uppercase font-semibold">
           Paused Requests ({hits.length})
         </div>
         {hits.map((hit) => (
           <button
             key={hit.id}
             onClick={() => setSelectedHit(hit)}
-            className={`w-full p-3 text-left border-b border-gray-700 hover:bg-gray-700/50 ${
-              selectedHit?.id === hit.id ? 'bg-gray-700' : ''
-            }`}
+            className={cn(
+              'w-full p-3 text-left border-b border-edge hover:bg-surface-raised/50',
+              selectedHit?.id === hit.id && 'bg-surface-raised'
+            )}
           >
             <div className="flex items-center gap-2">
-              <span
-                className={`px-1.5 py-0.5 text-xs font-medium rounded ${
-                  hit.type === 'request'
-                    ? 'bg-green-900/50 text-green-400'
-                    : 'bg-purple-900/50 text-purple-400'
-                }`}
-              >
-                {hit.type}
-              </span>
-              <span className="text-xs font-mono text-gray-300">{hit.method}</span>
+              <Badge tone={hit.type === 'request' ? 'success' : 'accent'}>{hit.type}</Badge>
+              <span className="text-xs font-mono text-ink-secondary">{hit.method}</span>
             </div>
-            <div className="mt-1 text-xs text-gray-400 truncate">
+            <div className="mt-1 text-xs text-ink-muted truncate">
               {new URL(hit.url).pathname}
             </div>
-            <div className="mt-1 text-xs text-gray-500">
+            <div className="mt-1 text-xs text-ink-faint">
               {new URL(hit.url).host}
             </div>
           </button>
@@ -135,30 +118,19 @@ export function InterceptedPanel({ hits, selectedHit: initialSelectedHit }: Inte
       {selectedHit && (
         <div className="flex-1 flex flex-col">
           {/* Tabs */}
-          <div className="flex border-b border-gray-700">
-            <button
-              onClick={() => setActiveTab('request')}
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === 'request'
-                  ? 'text-blue-400 border-b-2 border-blue-400'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Request
-            </button>
-            {selectedHit.type === 'response' && (
-              <button
-                onClick={() => setActiveTab('response')}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === 'response'
-                    ? 'text-blue-400 border-b-2 border-blue-400'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Response
-              </button>
-            )}
-          </div>
+          <Tabs
+            size="md"
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as 'request' | 'response')}
+            items={
+              selectedHit.type === 'response'
+                ? [
+                    { value: 'request', label: 'Request' },
+                    { value: 'response', label: 'Response' },
+                  ]
+                : [{ value: 'request', label: 'Request' }]
+            }
+          />
 
           {/* Editor content */}
           <div className="flex-1 overflow-auto p-4">
@@ -166,32 +138,33 @@ export function InterceptedPanel({ hits, selectedHit: initialSelectedHit }: Inte
               <div className="space-y-4">
                 {/* Method and URL */}
                 <div className="flex gap-2">
-                  <select
+                  <Select
+                    sizeVariant="md"
                     value={method}
                     onChange={(e) => setMethod(e.target.value)}
-                    className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
                     disabled={selectedHit.type === 'response'}
                   >
                     {['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'].map((m) => (
                       <option key={m} value={m}>{m}</option>
                     ))}
-                  </select>
-                  <input
+                  </Select>
+                  <Input
+                    sizeVariant="md"
                     type="text"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm font-mono"
+                    className="flex-1 font-mono"
                     readOnly={selectedHit.type === 'response'}
                   />
                 </div>
 
                 {/* Request Headers */}
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Headers</label>
+                  <label className="block text-sm text-ink-secondary mb-1">Headers</label>
                   <textarea
                     value={requestHeaders}
                     onChange={(e) => setRequestHeaders(e.target.value)}
-                    className="w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm font-mono resize-none"
+                    className={textareaClass('h-32')}
                     placeholder="Header-Name: value"
                     readOnly={selectedHit.type === 'response'}
                   />
@@ -199,11 +172,11 @@ export function InterceptedPanel({ hits, selectedHit: initialSelectedHit }: Inte
 
                 {/* Request Body */}
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Body</label>
+                  <label className="block text-sm text-ink-secondary mb-1">Body</label>
                   <textarea
                     value={requestBody}
                     onChange={(e) => setRequestBody(e.target.value)}
-                    className="w-full h-48 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm font-mono resize-none"
+                    className={textareaClass('h-48')}
                     placeholder="Request body..."
                     readOnly={selectedHit.type === 'response'}
                   />
@@ -213,40 +186,43 @@ export function InterceptedPanel({ hits, selectedHit: initialSelectedHit }: Inte
               <div className="space-y-4">
                 {/* Status */}
                 <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
-                    placeholder="200"
-                  />
-                  <input
+                  <div className="w-24">
+                    <Input
+                      sizeVariant="md"
+                      type="number"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      placeholder="200"
+                    />
+                  </div>
+                  <Input
+                    sizeVariant="md"
                     type="text"
                     value={statusText}
                     onChange={(e) => setStatusText(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                    className="flex-1"
                     placeholder="OK"
                   />
                 </div>
 
                 {/* Response Headers */}
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Headers</label>
+                  <label className="block text-sm text-ink-secondary mb-1">Headers</label>
                   <textarea
                     value={responseHeaders}
                     onChange={(e) => setResponseHeaders(e.target.value)}
-                    className="w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm font-mono resize-none"
+                    className={textareaClass('h-32')}
                     placeholder="Header-Name: value"
                   />
                 </div>
 
                 {/* Response Body */}
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Body</label>
+                  <label className="block text-sm text-ink-secondary mb-1">Body</label>
                   <textarea
                     value={responseBody}
                     onChange={(e) => setResponseBody(e.target.value)}
-                    className="w-full h-48 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm font-mono resize-none"
+                    className={textareaClass('h-48')}
                     placeholder="Response body..."
                   />
                 </div>
@@ -255,23 +231,31 @@ export function InterceptedPanel({ hits, selectedHit: initialSelectedHit }: Inte
           </div>
 
           {/* Action buttons */}
-          <div className="flex justify-end gap-3 p-4 border-t border-gray-700 bg-gray-800/50">
-            <button
+          <div className="flex justify-end gap-3 p-4 border-t border-edge bg-surface/50">
+            <Button
+              variant="ghost"
+              size="md"
               onClick={() => handleResume('abort')}
-              className="px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded-md"
+              className="!text-danger hover:!bg-danger/12"
             >
               Abort
-            </button>
-            <button
-              onClick={() => handleResume('continue')}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
-            >
+            </Button>
+            <Button variant="primary" size="md" onClick={() => handleResume('continue')}>
               Continue
-            </button>
+            </Button>
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function textareaClass(height: string): string {
+  return cn(
+    'w-full px-3 py-2 rounded-md text-sm font-mono resize-none',
+    'bg-canvas text-ink placeholder:text-ink-faint border border-edge',
+    'focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50',
+    height
   );
 }
 

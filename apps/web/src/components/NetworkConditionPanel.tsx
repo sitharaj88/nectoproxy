@@ -7,6 +7,7 @@ import {
   type NetworkProfile,
 } from '../services/api';
 import { Modal } from './ui/Modal';
+import { Button, Badge } from './ui';
 
 interface NetworkConditionPanelProps {
   isOpen: boolean;
@@ -76,18 +77,14 @@ export function NetworkConditionPanel({
   }
 
   const footer = (
-    <div className="flex items-center justify-between text-sm text-gray-500">
+    <div className="flex items-center justify-between text-sm text-ink-muted">
       <div className="flex items-center gap-2">
         <WifiOff className="w-4 h-4" aria-hidden="true" />
         Network conditioning simulates slow network conditions
       </div>
-      <button
-        type="button"
-        onClick={onClose}
-        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-gray-300"
-      >
+      <Button variant="secondary" size="md" onClick={onClose}>
         Close
-      </button>
+      </Button>
     </div>
   );
 
@@ -96,45 +93,41 @@ export function NetworkConditionPanel({
       isOpen={isOpen}
       onClose={onClose}
       title="Network Conditioning"
-      titleIcon={<Gauge className="w-5 h-5 text-primary-400" aria-hidden="true" />}
+      titleIcon={<Gauge className="w-5 h-5 text-accent" aria-hidden="true" />}
       size="lg"
       footer={footer}
     >
       <>
         {activeProfile && (
-          <div className="mx-4 mt-4 p-3 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-between">
+          <div className="mx-4 mt-4 p-3 rounded-lg bg-accent/12 border border-accent/25 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Wifi className="w-5 h-5 text-primary-400" aria-hidden="true" />
+              <Wifi className="w-5 h-5 text-accent" aria-hidden="true" />
               <div>
-                <div className="font-medium text-primary-300">
+                <div className="font-medium text-accent">
                   {activeProfile.name} Active
                 </div>
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-ink-secondary">
                   {activeProfile.description}
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleDeactivate}
-              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-md"
-            >
+            <Button variant="secondary" size="sm" onClick={handleDeactivate}>
               Disable
-            </button>
+            </Button>
           </div>
         )}
 
         <div className="p-4">
           {loading ? (
-            <div className="flex items-center justify-center h-32 gap-2 text-gray-500" role="status">
+            <div className="flex items-center justify-center h-32 gap-2 text-ink-muted" role="status">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span className="text-sm">Loading profiles…</span>
             </div>
           ) : error ? (
-            <div className="p-4 text-red-400 text-center" role="alert">{error}</div>
+            <div className="p-4 text-danger text-center" role="alert">{error}</div>
           ) : (
             <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-400 mb-3">
+              <h4 className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-3">
                 Network Profiles
               </h4>
               {profiles.map((profile) => (
@@ -142,27 +135,25 @@ export function NetworkConditionPanel({
                   key={profile.id}
                   className={`p-4 rounded-lg border transition-colors cursor-pointer ${
                     activeProfile?.id === profile.id
-                      ? 'bg-primary-500/10 border-primary-500/30'
-                      : 'bg-gray-900 border-gray-700 hover:border-gray-600'
+                      ? 'bg-accent/12 border-accent/30'
+                      : 'bg-surface-raised border-edge hover:border-edge-strong'
                   }`}
                   onClick={() => handleActivate(profile.id)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{profile.name}</span>
+                        <span className="font-medium text-ink">{profile.name}</span>
                         {activeProfile?.id === profile.id && (
-                          <span className="text-xs px-2 py-0.5 rounded bg-primary-500/20 text-primary-300">
-                            Active
-                          </span>
+                          <Badge tone="accent">Active</Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-400 mt-1">
+                      <p className="text-sm text-ink-secondary mt-1">
                         {profile.description}
                       </p>
                     </div>
                     {activeProfile?.id === profile.id && (
-                      <Check className="w-5 h-5 text-primary-400" />
+                      <Check className="w-5 h-5 text-accent" />
                     )}
                   </div>
 
@@ -170,7 +161,7 @@ export function NetworkConditionPanel({
                   {profile.downloadBandwidth > 0 ||
                   profile.latency > 0 ||
                   profile.packetLoss > 0 ? (
-                    <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 mt-3 text-xs text-ink-muted">
                       <div className="flex items-center gap-1">
                         <Gauge className="w-3 h-3" />
                         {formatBandwidth(profile.downloadBandwidth)}↓{' '}
@@ -185,7 +176,7 @@ export function NetworkConditionPanel({
                         </div>
                       )}
                       {profile.packetLoss > 0 && (
-                        <div className="flex items-center gap-1 text-yellow-500">
+                        <div className="flex items-center gap-1 text-warn">
                           <AlertTriangle className="w-3 h-3" />
                           {profile.packetLoss}% loss
                         </div>

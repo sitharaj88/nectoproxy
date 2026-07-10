@@ -1,4 +1,5 @@
 import { ShieldCheck, ShieldX, ShieldAlert, AlertTriangle, Shield, Info } from 'lucide-react';
+import { Card, cn } from '@/components/ui';
 import type { SecurityIssue, Severity } from './scanners';
 
 interface SecuritySummaryProps {
@@ -26,11 +27,11 @@ export function SecuritySummary({ issues }: SecuritySummaryProps) {
   }
 
   const severities: SeverityCount[] = [
-    { severity: 'critical', count: counts.critical, icon: <ShieldX className="w-4 h-4" />, color: 'text-red-500' },
-    { severity: 'high', count: counts.high, icon: <ShieldAlert className="w-4 h-4" />, color: 'text-orange-500' },
-    { severity: 'medium', count: counts.medium, icon: <AlertTriangle className="w-4 h-4" />, color: 'text-yellow-500' },
-    { severity: 'low', count: counts.low, icon: <Shield className="w-4 h-4" />, color: 'text-blue-500' },
-    { severity: 'info', count: counts.info, icon: <Info className="w-4 h-4" />, color: 'text-gray-400' },
+    { severity: 'critical', count: counts.critical, icon: <ShieldX className="w-4 h-4" />, color: 'text-danger' },
+    { severity: 'high', count: counts.high, icon: <ShieldAlert className="w-4 h-4" />, color: 'text-danger' },
+    { severity: 'medium', count: counts.medium, icon: <AlertTriangle className="w-4 h-4" />, color: 'text-warn' },
+    { severity: 'low', count: counts.low, icon: <Shield className="w-4 h-4" />, color: 'text-info' },
+    { severity: 'info', count: counts.info, icon: <Info className="w-4 h-4" />, color: 'text-info' },
   ];
 
   const totalIssues = issues.length;
@@ -38,19 +39,19 @@ export function SecuritySummary({ issues }: SecuritySummaryProps) {
   const hasCritical = counts.critical > 0 || counts.high > 0;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 mb-4">
+    <Card className="p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {hasIssues ? (
             hasCritical ? (
-              <ShieldAlert className="w-5 h-5 text-orange-500" />
+              <ShieldAlert className="w-5 h-5 text-danger" />
             ) : (
-              <Shield className="w-5 h-5 text-yellow-500" />
+              <Shield className="w-5 h-5 text-warn" />
             )
           ) : (
-            <ShieldCheck className="w-5 h-5 text-green-500" />
+            <ShieldCheck className="w-5 h-5 text-success" />
           )}
-          <span className="font-medium text-gray-200">
+          <span className="font-medium text-ink">
             {hasIssues
               ? `${totalIssues} Security ${totalIssues === 1 ? 'Issue' : 'Issues'} Found`
               : 'No Security Issues Found'}
@@ -62,9 +63,10 @@ export function SecuritySummary({ issues }: SecuritySummaryProps) {
         {severities.map(({ severity, count, icon, color }) => (
           <div
             key={severity}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded bg-gray-700/50 ${
-              count > 0 ? color : 'text-gray-500'
-            }`}
+            className={cn(
+              'flex items-center gap-1.5 px-2 py-1 rounded-md bg-surface',
+              count > 0 ? color : 'text-ink-faint'
+            )}
           >
             {icon}
             <span className="text-sm font-medium">{count}</span>
@@ -72,6 +74,6 @@ export function SecuritySummary({ issues }: SecuritySummaryProps) {
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }

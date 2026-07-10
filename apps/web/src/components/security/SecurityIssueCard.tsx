@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, AlertTriangle, Info, Shield, ShieldAlert, ShieldX } from 'lucide-react';
+import { Card, Badge, cn, type BadgeProps } from '@/components/ui';
 import type { SecurityIssue, Severity } from './scanners';
-import { severityColors } from './scanners';
 
 interface SecurityIssueCardProps {
   issue: SecurityIssue;
@@ -15,54 +15,62 @@ const severityIcons: Record<Severity, React.ReactNode> = {
   info: <Info className="w-4 h-4" />,
 };
 
+const severityStyles: Record<Severity, { tone: BadgeProps['tone']; icon: string; border: string }> = {
+  critical: { tone: 'danger', icon: 'text-danger', border: 'border-danger/30' },
+  high: { tone: 'danger', icon: 'text-danger', border: 'border-danger/30' },
+  medium: { tone: 'warn', icon: 'text-warn', border: 'border-warn/30' },
+  low: { tone: 'info', icon: 'text-info', border: 'border-info/30' },
+  info: { tone: 'info', icon: 'text-info', border: 'border-info/30' },
+};
+
 export function SecurityIssueCard({ issue }: SecurityIssueCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const colorClasses = severityColors[issue.severity];
+  const style = severityStyles[issue.severity];
 
   return (
-    <div className={`rounded-lg border ${colorClasses} overflow-hidden`}>
+    <Card className={cn('overflow-hidden', style.border)}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-800/50 transition-colors"
+        className="w-full flex items-center gap-3 p-3 text-left hover:bg-surface-overlay transition-colors"
       >
-        <span className="flex-shrink-0">{severityIcons[issue.severity]}</span>
-        <span className="flex-1 font-medium text-sm">{issue.title}</span>
-        <span className="text-xs uppercase px-2 py-0.5 rounded bg-gray-800/50">
+        <span className={cn('flex-shrink-0', style.icon)}>{severityIcons[issue.severity]}</span>
+        <span className="flex-1 font-medium text-sm text-ink">{issue.title}</span>
+        <Badge tone={style.tone} className="uppercase">
           {issue.severity}
-        </span>
+        </Badge>
         {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-ink-muted" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-ink-muted" />
         )}
       </button>
 
       {isExpanded && (
-        <div className="px-3 pb-3 space-y-3 border-t border-gray-700/50">
+        <div className="px-3 pb-3 space-y-3 border-t border-edge-subtle">
           <div className="pt-3">
-            <p className="text-sm text-gray-300">{issue.description}</p>
+            <p className="text-sm text-ink-secondary">{issue.description}</p>
           </div>
 
           <div>
-            <h4 className="text-xs font-medium text-gray-400 uppercase mb-1">
+            <h4 className="text-xs font-medium text-ink-muted uppercase mb-1">
               Recommendation
             </h4>
-            <p className="text-sm text-gray-300">{issue.recommendation}</p>
+            <p className="text-sm text-ink-secondary">{issue.recommendation}</p>
           </div>
 
           {issue.evidence && (
             <div>
-              <h4 className="text-xs font-medium text-gray-400 uppercase mb-1">
+              <h4 className="text-xs font-medium text-ink-muted uppercase mb-1">
                 Evidence
               </h4>
-              <pre className="text-xs font-mono bg-gray-900/50 p-2 rounded overflow-x-auto text-gray-400">
+              <pre className="text-xs font-mono bg-canvas border border-edge-subtle p-2 rounded-md overflow-x-auto text-ink-muted">
                 {issue.evidence}
               </pre>
             </div>
           )}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

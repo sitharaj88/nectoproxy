@@ -6,6 +6,7 @@ import {
   type ReplayComparison,
 } from '../services/api';
 import type { TrafficEntry } from '@nectoproxy/shared';
+import { Button, IconButton, Input, Select } from '@/components/ui';
 
 interface ReplayEditorProps {
   entry: TrafficEntry;
@@ -100,23 +101,22 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-surface-raised text-ink border border-edge rounded-lg shadow-popover w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-          <h3 className="text-lg font-medium flex items-center gap-2">
-            <Play className="w-5 h-5 text-primary-400" />
+        <div className="flex items-center justify-between px-4 py-3 border-b border-edge">
+          <h3 className="text-lg font-medium flex items-center gap-2 text-ink">
+            <Play className="w-5 h-5 text-accent" />
             Replay Request
           </h3>
-          <button
+          <IconButton
+            label="Close"
+            icon={<X className="w-5 h-5" />}
             onClick={onClose}
-            className="p-1 rounded hover:bg-gray-700 text-gray-400"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          />
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700">
+        <div className="flex border-b border-edge">
           {(['request', 'response', 'comparison'] as const).map((tab) => (
             <button
               key={tab}
@@ -124,8 +124,8 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
               disabled={tab !== 'request' && !result}
               className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
                 activeTab === tab
-                  ? 'text-primary-400 border-b-2 border-primary-400'
-                  : 'text-gray-400 hover:text-gray-300 disabled:opacity-50'
+                  ? 'text-accent border-b-2 border-accent'
+                  : 'text-ink-muted hover:text-ink disabled:opacity-50'
               }`}
             >
               {tab}
@@ -137,7 +137,7 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
         <div className="flex-1 overflow-auto p-4">
           {/* Error display */}
           {error && (
-            <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-2">
+            <div className="mb-4 p-3 rounded bg-danger/12 border border-danger/25 text-danger flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               {error}
             </div>
@@ -147,29 +147,31 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
             <div className="space-y-4">
               {/* Method and URL */}
               <div className="flex gap-2">
-                <select
+                <Select
+                  sizeVariant="md"
                   value={method}
                   onChange={(e) => setMethod(e.target.value)}
-                  className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm font-medium"
+                  className="font-medium"
                 >
                   {HTTP_METHODS.map((m) => (
                     <option key={m} value={m}>
                       {m}
                     </option>
                   ))}
-                </select>
-                <input
+                </Select>
+                <Input
                   type="text"
+                  sizeVariant="md"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="URL"
-                  className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm font-mono"
+                  className="flex-1 font-mono"
                 />
               </div>
 
               {/* Headers */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-ink-secondary mb-1">
                   Headers
                 </label>
                 <textarea
@@ -177,13 +179,13 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
                   onChange={(e) => setHeaders(e.target.value)}
                   rows={6}
                   placeholder="Header-Name: Header Value"
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm font-mono"
+                  className="w-full px-3 py-2 bg-canvas border border-edge rounded-md text-sm font-mono text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent"
                 />
               </div>
 
               {/* Body */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-ink-secondary mb-1">
                   Body
                 </label>
                 <textarea
@@ -191,7 +193,7 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
                   onChange={(e) => setBody(e.target.value)}
                   rows={8}
                   placeholder="Request body (optional)"
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm font-mono"
+                  className="w-full px-3 py-2 bg-canvas border border-edge rounded-md text-sm font-mono text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent"
                 />
               </div>
             </div>
@@ -204,21 +206,21 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
                 <div
                   className={`text-lg font-bold ${
                     result.status >= 200 && result.status < 300
-                      ? 'text-green-400'
+                      ? 'text-success'
                       : result.status >= 400
-                      ? 'text-red-400'
-                      : 'text-yellow-400'
+                      ? 'text-danger'
+                      : 'text-warn'
                   }`}
                 >
                   {result.status} {result.statusText}
                 </div>
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-ink-secondary">
                   Duration: {result.duration}ms
                 </div>
               </div>
 
               {result.error && (
-                <div className="p-3 rounded bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-2">
+                <div className="p-3 rounded bg-danger/12 border border-danger/25 text-danger flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
                   {result.error}
                 </div>
@@ -226,10 +228,10 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
 
               {/* Response Headers */}
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                <h4 className="text-sm font-medium text-ink-secondary mb-2">
                   Response Headers
                 </h4>
-                <pre className="bg-gray-900 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-48">
+                <pre className="bg-canvas rounded-md p-3 text-sm font-mono text-ink-secondary whitespace-pre-wrap overflow-auto max-h-48">
                   {Object.entries(result.headers || {})
                     .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
                     .join('\n')}
@@ -238,10 +240,10 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
 
               {/* Response Body */}
               <div>
-                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                <h4 className="text-sm font-medium text-ink-secondary mb-2">
                   Response Body
                 </h4>
-                <pre className="bg-gray-900 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-64">
+                <pre className="bg-canvas rounded-md p-3 text-sm font-mono text-ink-secondary whitespace-pre-wrap overflow-auto max-h-64">
                   {decodeResponseBody(result.body)}
                 </pre>
               </div>
@@ -254,18 +256,18 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
               <div
                 className={`p-4 rounded-lg flex items-center gap-3 ${
                   comparison.identical
-                    ? 'bg-green-500/10 border border-green-500/20'
-                    : 'bg-yellow-500/10 border border-yellow-500/20'
+                    ? 'bg-success/12 border border-success/25'
+                    : 'bg-warn/12 border border-warn/25'
                 }`}
               >
                 {comparison.identical ? (
                   <>
-                    <Check className="w-6 h-6 text-green-400" />
+                    <Check className="w-6 h-6 text-success" />
                     <div>
-                      <div className="font-medium text-green-400">
+                      <div className="font-medium text-success">
                         Responses are identical
                       </div>
-                      <div className="text-sm text-gray-400">
+                      <div className="text-sm text-ink-secondary">
                         Original: {comparison.originalDuration}ms | Replay:{' '}
                         {comparison.replayDuration}ms
                       </div>
@@ -273,12 +275,12 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="w-6 h-6 text-yellow-400" />
+                    <AlertCircle className="w-6 h-6 text-warn" />
                     <div>
-                      <div className="font-medium text-yellow-400">
+                      <div className="font-medium text-warn">
                         {comparison.changes.length} difference(s) found
                       </div>
-                      <div className="text-sm text-gray-400">
+                      <div className="text-sm text-ink-secondary">
                         Original: {comparison.originalDuration}ms | Replay:{' '}
                         {comparison.replayDuration}ms
                       </div>
@@ -290,24 +292,24 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
               {/* Changes */}
               {comparison.changes.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-300">Changes</h4>
+                  <h4 className="text-sm font-medium text-ink-secondary">Changes</h4>
                   {comparison.changes.map((change, i) => (
                     <div
                       key={i}
-                      className="bg-gray-900 rounded-md p-3 text-sm"
+                      className="bg-canvas rounded-md p-3 text-sm"
                     >
-                      <div className="text-gray-400 mb-1 capitalize">
+                      <div className="text-ink-secondary mb-1 capitalize">
                         {change.type === 'body_size'
                           ? 'Body Size'
                           : change.type}
                         {change.type === 'header' && `: ${change.field}`}
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <span className="text-red-400 font-mono">
+                        <span className="text-danger font-mono">
                           {change.original || '(empty)'}
                         </span>
-                        <ArrowRight className="w-4 h-4 text-gray-500" />
-                        <span className="text-green-400 font-mono">
+                        <ArrowRight className="w-4 h-4 text-ink-muted" />
+                        <span className="text-success font-mono">
                           {change.replayed || '(empty)'}
                         </span>
                       </div>
@@ -320,21 +322,19 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700">
-          <div className="text-sm text-gray-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-edge">
+          <div className="text-sm text-ink-muted">
             Original: {entry.method} {new URL(entry.url).pathname}
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-400 hover:text-gray-300"
-            >
+            <Button variant="ghost" size="md" onClick={onClose}>
               Close
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
               onClick={handleReplay}
               disabled={isReplaying || !url}
-              className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-md flex items-center gap-2"
             >
               {isReplaying ? (
                 <>
@@ -347,7 +347,7 @@ export function ReplayEditor({ entry, onClose }: ReplayEditorProps) {
                   Replay
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

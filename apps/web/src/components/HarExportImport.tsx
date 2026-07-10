@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Download, Upload, FileUp, X, Check, AlertCircle, Share2, MoreVertical } from 'lucide-react';
+import { Download, Upload, FileUp, Check, AlertCircle, Share2, MoreVertical } from 'lucide-react';
 import {
   getHARExportUrl,
   getSnapshotUrl,
@@ -11,6 +11,7 @@ import {
 } from '../services/api';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useTrafficStore } from '@/stores/trafficStore';
+import { Button, IconButton, Modal } from '@/components/ui';
 
 interface HarExportImportProps {
   sessionId: string;
@@ -35,38 +36,39 @@ function DropdownMenu({ onExport, onImport, onSnapshot }: { onExport: () => void
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <IconButton
+        label="Export / Import"
+        icon={<MoreVertical className="w-4 h-4" />}
         onClick={() => setOpen(!open)}
-        className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
-        title="Export / Import"
-        aria-label="Export and Import options"
-      >
-        <MoreVertical className="w-4 h-4" />
-      </button>
+        active={open}
+      />
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1 overflow-hidden">
-          <button
+        <div className="absolute right-0 top-full mt-1 w-48 bg-surface-overlay border border-edge rounded-md shadow-popover z-50 py-1 overflow-hidden">
+          <Button
+            variant="ghost"
             onClick={() => { onExport(); setOpen(false); }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 transition-colors"
+            className="w-full justify-start gap-2 px-3 py-2 h-auto text-sm text-ink"
           >
-            <Download className="w-4 h-4 text-gray-400" />
+            <Download className="w-4 h-4 text-ink-muted" />
             Export HAR
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => { onImport(); setOpen(false); }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 transition-colors"
+            className="w-full justify-start gap-2 px-3 py-2 h-auto text-sm text-ink"
           >
-            <Upload className="w-4 h-4 text-gray-400" />
+            <Upload className="w-4 h-4 text-ink-muted" />
             Import HAR
-          </button>
-          <div className="h-px bg-gray-600 mx-2 my-1" />
-          <button
+          </Button>
+          <div className="h-px bg-edge mx-2 my-1" />
+          <Button
+            variant="ghost"
             onClick={() => { onSnapshot(); setOpen(false); }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-600 transition-colors"
+            className="w-full justify-start gap-2 px-3 py-2 h-auto text-sm text-ink"
           >
-            <Share2 className="w-4 h-4 text-gray-400" />
+            <Share2 className="w-4 h-4 text-ink-muted" />
             Share as HTML
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -203,151 +205,138 @@ export function HarExportImport({
       </div>
 
       {/* Import Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-              <h3 className="text-lg font-medium">Import HAR File</h3>
-              <button
-                onClick={closeModal}
-                className="p-1 rounded hover:bg-gray-700 text-gray-400"
+      <Modal
+        isOpen={showImportModal}
+        onClose={closeModal}
+        title="Import HAR File"
+        size="sm"
+        footer={
+          !importResult ? (
+            <div className="flex items-center justify-end gap-3">
+              <Button variant="ghost" size="md" onClick={closeModal}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleImport}
+                disabled={!selectedFile || !validationResult?.valid || importing}
               >
-                <X className="w-5 h-5" />
-              </button>
+                {importing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    Importing...
+                  </>
+                ) : (
+                  'Import'
+                )}
+              </Button>
             </div>
+          ) : undefined
+        }
+      >
+        <div className="p-4">
+          {importResult ? (
+            // Import complete
+            <div className="text-center py-6">
+              <div className="w-16 h-16 rounded-full bg-success/12 flex items-center justify-center mx-auto mb-4">
+                <Check className="w-8 h-8 text-success" />
+              </div>
+              <h4 className="text-lg font-medium mb-2 text-ink">Import Complete</h4>
+              <p className="text-ink-secondary">
+                Imported {importResult.imported} of {importResult.total} entries
+              </p>
+              <p className="text-ink-muted text-sm mt-1">
+                Opened in tab: {importResult.sessionName}
+              </p>
+              <Button variant="primary" size="md" className="mt-4" onClick={closeModal}>
+                Done
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Drop zone */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  selectedFile
+                    ? 'border-accent bg-accent/12'
+                    : 'border-edge hover:border-edge-strong'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".har,application/json"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <FileUp className="w-12 h-12 mx-auto mb-3 text-ink-muted" />
+                {selectedFile ? (
+                  <p className="text-sm">
+                    <span className="text-accent">{selectedFile.name}</span>
+                    <br />
+                    <span className="text-ink-muted">
+                      {(selectedFile.size / 1024).toFixed(1)} KB
+                    </span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-ink-secondary">
+                    Drop a HAR file here or click to browse
+                  </p>
+                )}
+              </div>
 
-            <div className="p-4">
-              {importResult ? (
-                // Import complete
-                <div className="text-center py-6">
-                  <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                    <Check className="w-8 h-8 text-green-500" />
-                  </div>
-                  <h4 className="text-lg font-medium mb-2">Import Complete</h4>
-                  <p className="text-gray-400">
-                    Imported {importResult.imported} of {importResult.total} entries
-                  </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Opened in tab: {importResult.sessionName}
-                  </p>
-                  <button
-                    onClick={closeModal}
-                    className="mt-4 px-4 py-2 bg-primary-600 hover:bg-primary-500 rounded-md"
-                  >
-                    Done
-                  </button>
+              {/* Validation result */}
+              {validating && (
+                <div className="mt-4 flex items-center gap-2 text-ink-secondary">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent" />
+                  Validating file...
                 </div>
-              ) : (
-                <>
-                  {/* Drop zone */}
-                  <div
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                      selectedFile
-                        ? 'border-primary-500 bg-primary-500/10'
-                        : 'border-gray-600 hover:border-gray-500'
-                    }`}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".har,application/json"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    <FileUp className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    {selectedFile ? (
-                      <p className="text-sm">
-                        <span className="text-primary-400">{selectedFile.name}</span>
-                        <br />
-                        <span className="text-gray-500">
-                          {(selectedFile.size / 1024).toFixed(1)} KB
-                        </span>
-                      </p>
-                    ) : (
-                      <p className="text-sm text-gray-400">
-                        Drop a HAR file here or click to browse
+              )}
+
+              {validationResult && validationResult.valid && (
+                <div className="mt-4 p-3 rounded bg-success/12 border border-success/25">
+                  <div className="flex items-center gap-2 text-success mb-2">
+                    <Check className="w-4 h-4" />
+                    Valid HAR file
+                  </div>
+                  <div className="text-sm text-ink-secondary space-y-1">
+                    <p>Version: {validationResult.version}</p>
+                    {validationResult.creator && (
+                      <p>
+                        Creator: {validationResult.creator.name}{' '}
+                        {validationResult.creator.version}
                       </p>
                     )}
+                    <p>Entries: {validationResult.entryCount}</p>
                   </div>
-
-                  {/* Validation result */}
-                  {validating && (
-                    <div className="mt-4 flex items-center gap-2 text-gray-400">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
-                      Validating file...
-                    </div>
-                  )}
-
-                  {validationResult && validationResult.valid && (
-                    <div className="mt-4 p-3 rounded bg-green-500/10 border border-green-500/20">
-                      <div className="flex items-center gap-2 text-green-400 mb-2">
-                        <Check className="w-4 h-4" />
-                        Valid HAR file
-                      </div>
-                      <div className="text-sm text-gray-400 space-y-1">
-                        <p>Version: {validationResult.version}</p>
-                        {validationResult.creator && (
-                          <p>
-                            Creator: {validationResult.creator.name}{' '}
-                            {validationResult.creator.version}
-                          </p>
-                        )}
-                        <p>Entries: {validationResult.entryCount}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {validationResult && !validationResult.valid && (
-                    <div className="mt-4 p-3 rounded bg-red-500/10 border border-red-500/20">
-                      <div className="flex items-center gap-2 text-red-400">
-                        <AlertCircle className="w-4 h-4" />
-                        {validationResult.error || 'Invalid HAR file'}
-                      </div>
-                    </div>
-                  )}
-
-                  {error && (
-                    <div className="mt-4 p-3 rounded bg-red-500/10 border border-red-500/20">
-                      <div className="flex items-center gap-2 text-red-400">
-                        <AlertCircle className="w-4 h-4" />
-                        {error}
-                      </div>
-                    </div>
-                  )}
-                </>
+                </div>
               )}
-            </div>
 
-            {!importResult && (
-              <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-gray-700">
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2 text-sm text-gray-400 hover:text-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleImport}
-                  disabled={!selectedFile || !validationResult?.valid || importing}
-                  className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-md flex items-center gap-2"
-                >
-                  {importing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      Importing...
-                    </>
-                  ) : (
-                    'Import'
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
+              {validationResult && !validationResult.valid && (
+                <div className="mt-4 p-3 rounded bg-danger/12 border border-danger/25">
+                  <div className="flex items-center gap-2 text-danger">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationResult.error || 'Invalid HAR file'}
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="mt-4 p-3 rounded bg-danger/12 border border-danger/25">
+                  <div className="flex items-center gap-2 text-danger">
+                    <AlertCircle className="w-4 h-4" />
+                    {error}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      )}
+      </Modal>
     </>
   );
 }

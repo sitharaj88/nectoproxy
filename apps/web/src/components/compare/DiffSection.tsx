@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Badge } from '@/components/ui';
 
 interface DiffSectionProps {
   title: string;
@@ -12,26 +13,22 @@ export function DiffSection({ title, children, defaultExpanded = true, badge }: 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="border border-gray-700 rounded-lg overflow-hidden">
+    <div className="border border-edge rounded-md overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-2 bg-gray-800 hover:bg-gray-700 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-2 bg-surface-raised hover:bg-surface-overlay transition-colors"
       >
         <div className="flex items-center gap-2">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-ink-muted" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-ink-muted" />
           )}
-          <span className="font-medium text-gray-200">{title}</span>
+          <span className="font-medium text-ink">{title}</span>
         </div>
-        {badge && (
-          <span className="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-400">
-            {badge}
-          </span>
-        )}
+        {badge && <Badge tone="neutral">{badge}</Badge>}
       </button>
-      {isExpanded && <div className="p-4 bg-gray-900/50">{children}</div>}
+      {isExpanded && <div className="p-4 bg-surface">{children}</div>}
     </div>
   );
 }

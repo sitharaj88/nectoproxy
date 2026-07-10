@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { ParsedGraphQLRequest } from '@/utils/graphql';
 import { formatGraphQLQuery } from '@/utils/graphql';
+import { Badge, Button } from '@/components/ui';
 
 interface GraphQLViewerProps {
   request: ParsedGraphQLRequest;
@@ -9,18 +10,16 @@ interface GraphQLViewerProps {
 }
 
 function OperationBadge({ type }: { type: ParsedGraphQLRequest['operationType'] }) {
-  const colors: Record<string, string> = {
-    query: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    mutation: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    subscription: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  const tones: Record<string, 'info' | 'warn' | 'accent'> = {
+    query: 'info',
+    mutation: 'warn',
+    subscription: 'accent',
   };
 
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase border ${colors[type]}`}
-    >
+    <Badge tone={tones[type]} className="uppercase">
       {type}
-    </span>
+    </Badge>
   );
 }
 
@@ -37,27 +36,27 @@ function highlightGraphQLSyntax(query: string): JSX.Element[] {
     parts.forEach((part, partIndex) => {
       const key = `${lineIndex}-${partIndex}`;
       if (keywords.includes(part)) {
-        tokens.push(<span key={key} className="text-purple-400 font-semibold">{part}</span>);
+        tokens.push(<span key={key} className="text-accent font-semibold">{part}</span>);
       } else if (builtinTypes.includes(part)) {
-        tokens.push(<span key={key} className="text-teal-400">{part}</span>);
+        tokens.push(<span key={key} className="text-info">{part}</span>);
       } else if (part.startsWith('"')) {
-        tokens.push(<span key={key} className="text-green-400">{part}</span>);
+        tokens.push(<span key={key} className="text-success">{part}</span>);
       } else if (part.startsWith('$')) {
-        tokens.push(<span key={key} className="text-yellow-400">{part}</span>);
+        tokens.push(<span key={key} className="text-warn">{part}</span>);
       } else if (part === '{' || part === '}' || part === '(' || part === ')') {
-        tokens.push(<span key={key} className="text-gray-500">{part}</span>);
+        tokens.push(<span key={key} className="text-ink-faint">{part}</span>);
       } else if (part.startsWith('@')) {
-        tokens.push(<span key={key} className="text-cyan-400">{part}</span>);
+        tokens.push(<span key={key} className="text-info">{part}</span>);
       } else if (part === '!' || part === ':' || part === '=' || part === ',') {
-        tokens.push(<span key={key} className="text-gray-500">{part}</span>);
+        tokens.push(<span key={key} className="text-ink-faint">{part}</span>);
       } else {
-        tokens.push(<span key={key} className="text-gray-200">{part}</span>);
+        tokens.push(<span key={key} className="text-ink-secondary">{part}</span>);
       }
     });
 
     return (
       <div key={lineIndex} className="leading-relaxed">
-        {tokens.length > 0 ? tokens : '\u00A0'}
+        {tokens.length > 0 ? tokens : ' '}
       </div>
     );
   });
@@ -74,23 +73,24 @@ function CollapsibleSection({ title, defaultOpen = false, children, badge }: Col
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-gray-700 rounded-md overflow-hidden">
-      <button
+    <div className="border border-edge rounded-md overflow-hidden">
+      <Button
+        variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 w-full px-3 py-2 bg-gray-800 hover:bg-gray-700 text-sm font-medium text-gray-300 transition-colors"
+        className="w-full justify-start gap-2 h-auto px-3 py-2 rounded-none text-sm text-ink-secondary"
       >
         {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-gray-500" />
+          <ChevronDown className="w-4 h-4 text-ink-faint" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-500" />
+          <ChevronRight className="w-4 h-4 text-ink-faint" />
         )}
         {title}
         {badge && (
-          <span className="ml-2 text-xs text-gray-500 font-mono">{badge}</span>
+          <span className="ml-2 text-xs text-ink-muted font-mono">{badge}</span>
         )}
-      </button>
+      </Button>
       {isOpen && (
-        <div className="border-t border-gray-700">
+        <div className="border-t border-edge">
           {children}
         </div>
       )}
@@ -107,8 +107,8 @@ function JsonTreeView({ data, label }: { data: unknown; label?: string }) {
   }
 
   return (
-    <pre className="p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[300px] bg-gray-900">
-      {label && <span className="text-gray-500 text-xs block mb-1">{label}</span>}
+    <pre className="p-3 text-sm font-mono text-ink-secondary whitespace-pre-wrap overflow-auto max-h-[300px] bg-canvas">
+      {label && <span className="text-ink-muted text-xs block mb-1">{label}</span>}
       {formatted}
     </pre>
   );
@@ -136,7 +136,7 @@ export function GraphQLViewer({ request, responseBody }: GraphQLViewerProps) {
       <div className="flex items-center gap-3">
         <OperationBadge type={request.operationType} />
         {request.operationName && (
-          <span className="text-lg font-semibold text-gray-200">
+          <span className="text-lg font-semibold text-ink">
             {request.operationName}
           </span>
         )}
@@ -144,7 +144,7 @@ export function GraphQLViewer({ request, responseBody }: GraphQLViewerProps) {
 
       {/* Query */}
       <CollapsibleSection title="Query" defaultOpen={true}>
-        <div className="p-3 text-sm font-mono bg-gray-900 overflow-auto max-h-[400px]">
+        <div className="p-3 text-sm font-mono bg-canvas overflow-auto max-h-[400px]">
           {highlightGraphQLSyntax(formattedQuery)}
         </div>
       </CollapsibleSection>
@@ -167,21 +167,21 @@ export function GraphQLViewer({ request, responseBody }: GraphQLViewerProps) {
           defaultOpen={true}
           badge={`${responseErrors.length} error${responseErrors.length !== 1 ? 's' : ''}`}
         >
-          <div className="p-3 bg-red-900/20 border-l-2 border-red-500">
+          <div className="p-3 bg-danger/12 border-l-2 border-danger">
             {responseErrors.map((error, index) => {
               const err = error as Record<string, unknown>;
               return (
                 <div key={index} className="mb-2 last:mb-0">
-                  <div className="text-sm text-red-400 font-medium">
+                  <div className="text-sm text-danger font-medium">
                     {(err.message as string) || 'Unknown error'}
                   </div>
                   {err.path != null && (
-                    <div className="text-xs text-red-400/70 mt-1 font-mono">
+                    <div className="text-xs text-danger/70 mt-1 font-mono">
                       Path: {JSON.stringify(err.path)}
                     </div>
                   )}
                   {err.locations != null && (
-                    <div className="text-xs text-red-400/70 font-mono">
+                    <div className="text-xs text-danger/70 font-mono">
                       Locations: {JSON.stringify(err.locations)}
                     </div>
                   )}
@@ -202,7 +202,7 @@ export function GraphQLViewer({ request, responseBody }: GraphQLViewerProps) {
       {/* Full Raw Response (if not parsed) */}
       {responseBody && !responseData && !responseErrors && (
         <CollapsibleSection title="Raw Response" defaultOpen={false}>
-          <pre className="p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[300px] bg-gray-900">
+          <pre className="p-3 text-sm font-mono text-ink-secondary whitespace-pre-wrap overflow-auto max-h-[300px] bg-canvas">
             {responseBody}
           </pre>
         </CollapsibleSection>

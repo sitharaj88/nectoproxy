@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { RuleAction, RuleCreateInput, RuleMatcher } from '@nectoproxy/shared';
 import { useRulesStore } from '@/stores/rulesStore';
 import { createRule, updateRule } from '@/services/api';
+import { Button, Input, Select, Switch, IconButton, cn } from '@/components/ui';
 
 const ACTIONS: { value: RuleAction; label: string; description: string }[] = [
   { value: 'mock', label: 'Mock Response', description: 'Return a custom response without forwarding' },
@@ -16,6 +17,10 @@ const ACTIONS: { value: RuleAction; label: string; description: string }[] = [
 ];
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+
+const textareaClass =
+  'w-full bg-canvas text-ink placeholder:text-ink-faint rounded-md border border-edge ' +
+  'px-2.5 py-2 text-sm transition-colors focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50';
 
 export function RuleEditor() {
   const { editingRule, setEditorOpen, addRule, updateRule: updateRuleInStore } = useRulesStore();
@@ -86,27 +91,28 @@ export function RuleEditor() {
         return (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Status Code</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">Status Code</label>
+              <Input
                 type="number"
+                sizeVariant="md"
                 value={(config.status as number) || 200}
                 onChange={(e) => setConfig({ ...config, status: parseInt(e.target.value) })}
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Response Body</label>
+              <label className="block text-sm text-ink-secondary mb-1">Response Body</label>
               <textarea
                 value={(config.body as string) || ''}
                 onChange={(e) => setConfig({ ...config, body: e.target.value })}
                 placeholder="Response body content..."
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm h-24 font-mono"
+                className={cn(textareaClass, 'h-24 font-mono')}
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Content-Type Header</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">Content-Type Header</label>
+              <Input
                 type="text"
+                sizeVariant="md"
                 value={(config.headers as Record<string, string>)?.['content-type'] || ''}
                 onChange={(e) =>
                   setConfig({
@@ -115,7 +121,6 @@ export function RuleEditor() {
                   })
                 }
                 placeholder="application/json"
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
           </div>
@@ -124,13 +129,13 @@ export function RuleEditor() {
       case 'map-local':
         return (
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Local Path</label>
-            <input
+            <label className="block text-sm text-ink-secondary mb-1">Local Path</label>
+            <Input
               type="text"
+              sizeVariant="md"
               value={(config.localPath as string) || ''}
               onChange={(e) => setConfig({ ...config, localPath: e.target.value })}
               placeholder="/path/to/local/files"
-              className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
             />
           </div>
         );
@@ -139,33 +144,31 @@ export function RuleEditor() {
         return (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Target URL</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">Target URL</label>
+              <Input
                 type="text"
+                sizeVariant="md"
                 value={(config.targetUrl as string) || ''}
                 onChange={(e) => setConfig({ ...config, targetUrl: e.target.value })}
                 placeholder="https://example.com"
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-6">
               <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Switch
                   checked={(config.preservePath as boolean) || false}
-                  onChange={(e) => setConfig({ ...config, preservePath: e.target.checked })}
-                  className="rounded"
+                  aria-label="Preserve Path"
+                  onCheckedChange={(v) => setConfig({ ...config, preservePath: v })}
                 />
-                <span className="text-sm">Preserve Path</span>
+                <span className="text-sm text-ink">Preserve Path</span>
               </label>
               <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Switch
                   checked={(config.preserveQuery as boolean) || false}
-                  onChange={(e) => setConfig({ ...config, preserveQuery: e.target.checked })}
-                  className="rounded"
+                  aria-label="Preserve Query"
+                  onCheckedChange={(v) => setConfig({ ...config, preserveQuery: v })}
                 />
-                <span className="text-sm">Preserve Query</span>
+                <span className="text-sm text-ink">Preserve Query</span>
               </label>
             </div>
           </div>
@@ -175,21 +178,21 @@ export function RuleEditor() {
         return (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Delay (ms)</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">Delay (ms)</label>
+              <Input
                 type="number"
+                sizeVariant="md"
                 value={(config.delay as number) || 1000}
                 onChange={(e) => setConfig({ ...config, delay: parseInt(e.target.value) })}
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Variance (ms)</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">Variance (ms)</label>
+              <Input
                 type="number"
+                sizeVariant="md"
                 value={(config.variance as number) || 0}
                 onChange={(e) => setConfig({ ...config, variance: parseInt(e.target.value) })}
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
           </div>
@@ -199,21 +202,21 @@ export function RuleEditor() {
         return (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Bytes per Second</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">Bytes per Second</label>
+              <Input
                 type="number"
+                sizeVariant="md"
                 value={(config.bytesPerSecond as number) || 50000}
                 onChange={(e) => setConfig({ ...config, bytesPerSecond: parseInt(e.target.value) })}
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Latency (ms)</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">Latency (ms)</label>
+              <Input
                 type="number"
+                sizeVariant="md"
                 value={(config.latency as number) || 0}
                 onChange={(e) => setConfig({ ...config, latency: parseInt(e.target.value) })}
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
           </div>
@@ -221,7 +224,7 @@ export function RuleEditor() {
 
       case 'block':
         return (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-ink-secondary">
             This rule will block matching requests and return a 403 Forbidden response.
           </p>
         );
@@ -233,47 +236,45 @@ export function RuleEditor() {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg w-[500px] max-h-[85vh] overflow-hidden flex flex-col">
+      <div className="bg-surface-overlay border border-edge rounded-lg shadow-popover w-[500px] max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h3 className="font-medium">{editingRule ? 'Edit Rule' : 'Create Rule'}</h3>
-          <button onClick={handleClose} className="p-1 hover:bg-gray-700 rounded">
-            <X className="w-5 h-5" />
-          </button>
+        <div className="flex items-center justify-between p-4 border-b border-edge">
+          <h3 className="font-medium text-ink">{editingRule ? 'Edit Rule' : 'Create Rule'}</h3>
+          <IconButton label="Close" icon={<X className="w-5 h-5" />} onClick={handleClose} />
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-auto p-4 space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Name</label>
-            <input
+            <label className="block text-sm text-ink-secondary mb-1">Name</label>
+            <Input
               type="text"
+              sizeVariant="md"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Rule name"
-              className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               required
             />
           </div>
 
           {/* Match Conditions */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-300">Match Conditions</h4>
+            <h4 className="text-xs font-medium uppercase tracking-wide text-ink-muted">Match Conditions</h4>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">URL Pattern</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">URL Pattern</label>
+              <Input
                 type="text"
+                sizeVariant="md"
                 value={(match.url as string) || ''}
                 onChange={(e) => setMatch({ ...match, url: e.target.value || undefined })}
                 placeholder="*api.example.com* or /regex/"
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Methods</label>
+              <label className="block text-sm text-ink-secondary mb-1">Methods</label>
               <div className="flex flex-wrap gap-2">
                 {METHODS.map((method) => {
                   const selected = Array.isArray(match.method)
@@ -294,9 +295,12 @@ export function RuleEditor() {
                           : [...current, method];
                         setMatch({ ...match, method: updated.length > 0 ? updated : undefined });
                       }}
-                      className={`px-2 py-1 text-xs rounded ${
-                        selected ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'
-                      }`}
+                      className={cn(
+                        'px-2 py-1 text-xs rounded border transition-colors',
+                        selected
+                          ? 'bg-accent/12 border-accent/25 text-accent'
+                          : 'bg-surface-raised border-edge text-ink-secondary hover:bg-surface-overlay'
+                      )}
                     >
                       {method}
                     </button>
@@ -306,81 +310,78 @@ export function RuleEditor() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Host</label>
-              <input
+              <label className="block text-sm text-ink-secondary mb-1">Host</label>
+              <Input
                 type="text"
+                sizeVariant="md"
                 value={(match.host as string) || ''}
                 onChange={(e) => setMatch({ ...match, host: e.target.value || undefined })}
                 placeholder="api.example.com"
-                className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
               />
             </div>
           </div>
 
           {/* Action */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Action</label>
-            <select
+            <label className="block text-sm text-ink-secondary mb-1">Action</label>
+            <Select
+              sizeVariant="md"
               value={action}
               onChange={(e) => {
                 setAction(e.target.value as RuleAction);
                 setConfig({});
               }}
-              className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
+              className="w-full"
             >
               {ACTIONS.map((a) => (
                 <option key={a.value} value={a.value}>
                   {a.label} - {a.description}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Action Config */}
           <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Action Configuration</h4>
+            <h4 className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-2">Action Configuration</h4>
             {renderActionConfig()}
           </div>
 
           {/* Priority */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Priority (lower = higher priority)</label>
-            <input
+            <label className="block text-sm text-ink-secondary mb-1">Priority (lower = higher priority)</label>
+            <Input
               type="number"
+              sizeVariant="md"
               value={priority}
               onChange={(e) => setPriority(parseInt(e.target.value))}
-              className="w-full bg-gray-700 rounded px-3 py-2 text-sm"
             />
           </div>
 
           {/* Enabled */}
           <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Switch
               checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
-              className="rounded"
+              aria-label="Enabled"
+              onCheckedChange={setEnabled}
             />
-            <span className="text-sm">Enabled</span>
+            <span className="text-sm text-ink">Enabled</span>
           </label>
         </form>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 p-4 border-t border-gray-700">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-4 py-2 text-sm bg-gray-700 rounded hover:bg-gray-600"
-          >
+        <div className="flex justify-end gap-2 p-4 border-t border-edge">
+          <Button variant="secondary" size="md" onClick={handleClose}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
             onClick={handleSubmit}
             disabled={isSubmitting || !name}
-            className="px-4 py-2 text-sm bg-blue-500 rounded hover:bg-blue-400 disabled:opacity-50"
           >
             {isSubmitting ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

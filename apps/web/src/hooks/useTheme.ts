@@ -5,9 +5,10 @@ export type Theme = 'light' | 'dark' | 'system';
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('theme') as Theme) || 'light';
+      // Dark-first: default to dark unless the user has chosen otherwise.
+      return (localStorage.getItem('theme') as Theme) || 'dark';
     }
-    return 'light';
+    return 'dark';
   });
 
   useEffect(() => {

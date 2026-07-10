@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { X, Pencil, Trash2, ArrowRight } from 'lucide-react';
 import type { DnsMapping, DnsMappingCreateInput } from '@nectoproxy/shared';
 import {
   getDnsMappings,
@@ -8,6 +9,7 @@ import {
   deleteDnsMapping,
   resolveDnsMapping,
 } from '@/services/api';
+import { Button, Input, Switch, Card, IconButton } from './ui';
 
 interface DnsMappingPanelProps {
   isOpen: boolean;
@@ -184,29 +186,25 @@ export function DnsMappingPanel({ isOpen, onClose }: DnsMappingPanelProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-[700px] max-h-[85vh] flex flex-col">
+      <div className="bg-surface-overlay border border-edge rounded-lg shadow-popover w-[700px] max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-edge">
           <div>
-            <h2 className="text-lg font-semibold text-white">DNS Spoofing</h2>
-            <p className="text-xs text-gray-400 mt-1">
+            <h2 className="text-lg font-semibold text-ink">DNS Spoofing</h2>
+            <p className="text-xs text-ink-muted mt-1">
               Map domains to custom IP addresses for request resolution
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <IconButton label="Close" icon={<X className="w-5 h-5" />} onClick={onClose} />
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="p-3 bg-red-900/30 text-red-400 text-sm">
+          <div className="p-3 bg-danger/12 text-danger text-sm">
             {error}
             <button
               onClick={() => setError(null)}
-              className="ml-2 text-red-300 hover:text-red-100"
+              className="ml-2 underline text-danger hover:text-ink"
             >
               Dismiss
             </button>
@@ -216,66 +214,63 @@ export function DnsMappingPanel({ isOpen, onClose }: DnsMappingPanelProps) {
         {/* Content */}
         <div className="flex-1 overflow-auto p-4 space-y-5">
           {/* Add new mapping form */}
-          <div className="bg-gray-900 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Add DNS Mapping</h3>
+          <Card className="p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-3">Add DNS Mapping</h3>
             <div className="space-y-3">
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-400 mb-1">Domain</label>
-                  <input
+                  <label className="block text-xs text-ink-secondary mb-1">Domain</label>
+                  <Input
                     type="text"
+                    sizeVariant="md"
                     value={newDomain}
                     onChange={(e) => setNewDomain(e.target.value)}
                     placeholder="e.g., api.example.com or *.example.com"
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-400 mb-1">Target IP</label>
-                  <input
+                  <label className="block text-xs text-ink-secondary mb-1">Target IP</label>
+                  <Input
                     type="text"
+                    sizeVariant="md"
                     value={newTargetIp}
                     onChange={(e) => setNewTargetIp(e.target.value)}
                     placeholder="e.g., 127.0.0.1"
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
               <div className="flex gap-3 items-end">
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-400 mb-1">Description (optional)</label>
-                  <input
+                  <label className="block text-xs text-ink-secondary mb-1">Description (optional)</label>
+                  <Input
                     type="text"
+                    sizeVariant="md"
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
                     placeholder="e.g., Redirect to local dev server"
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
-                <button
-                  onClick={handleAdd}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md whitespace-nowrap"
-                >
+                <Button variant="primary" size="md" onClick={handleAdd} className="whitespace-nowrap">
                   Add Mapping
-                </button>
+                </Button>
               </div>
               {addError && (
-                <p className="text-xs text-red-400">{addError}</p>
+                <p className="text-xs text-danger">{addError}</p>
               )}
             </div>
-          </div>
+          </Card>
 
           {/* Mappings table */}
           <div>
-            <h3 className="text-sm font-medium text-gray-300 mb-3">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-3">
               Active Mappings ({mappings.length})
             </h3>
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-600 border-t-blue-500" />
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-edge border-t-accent" />
               </div>
             ) : mappings.length === 0 ? (
-              <div className="text-sm text-gray-500 p-4 bg-gray-900 rounded-lg text-center">
+              <div className="text-sm text-ink-muted p-4 bg-canvas border border-edge-subtle rounded-lg text-center">
                 No DNS mappings configured. Add one above to get started.
               </div>
             ) : (
@@ -283,8 +278,8 @@ export function DnsMappingPanel({ isOpen, onClose }: DnsMappingPanelProps) {
                 {mappings.map((mapping) => (
                   <div
                     key={mapping.id}
-                    className={`p-3 bg-gray-900 rounded-lg border ${
-                      mapping.enabled ? 'border-gray-700' : 'border-gray-800 opacity-60'
+                    className={`p-3 bg-canvas rounded-lg border ${
+                      mapping.enabled ? 'border-edge-subtle' : 'border-edge-subtle opacity-60'
                     }`}
                   >
                     {editingId === mapping.id ? (
@@ -292,46 +287,37 @@ export function DnsMappingPanel({ isOpen, onClose }: DnsMappingPanelProps) {
                       <div className="space-y-2">
                         <div className="flex gap-3">
                           <div className="flex-1">
-                            <label className="block text-xs text-gray-400 mb-1">Domain</label>
-                            <input
+                            <label className="block text-xs text-ink-secondary mb-1">Domain</label>
+                            <Input
                               type="text"
                               value={editDomain}
                               onChange={(e) => setEditDomain(e.target.value)}
-                              className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
                             />
                           </div>
                           <div className="flex-1">
-                            <label className="block text-xs text-gray-400 mb-1">Target IP</label>
-                            <input
+                            <label className="block text-xs text-ink-secondary mb-1">Target IP</label>
+                            <Input
                               type="text"
                               value={editTargetIp}
                               onChange={(e) => setEditTargetIp(e.target.value)}
-                              className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">Description</label>
-                          <input
+                          <label className="block text-xs text-ink-secondary mb-1">Description</label>
+                          <Input
                             type="text"
                             value={editDescription}
                             onChange={(e) => setEditDescription(e.target.value)}
-                            className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
                           />
                         </div>
                         <div className="flex justify-end gap-2">
-                          <button
-                            onClick={handleEditCancel}
-                            className="px-3 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-700 rounded"
-                          >
+                          <Button variant="ghost" size="xs" onClick={handleEditCancel}>
                             Cancel
-                          </button>
-                          <button
-                            onClick={handleEditSave}
-                            className="px-3 py-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded"
-                          >
+                          </Button>
+                          <Button variant="primary" size="xs" onClick={handleEditSave}>
                             Save
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ) : (
@@ -339,57 +325,40 @@ export function DnsMappingPanel({ isOpen, onClose }: DnsMappingPanelProps) {
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-mono text-white truncate">
+                            <span className="text-sm font-mono text-ink truncate">
                               {mapping.domain}
                             </span>
-                            <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
-                            <span className="text-sm font-mono text-blue-400 truncate">
+                            <ArrowRight className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                            <span className="text-sm font-mono text-accent truncate">
                               {mapping.targetIp}
                             </span>
                           </div>
                           {mapping.description && (
-                            <p className="text-xs text-gray-500 mt-1 truncate">
+                            <p className="text-xs text-ink-muted mt-1 truncate">
                               {mapping.description}
                             </p>
                           )}
                         </div>
                         <div className="flex items-center gap-2 ml-3 flex-shrink-0">
                           {/* Toggle switch */}
-                          <button
-                            onClick={() => handleToggle(mapping.id)}
-                            className={`w-9 h-5 rounded-full transition-colors ${
-                              mapping.enabled ? 'bg-blue-600' : 'bg-gray-600'
-                            }`}
-                            title={mapping.enabled ? 'Disable' : 'Enable'}
-                          >
-                            <span
-                              className={`block w-3.5 h-3.5 bg-white rounded-full transform transition-transform ${
-                                mapping.enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
-                              }`}
-                            />
-                          </button>
+                          <Switch
+                            checked={mapping.enabled}
+                            aria-label={mapping.enabled ? 'Disable' : 'Enable'}
+                            onCheckedChange={() => handleToggle(mapping.id)}
+                          />
                           {/* Edit button */}
-                          <button
+                          <IconButton
+                            label="Edit"
+                            icon={<Pencil className="w-4 h-4" />}
                             onClick={() => handleEditStart(mapping)}
-                            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-                            title="Edit"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
+                          />
                           {/* Delete button */}
-                          <button
+                          <IconButton
+                            label="Delete"
+                            variant="danger"
+                            icon={<Trash2 className="w-4 h-4" />}
                             onClick={() => handleDelete(mapping.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors"
-                            title="Delete"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
+                          />
                         </div>
                       </div>
                     )}
@@ -400,42 +369,39 @@ export function DnsMappingPanel({ isOpen, onClose }: DnsMappingPanelProps) {
           </div>
 
           {/* Test resolve section */}
-          <div className="border-t border-gray-700 pt-4">
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Test Resolution</h3>
+          <div className="border-t border-edge pt-4">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-3">Test Resolution</h3>
             <div className="flex gap-3 items-end">
               <div className="flex-1">
-                <label className="block text-xs text-gray-400 mb-1">Hostname</label>
-                <input
+                <label className="block text-xs text-ink-secondary mb-1">Hostname</label>
+                <Input
                   type="text"
+                  sizeVariant="md"
                   value={testHostname}
                   onChange={(e) => setTestHostname(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleTestResolve();
                   }}
                   placeholder="e.g., api.example.com"
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
-              <button
-                onClick={handleTestResolve}
-                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md whitespace-nowrap"
-              >
+              <Button variant="secondary" size="md" onClick={handleTestResolve} className="whitespace-nowrap">
                 Resolve
-              </button>
+              </Button>
             </div>
             {testResult && (
               <div className={`mt-2 p-3 rounded-md text-sm ${
                 testResult.matched
-                  ? 'bg-green-900/20 border border-green-800'
-                  : 'bg-gray-900 border border-gray-700'
+                  ? 'bg-success/12 border border-success/25'
+                  : 'bg-canvas border border-edge-subtle'
               }`}>
                 {testResult.matched ? (
-                  <span className="text-green-400">
+                  <span className="text-success">
                     {testResult.hostname} resolves to{' '}
                     <span className="font-mono font-medium">{testResult.resolvedIp}</span>
                   </span>
                 ) : (
-                  <span className="text-gray-400">
+                  <span className="text-ink-secondary">
                     {testResult.hostname} -- no matching DNS mapping (will use default resolution)
                   </span>
                 )}
@@ -445,13 +411,10 @@ export function DnsMappingPanel({ isOpen, onClose }: DnsMappingPanelProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end p-4 border-t border-gray-700">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md"
-          >
+        <div className="flex justify-end p-4 border-t border-edge">
+          <Button variant="ghost" size="md" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
       </div>
     </div>

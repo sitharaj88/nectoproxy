@@ -9,6 +9,8 @@ import { EditorView } from '@codemirror/view';
 import { Copy, Check, WrapText, Code2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/utils/clipboard';
+import { useTheme, getResolvedTheme } from '@/hooks/useTheme';
+import { IconButton } from './ui';
 
 interface CodeViewerProps {
   content: string;
@@ -19,39 +21,80 @@ interface CodeViewerProps {
 }
 
 // Dark theme matching the app
-const darkTheme = EditorView.theme({
-  '&': {
-    backgroundColor: 'rgb(17 24 39)',
-    color: 'rgb(229 231 235)',
+const darkTheme = EditorView.theme(
+  {
+    '&': {
+      backgroundColor: 'rgb(17 24 39)',
+      color: 'rgb(229 231 235)',
+    },
+    '.cm-content': {
+      caretColor: '#fff',
+      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+      fontSize: '13px',
+    },
+    '.cm-gutters': {
+      backgroundColor: 'rgb(17 24 39)',
+      color: 'rgb(107 114 128)',
+      border: 'none',
+    },
+    '.cm-activeLineGutter': {
+      backgroundColor: 'rgb(31 41 55)',
+    },
+    '.cm-activeLine': {
+      backgroundColor: 'rgb(31 41 55)',
+    },
+    '.cm-selectionMatch': {
+      backgroundColor: 'rgba(59, 130, 246, 0.3)',
+    },
+    '&.cm-focused .cm-selectionBackground, ::selection': {
+      backgroundColor: 'rgba(59, 130, 246, 0.4)',
+    },
+    '.cm-foldPlaceholder': {
+      backgroundColor: 'rgb(55 65 81)',
+      color: 'rgb(156 163 175)',
+      border: 'none',
+    },
   },
-  '.cm-content': {
-    caretColor: '#fff',
-    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize: '13px',
+  { dark: true }
+);
+
+// Light theme matching the app's light mode
+const lightTheme = EditorView.theme(
+  {
+    '&': {
+      backgroundColor: '#ffffff',
+      color: 'rgb(31 41 55)',
+    },
+    '.cm-content': {
+      caretColor: 'rgb(17 24 39)',
+      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+      fontSize: '13px',
+    },
+    '.cm-gutters': {
+      backgroundColor: '#ffffff',
+      color: 'rgb(156 163 175)',
+      border: 'none',
+    },
+    '.cm-activeLineGutter': {
+      backgroundColor: 'rgb(243 244 246)',
+    },
+    '.cm-activeLine': {
+      backgroundColor: 'rgb(243 244 246)',
+    },
+    '.cm-selectionMatch': {
+      backgroundColor: 'rgba(59, 130, 246, 0.18)',
+    },
+    '&.cm-focused .cm-selectionBackground, ::selection': {
+      backgroundColor: 'rgba(59, 130, 246, 0.25)',
+    },
+    '.cm-foldPlaceholder': {
+      backgroundColor: 'rgb(229 231 235)',
+      color: 'rgb(107 114 128)',
+      border: 'none',
+    },
   },
-  '.cm-gutters': {
-    backgroundColor: 'rgb(17 24 39)',
-    color: 'rgb(107 114 128)',
-    border: 'none',
-  },
-  '.cm-activeLineGutter': {
-    backgroundColor: 'rgb(31 41 55)',
-  },
-  '.cm-activeLine': {
-    backgroundColor: 'rgb(31 41 55)',
-  },
-  '.cm-selectionMatch': {
-    backgroundColor: 'rgba(59, 130, 246, 0.3)',
-  },
-  '&.cm-focused .cm-selectionBackground, ::selection': {
-    backgroundColor: 'rgba(59, 130, 246, 0.4)',
-  },
-  '.cm-foldPlaceholder': {
-    backgroundColor: 'rgb(55 65 81)',
-    color: 'rgb(156 163 175)',
-    border: 'none',
-  },
-});
+  { dark: false }
+);
 
 function detectLanguage(contentType?: string) {
   if (!contentType) return null;
@@ -135,6 +178,10 @@ export function CodeViewer({
   const [wordWrap, setWordWrap] = useState(true);
   const [prettyPrint, setPrettyPrint] = useState(true);
 
+  const { theme } = useTheme();
+  const resolvedTheme = getResolvedTheme(theme);
+  const isLight = resolvedTheme === 'light';
+
   const language = useMemo(() => detectLanguage(contentType), [contentType]);
 
   const displayContent = useMemo(() => {
@@ -145,13 +192,13 @@ export function CodeViewer({
   }, [content, contentType, prettyPrint]);
 
   const extensions = useMemo(() => {
-    const exts = [darkTheme];
+    const exts = [isLight ? lightTheme : darkTheme];
 
     if (language) exts.push(language);
     if (wordWrap) exts.push(EditorView.lineWrapping);
 
     return exts;
-  }, [language, wordWrap]);
+  }, [language, wordWrap, isLight]);
 
   const handleCopy = async () => {
     try {
@@ -167,12 +214,12 @@ export function CodeViewer({
   const formattable = isFormattable(contentType);
 
   return (
-    <div className={`relative rounded-lg overflow-hidden bg-gray-900 border border-gray-700 ${className}`}>
+    <div className={`relative rounded-md overflow-hidden bg-surface border border-edge ${className}`}>
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700 bg-gray-800">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-edge bg-surface-raised">
         <div className="flex items-center gap-2">
           {contentType && (
-            <span className="text-xs text-gray-500 font-mono">
+            <span className="text-xs text-ink-faint font-mono">
               {contentType.split(';')[0]}
             </span>
           )}
@@ -180,42 +227,26 @@ export function CodeViewer({
 
         <div className="flex items-center gap-1">
           {formattable && (
-            <button
+            <IconButton
+              label={prettyPrint ? 'Show raw' : 'Pretty print'}
+              icon={<Code2 className="w-4 h-4" />}
               onClick={() => setPrettyPrint(!prettyPrint)}
-              className={`p-1.5 rounded transition-colors ${
-                prettyPrint
-                  ? 'text-blue-400 bg-blue-400/10'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-              }`}
-              title={prettyPrint ? 'Show raw' : 'Pretty print'}
-            >
-              <Code2 className="w-4 h-4" />
-            </button>
+              active={prettyPrint}
+            />
           )}
 
-          <button
+          <IconButton
+            label={wordWrap ? 'Disable word wrap' : 'Enable word wrap'}
+            icon={<WrapText className="w-4 h-4" />}
             onClick={() => setWordWrap(!wordWrap)}
-            className={`p-1.5 rounded transition-colors ${
-              wordWrap
-                ? 'text-blue-400 bg-blue-400/10'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-            }`}
-            title={wordWrap ? 'Disable word wrap' : 'Enable word wrap'}
-          >
-            <WrapText className="w-4 h-4" />
-          </button>
+            active={wordWrap}
+          />
 
-          <button
+          <IconButton
+            label="Copy to clipboard"
+            icon={copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
             onClick={handleCopy}
-            className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded transition-colors"
-            title="Copy to clipboard"
-          >
-            {copied ? (
-              <Check className="w-4 h-4 text-green-400" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
-          </button>
+          />
         </div>
       </div>
 
@@ -224,7 +255,7 @@ export function CodeViewer({
         <CodeMirror
           value={displayContent}
           extensions={extensions}
-          theme="dark"
+          theme={resolvedTheme}
           editable={false}
           basicSetup={{
             lineNumbers: showLineNumbers,

@@ -5,7 +5,7 @@ import { subscribeToBreakpoints } from '../../services/socket';
 import { BreakpointList } from './BreakpointList';
 import { BreakpointEditor } from './BreakpointEditor';
 import { InterceptedPanel } from './InterceptedPanel';
-import { Modal } from '../ui/Modal';
+import { Modal, Tabs, Badge, Button } from '@/components/ui';
 import type { BreakpointCreateInput } from '@nectoproxy/shared';
 
 interface BreakpointsPanelProps {
@@ -93,48 +93,39 @@ export function BreakpointsPanel({ isOpen, onClose }: BreakpointsPanelProps) {
       maxHeight="85vh"
     >
       <div className="flex flex-col h-full">
-        <div className="flex border-b border-gray-700">
-          <button
-            type="button"
-            onClick={() => setActiveTab('breakpoints')}
-            className={`px-4 py-2 text-sm font-medium ${
-              activeTab === 'breakpoints'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-white'
-            }`}
-            aria-pressed={activeTab === 'breakpoints'}
-          >
-            Breakpoints ({breakpoints.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('intercepted')}
-            className={`px-4 py-2 text-sm font-medium ${
-              activeTab === 'intercepted'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-white'
-            }`}
-            aria-pressed={activeTab === 'intercepted'}
-          >
-            Intercepted ({pendingHits.length})
-            {pendingHits.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
-                {pendingHits.length}
-              </span>
-            )}
-          </button>
-        </div>
+        <Tabs
+          size="md"
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'breakpoints' | 'intercepted')}
+          items={[
+            { value: 'breakpoints', label: `Breakpoints (${breakpoints.length})` },
+            {
+              value: 'intercepted',
+              label: (
+                <>
+                  Intercepted ({pendingHits.length})
+                  {pendingHits.length > 0 && (
+                    <Badge tone="danger" className="ml-1">
+                      {pendingHits.length}
+                    </Badge>
+                  )}
+                </>
+              ),
+            },
+          ]}
+        />
 
         {error && (
-          <div className="p-3 bg-red-900/30 text-red-400 text-sm" role="alert">
-            {error}
-            <button
-              type="button"
+          <div className="p-3 bg-danger/12 text-danger text-sm flex items-center" role="alert">
+            <span className="flex-1">{error}</span>
+            <Button
+              variant="ghost"
+              size="xs"
               onClick={() => setError(null)}
-              className="ml-2 text-red-300 hover:text-red-100"
+              className="ml-2 !text-danger"
             >
               Dismiss
-            </button>
+            </Button>
           </div>
         )}
 

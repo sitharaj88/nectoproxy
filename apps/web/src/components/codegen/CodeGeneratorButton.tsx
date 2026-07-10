@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Code2 } from 'lucide-react';
+import { Button, Tooltip } from '@/components/ui';
 import { CodeGeneratorModal } from './CodeGeneratorModal';
 import type { TrafficEntry } from '@nectoproxy/shared';
 
@@ -13,15 +14,16 @@ export function CodeGeneratorButton({ entry, requestBody }: CodeGeneratorButtonP
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 px-2 py-1 rounded text-sm bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-        title="Generate code from this request"
-        aria-label="Generate code"
-      >
-        <Code2 className="w-4 h-4" />
-        <span className="hidden sm:inline">Code</span>
-      </button>
+      <Tooltip content="Generate code from this request">
+        <Button
+          variant="primary"
+          onClick={() => setIsOpen(true)}
+          aria-label="Generate code"
+        >
+          <Code2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Code</span>
+        </Button>
+      </Tooltip>
 
       <CodeGeneratorModal
         isOpen={isOpen}

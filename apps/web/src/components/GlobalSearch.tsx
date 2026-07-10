@@ -11,6 +11,7 @@ import {
 import { searchTrafficGlobal, activateSession as activateSessionApi, type GlobalSearchResult } from '@/services/api';
 import { useTrafficStore } from '@/stores/trafficStore';
 import { useSessionStore } from '@/stores/sessionStore';
+import { Badge, Button, EmptyState, Kbd, cn, type BadgeProps } from '@/components/ui';
 
 interface GlobalSearchProps {
   isOpen: boolean;
@@ -19,26 +20,38 @@ interface GlobalSearchProps {
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
 
+function getMethodTone(method: string): BadgeProps['tone'] {
+  const tones: Record<string, BadgeProps['tone']> = {
+    GET: 'success',
+    POST: 'info',
+    PUT: 'warn',
+    PATCH: 'warn',
+    DELETE: 'danger',
+    OPTIONS: 'accent',
+    HEAD: 'neutral',
+  };
+  return tones[method] || 'neutral';
+}
+
 function getMethodColor(method: string): string {
   const colors: Record<string, string> = {
-    GET: 'bg-green-600/20 text-green-400',
-    POST: 'bg-blue-600/20 text-blue-400',
-    PUT: 'bg-yellow-600/20 text-yellow-400',
-    PATCH: 'bg-orange-600/20 text-orange-400',
-    DELETE: 'bg-red-600/20 text-red-400',
-    OPTIONS: 'bg-purple-600/20 text-purple-400',
-    HEAD: 'bg-gray-600/20 text-gray-400',
+    GET: 'bg-success/12 text-success',
+    POST: 'bg-info/12 text-info',
+    PUT: 'bg-warn/12 text-warn',
+    PATCH: 'bg-warn/12 text-warn',
+    DELETE: 'bg-danger/12 text-danger',
+    OPTIONS: 'bg-accent/12 text-accent',
+    HEAD: 'bg-surface-raised text-ink-muted',
   };
-  return colors[method] || 'bg-gray-600/20 text-gray-400';
+  return colors[method] || 'bg-surface-raised text-ink-muted';
 }
 
 function getStatusColor(status: number | null | undefined): string {
-  if (!status) return 'text-gray-500';
-  if (status >= 200 && status < 300) return 'text-green-400';
-  if (status >= 300 && status < 400) return 'text-yellow-400';
-  if (status >= 400 && status < 500) return 'text-red-400';
-  if (status >= 500) return 'text-red-500';
-  return 'text-gray-500';
+  if (!status) return 'text-ink-faint';
+  if (status >= 200 && status < 300) return 'text-success';
+  if (status >= 300 && status < 400) return 'text-warn';
+  if (status >= 400) return 'text-danger';
+  return 'text-ink-faint';
 }
 
 function formatTimestamp(ts: number): string {
@@ -192,6 +205,16 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   const totalPages = results ? Math.ceil(results.total / PAGE_SIZE) : 0;
 
+  const filtersActive = showFilters || searchIn.length > 0 || methodFilters.length > 0;
+
+  const scopeChipClass = (active: boolean) =>
+    cn(
+      'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition-colors border',
+      active
+        ? 'bg-accent/12 text-accent border-accent/25'
+        : 'bg-surface-raised text-ink-muted border-edge hover:text-ink'
+    );
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -208,32 +231,30 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15 }}
-            className="w-[720px] max-h-[80vh] overflow-hidden rounded-xl bg-gray-800 border border-gray-700 shadow-2xl flex flex-col"
+            className="w-[720px] max-h-[80vh] overflow-hidden rounded-md bg-surface-overlay border border-edge shadow-popover flex flex-col"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={handleKeyDown}
           >
             {/* Search Header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-700">
-              <Search className="w-5 h-5 text-gray-500 flex-shrink-0" />
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-edge">
+              <Search className="w-5 h-5 text-ink-faint flex-shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search across all sessions..."
-                className="flex-1 bg-transparent text-gray-100 placeholder-gray-500 outline-none text-sm"
+                className="flex-1 bg-transparent text-ink placeholder:text-ink-faint outline-none text-sm"
                 autoFocus
               />
               {isLoading && (
-                <Loader2 className="w-4 h-4 text-blue-400 animate-spin flex-shrink-0" />
+                <Loader2 className="w-4 h-4 text-accent animate-spin flex-shrink-0" />
               )}
-              <button
+              <Button
+                variant="secondary"
+                size="xs"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`px-2 py-1 text-xs rounded transition-colors ${
-                  showFilters || searchIn.length > 0 || methodFilters.length > 0
-                    ? 'bg-blue-600/20 text-blue-400'
-                    : 'bg-gray-700 text-gray-400 hover:text-gray-200'
-                }`}
+                className={cn(filtersActive && 'bg-accent/12 text-accent border-accent/25 hover:bg-accent/20')}
               >
                 Filters
                 {(searchIn.length > 0 || methodFilters.length > 0) && (
@@ -241,10 +262,8 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                     ({searchIn.length + methodFilters.length})
                   </span>
                 )}
-              </button>
-              <kbd className="px-2 py-1 text-xs font-mono bg-gray-900 text-gray-400 rounded border border-gray-600 flex-shrink-0">
-                Esc
-              </kbd>
+              </Button>
+              <Kbd>Esc</Kbd>
             </div>
 
             {/* Filter Options */}
@@ -255,44 +274,32 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="overflow-hidden border-b border-gray-700"
+                  className="overflow-hidden border-b border-edge"
                 >
                   <div className="px-4 py-3 space-y-3">
                     {/* Search Scope */}
                     <div>
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5 block">
+                      <label className="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5 block">
                         Search in
                       </label>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => toggleSearchIn('url')}
-                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs transition-colors ${
-                            searchIn.includes('url')
-                              ? 'bg-blue-600/20 text-blue-400 border border-blue-600/40'
-                              : 'bg-gray-700 text-gray-400 border border-gray-600 hover:text-gray-200'
-                          }`}
+                          className={scopeChipClass(searchIn.includes('url'))}
                         >
                           <Globe className="w-3 h-3" />
                           URL
                         </button>
                         <button
                           onClick={() => toggleSearchIn('headers')}
-                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs transition-colors ${
-                            searchIn.includes('headers')
-                              ? 'bg-blue-600/20 text-blue-400 border border-blue-600/40'
-                              : 'bg-gray-700 text-gray-400 border border-gray-600 hover:text-gray-200'
-                          }`}
+                          className={scopeChipClass(searchIn.includes('headers'))}
                         >
                           <FileText className="w-3 h-3" />
                           Headers
                         </button>
                         <button
                           onClick={() => toggleSearchIn('body')}
-                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs transition-colors ${
-                            searchIn.includes('body')
-                              ? 'bg-blue-600/20 text-blue-400 border border-blue-600/40'
-                              : 'bg-gray-700 text-gray-400 border border-gray-600 hover:text-gray-200'
-                          }`}
+                          className={scopeChipClass(searchIn.includes('body'))}
                         >
                           <Code className="w-3 h-3" />
                           Body
@@ -302,7 +309,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
                     {/* Method Filter */}
                     <div>
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1.5 block">
+                      <label className="text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5 block">
                         HTTP Method
                       </label>
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -310,22 +317,20 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                           <button
                             key={method}
                             onClick={() => toggleMethod(method)}
-                            className={`px-2 py-1 rounded text-xs font-mono transition-colors ${
+                            className={cn(
+                              'px-2 py-1 rounded-md text-xs font-mono transition-colors border',
                               methodFilters.includes(method)
-                                ? getMethodColor(method) + ' border border-current/30'
-                                : 'bg-gray-700 text-gray-400 border border-gray-600 hover:text-gray-200'
-                            }`}
+                                ? getMethodColor(method) + ' border-current/30'
+                                : 'bg-surface-raised text-ink-muted border-edge hover:text-ink'
+                            )}
                           >
                             {method}
                           </button>
                         ))}
                         {methodFilters.length > 0 && (
-                          <button
-                            onClick={() => setMethodFilters([])}
-                            className="px-2 py-1 text-xs text-gray-500 hover:text-gray-300"
-                          >
+                          <Button variant="ghost" size="xs" onClick={() => setMethodFilters([])}>
                             Clear
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -338,8 +343,8 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             <div className="flex-1 overflow-y-auto min-h-0">
               {/* Result count summary */}
               {results && query.trim() && (
-                <div className="px-4 py-2 border-b border-gray-700 bg-gray-900/50">
-                  <span className="text-xs text-gray-400">
+                <div className="px-4 py-2 border-b border-edge bg-surface">
+                  <span className="text-xs text-ink-muted">
                     {results.total} result{results.total !== 1 ? 's' : ''} found
                     {uniqueSessionCount > 0 && (
                       <> across {uniqueSessionCount} session{uniqueSessionCount !== 1 ? 's' : ''}</>
@@ -351,30 +356,26 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
               {/* Error state */}
               {error && (
                 <div className="px-4 py-6 text-center">
-                  <p className="text-sm text-red-400">{error}</p>
+                  <p className="text-sm text-danger">{error}</p>
                 </div>
               )}
 
               {/* Empty state */}
               {!isLoading && query.trim() && results && results.entries.length === 0 && (
-                <div className="px-4 py-12 text-center">
-                  <Search className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-                  <p className="text-sm text-gray-400">No results found for "{query}"</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Try adjusting your search query or filters
-                  </p>
-                </div>
+                <EmptyState
+                  icon={Search}
+                  title={`No results found for "${query}"`}
+                  description="Try adjusting your search query or filters"
+                />
               )}
 
               {/* Initial state */}
               {!query.trim() && !results && (
-                <div className="px-4 py-12 text-center">
-                  <Search className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-                  <p className="text-sm text-gray-400">Search request and response content across all sessions</p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Use filters to narrow results by URL, headers, or body content
-                  </p>
-                </div>
+                <EmptyState
+                  icon={Search}
+                  title="Search request and response content across all sessions"
+                  description="Use filters to narrow results by URL, headers, or body content"
+                />
               )}
 
               {/* Results list */}
@@ -394,32 +395,30 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                       <button
                         key={entry.id}
                         onClick={() => handleResultClick(entry)}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-700/50 transition-colors border-b border-gray-800 group"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-raised transition-colors border-b border-edge-subtle group"
                       >
                         {/* Method badge */}
-                        <span
-                          className={`flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold ${getMethodColor(entry.method)}`}
-                        >
+                        <Badge tone={getMethodTone(entry.method)} mono className="flex-shrink-0">
                           {entry.method}
-                        </span>
+                        </Badge>
 
                         {/* URL and details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-200 truncate" title={entry.url}>
+                            <span className="text-sm text-ink truncate" title={entry.url}>
                               {entry.host}
-                              <span className="text-gray-400">{pathDisplay}</span>
+                              <span className="text-ink-muted">{pathDisplay}</span>
                             </span>
                           </div>
                           <div className="flex items-center gap-3 mt-0.5">
-                            <span className="text-[10px] text-gray-500 bg-gray-700/50 px-1.5 py-0.5 rounded">
+                            <Badge tone="neutral" className="text-[10px]">
                               {sessionName}
-                            </span>
-                            <span className="text-[10px] text-gray-500">
+                            </Badge>
+                            <span className="text-[10px] text-ink-faint">
                               {formatTimestamp(entry.timestamp)}
                             </span>
                             {entry.duration !== null && entry.duration !== undefined && (
-                              <span className="text-[10px] text-gray-500">
+                              <span className="text-[10px] text-ink-faint">
                                 {formatDuration(entry.duration)}
                               </span>
                             )}
@@ -428,13 +427,13 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
                         {/* Status */}
                         <span
-                          className={`flex-shrink-0 text-xs font-mono ${getStatusColor(entry.status)}`}
+                          className={cn('flex-shrink-0 text-xs font-mono', getStatusColor(entry.status))}
                         >
                           {entry.status || 'pending'}
                         </span>
 
                         {/* Navigate icon */}
-                        <ExternalLink className="w-3.5 h-3.5 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                        <ExternalLink className="w-3.5 h-3.5 text-ink-faint opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                       </button>
                     );
                   })}
@@ -444,45 +443,47 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
             {/* Pagination */}
             {results && totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-2 border-t border-gray-700 bg-gray-900/50">
-                <span className="text-xs text-gray-500">
+              <div className="flex items-center justify-between px-4 py-2 border-t border-edge bg-surface">
+                <span className="text-xs text-ink-muted">
                   Page {page + 1} of {totalPages}
                 </span>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="xs"
                     onClick={() => handlePageChange(page - 1)}
                     disabled={page === 0}
-                    className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     Previous
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="xs"
                     onClick={() => handlePageChange(page + 1)}
                     disabled={page >= totalPages - 1}
-                    className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
 
             {/* Footer */}
-            <div className="px-4 py-2 border-t border-gray-700 flex items-center gap-3 text-[10px] text-gray-500">
+            <div className="px-4 py-2 border-t border-edge flex items-center gap-3 text-[10px] text-ink-muted">
               <span className="flex items-center gap-1">
-                <kbd className="px-1 py-0.5 bg-gray-700 rounded">↑↓</kbd>
+                <Kbd>↑↓</Kbd>
                 Navigate
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1 py-0.5 bg-gray-700 rounded">Enter</kbd>
+                <Kbd>Enter</Kbd>
                 Open
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1 py-0.5 bg-gray-700 rounded">Esc</kbd>
+                <Kbd>Esc</Kbd>
                 Close
               </span>
               <span className="ml-auto flex items-center gap-1">
-                <kbd className="px-1 py-0.5 bg-gray-700 rounded">Ctrl+Shift+F</kbd>
+                <Kbd>Ctrl+Shift+F</Kbd>
                 Global Search
               </span>
             </div>

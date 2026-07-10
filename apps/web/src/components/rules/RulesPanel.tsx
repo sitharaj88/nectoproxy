@@ -5,7 +5,7 @@ import { getRules } from '@/services/api';
 import { subscribeToRules } from '@/services/socket';
 import { RulesList } from './RulesList';
 import { RuleEditor } from './RuleEditor';
-import { EmptyState } from '../ui/EmptyState';
+import { Button, IconButton, EmptyState } from '@/components/ui';
 
 interface RulesPanelProps {
   onClose: () => void;
@@ -50,30 +50,22 @@ export function RulesPanel({ onClose }: RulesPanelProps) {
 
   return (
     <aside
-      className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col"
+      className="w-80 bg-surface border-l border-edge flex flex-col"
       aria-label="Rules panel"
     >
-      <div className="flex items-center justify-between p-3 border-b border-gray-700">
-        <h2 className="font-medium">Rules</h2>
+      <div className="flex items-center justify-between p-3 border-b border-edge">
+        <h2 className="font-medium text-ink">Rules</h2>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <IconButton
+            label="Add rule"
+            icon={<Plus className="w-5 h-5" aria-hidden="true" />}
             onClick={handleNewRule}
-            className="p-1 hover:bg-gray-700 rounded"
-            title="Add rule"
-            aria-label="Add rule"
-          >
-            <Plus className="w-5 h-5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
+          />
+          <IconButton
+            label="Close rules panel"
+            icon={<X className="w-5 h-5" aria-hidden="true" />}
             onClick={onClose}
-            className="p-1 hover:bg-gray-700 rounded"
-            title="Close rules panel"
-            aria-label="Close rules panel"
-          >
-            <X className="w-5 h-5" aria-hidden="true" />
-          </button>
+          />
         </div>
       </div>
 
@@ -91,7 +83,7 @@ export function RulesPanel({ onClose }: RulesPanelProps) {
                 Rules let you intercept matching requests and apply actions like
                 mock, block, redirect, modify headers/body, or throttle.
               </p>
-              <ul className="text-xs text-gray-500 list-disc list-inside space-y-0.5">
+              <ul className="text-xs text-ink-muted list-disc list-inside space-y-0.5">
                 <li>Mock — return a custom response</li>
                 <li>Block — reject the request</li>
                 <li>Map Local / Remote — redirect</li>
@@ -101,14 +93,10 @@ export function RulesPanel({ onClose }: RulesPanelProps) {
             </div>
           }
           action={
-            <button
-              type="button"
-              onClick={handleNewRule}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md"
-            >
+            <Button variant="primary" onClick={handleNewRule}>
               <Plus className="w-4 h-4" aria-hidden="true" />
               Create your first rule
-            </button>
+            </Button>
           }
         />
       )}

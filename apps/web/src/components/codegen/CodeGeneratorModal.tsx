@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
-import { X, Copy, Check, Code2 } from 'lucide-react';
+import { Copy, Check, Code2 } from 'lucide-react';
+import { Modal, Button, Select } from '@/components/ui';
 import { languages, type GeneratorInput } from './generators';
 import type { TrafficEntry } from '@nectoproxy/shared';
 import { copyToClipboard } from '@/utils/clipboard';
@@ -38,97 +39,76 @@ export function CodeGeneratorModal({
     }
   }, [generated.code]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div
-        className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scaleIn"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="codegen-title"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-          <div className="flex items-center gap-2">
-            <Code2 className="w-5 h-5 text-blue-400" />
-            <h2 id="codegen-title" className="text-lg font-semibold text-white">
-              Generate Code
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Request Info */}
-        <div className="px-4 py-2 bg-gray-700 border-b border-gray-700">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-mono text-blue-400">{entry.method}</span>
-            <span className="text-gray-300 truncate">{entry.url}</span>
-          </div>
-        </div>
-
-        {/* Language Tabs */}
-        <div className="flex gap-1 px-4 py-2 border-b border-gray-700 overflow-x-auto">
-          {languages.map((lang) => (
-            <button
-              key={lang.id}
-              onClick={() => setSelectedLanguage(lang.id)}
-              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap ${
-                selectedLanguage === lang.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {lang.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Code Display */}
-        <div className="flex-1 overflow-auto p-4">
-          <div className="relative">
-            <button
-              onClick={handleCopy}
-              className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
-              aria-label={copied ? 'Copied!' : 'Copy code'}
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-green-400" />
-                  <span>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy</span>
-                </>
-              )}
-            </button>
-            <pre className="p-4 bg-gray-900 rounded-lg overflow-auto text-sm font-mono text-gray-300 whitespace-pre-wrap">
-              <code>{generated.code}</code>
-            </pre>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700 bg-gray-700">
-          <span className="text-sm text-gray-400">
-            Language: <span className="text-gray-300">{generated.language}</span>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Generate Code"
+      titleIcon={<Code2 className="w-5 h-5 text-accent" />}
+      size="xl"
+      maxHeight="90vh"
+      footer={
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-ink-muted">
+            Language: <span className="text-ink-secondary">{generated.language}</span>
           </span>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
-          >
+          <Button variant="primary" size="md" onClick={onClose}>
             Close
-          </button>
+          </Button>
+        </div>
+      }
+    >
+      {/* Request Info */}
+      <div className="px-4 py-2 bg-surface border-b border-edge">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="font-mono text-accent">{entry.method}</span>
+          <span className="text-ink-secondary truncate">{entry.url}</span>
         </div>
       </div>
-    </div>
+
+      {/* Language Selector */}
+      <div className="px-4 py-2 border-b border-edge">
+        <Select
+          sizeVariant="md"
+          aria-label="Language"
+          value={selectedLanguage}
+          onChange={(e) => setSelectedLanguage(e.target.value)}
+        >
+          {languages.map((lang) => (
+            <option key={lang.id} value={lang.id}>
+              {lang.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      {/* Code Display */}
+      <div className="p-4">
+        <div className="relative">
+          <Button
+            variant="secondary"
+            size="xs"
+            onClick={handleCopy}
+            className="absolute top-2 right-2"
+            aria-label={copied ? 'Copied!' : 'Copy code'}
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-success" />
+                <span>Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy</span>
+              </>
+            )}
+          </Button>
+          <pre className="p-4 bg-canvas border border-edge rounded-md overflow-auto text-sm font-mono text-ink-secondary whitespace-pre-wrap">
+            <code>{generated.code}</code>
+          </pre>
+        </div>
+      </div>
+    </Modal>
   );
 }

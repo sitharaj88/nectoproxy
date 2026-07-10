@@ -9,6 +9,8 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { TimeSeriesPoint } from '@/hooks/usePerformanceStats';
+import { Card } from '@/components/ui';
+import { useChartTheme, tooltipContentStyle } from './chartTheme';
 
 interface ErrorRateChartProps {
   data: TimeSeriesPoint[];
@@ -20,51 +22,47 @@ function formatTime(timestamp: number): string {
 }
 
 export function ErrorRateChart({ data }: ErrorRateChartProps) {
+  const theme = useChartTheme();
   const hasErrors = data.some((d) => d.value > 0);
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 h-64">
-      <h3 className="text-sm font-medium text-gray-300 mb-3">Error Rate</h3>
+    <Card className="p-4 h-64">
+      <h3 className="text-sm font-medium text-ink-secondary mb-3">Error Rate</h3>
       <ResponsiveContainer width="100%" height="85%">
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} />
           <XAxis
             dataKey="timestamp"
             tickFormatter={formatTime}
-            stroke="#6b7280"
+            stroke={theme.axis}
             fontSize={10}
             tickLine={false}
           />
           <YAxis
-            stroke="#6b7280"
+            stroke={theme.axis}
             fontSize={10}
             tickLine={false}
             domain={[0, 'auto']}
             tickFormatter={(value) => `${value}%`}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              fontSize: '12px',
-            }}
+            contentStyle={tooltipContentStyle(theme)}
             labelFormatter={(value) => formatTime(value as number)}
             formatter={(value) => [`${(Number(value) || 0).toFixed(1)}%`, 'Error Rate']}
           />
           {hasErrors && (
-            <ReferenceLine y={5} stroke="#eab308" strokeDasharray="5 5" />
+            <ReferenceLine y={5} stroke={theme.warn} strokeDasharray="5 5" />
           )}
           <Line
             type="monotone"
             dataKey="value"
-            stroke={hasErrors ? '#ef4444' : '#22c55e'}
+            stroke={hasErrors ? theme.danger : theme.success}
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4 }}
           />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </Card>
   );
 }

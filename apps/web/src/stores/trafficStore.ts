@@ -28,6 +28,8 @@ interface TrafficState {
   // Actions
   addEntry: (entry: TrafficEntry) => void;
   addBatch: (entries: TrafficEntry[]) => void;
+  /** Seed historical entries on (re)connect; dedups by id, keeps newest-first. */
+  seedEntries: (entries: TrafficEntry[]) => void;
   updateEntry: (id: string, update: Partial<TrafficEntry>) => void;
   setSelected: (id: string | null) => void;
   clearEntries: () => void;
@@ -82,6 +84,20 @@ export const useTrafficStore = create<TrafficState>((set, get) => ({
         return { entries: newEntries.slice(0, state.maxEntries) };
       }
       return { entries: newEntries };
+    });
+  },
+
+  seedEntries: (entries) => {
+    set((state) => {
+      const existing = new Set(state.entries.map((e) => e.id));
+      const fresh = entries.filter((e) => !existing.has(e.id));
+      if (fresh.length === 0) return state;
+      const merged = [...state.entries, ...fresh].sort(
+        (a, b) => b.timestamp - a.timestamp
+      );
+      return {
+        entries: merged.length > state.maxEntries ? merged.slice(0, state.maxEntries) : merged,
+      };
     });
   },
 

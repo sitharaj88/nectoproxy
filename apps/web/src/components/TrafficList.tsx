@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback, type RefObject } from 'react';
+import { useRef, useMemo, useCallback, type RefObject, type KeyboardEvent } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useActiveEntries, useTrafficStore } from '@/stores/trafficStore';
 import { useCompareStore } from '@/stores/compareStore';
@@ -6,7 +6,7 @@ import { useRulesStore } from '@/stores/rulesStore';
 import { TrafficContextMenu } from './TrafficContextMenu';
 import type { TrafficEntry, Rule } from '@nectoproxy/shared';
 import { Loader2, Square, CheckSquare, ArrowLeftRight, X, Gauge, Network } from 'lucide-react';
-import { EmptyState } from './ui/EmptyState';
+import { Badge, statusTone, Button, IconButton, EmptyState, cn, type BadgeProps } from './ui';
 import { isGraphQLRequest, parseGraphQLRequest } from '@/utils/graphql';
 import { isGRPCRequest } from '@/utils/grpc';
 
@@ -28,26 +28,26 @@ function formatSize(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)}MB`;
 }
 
-function getMethodClass(method: string): string {
-  const classes: Record<string, string> = {
-    GET: 'method-get',
-    POST: 'method-post',
-    PUT: 'method-put',
-    PATCH: 'method-patch',
-    DELETE: 'method-delete',
-    OPTIONS: 'method-options',
-    HEAD: 'method-head',
-  };
-  return classes[method] || 'text-gray-400';
-}
-
-function getStatusClass(status: number | null): string {
-  if (!status) return 'text-gray-500';
-  if (status >= 200 && status < 300) return 'status-2xx';
-  if (status >= 300 && status < 400) return 'status-3xx';
-  if (status >= 400 && status < 500) return 'status-4xx';
-  if (status >= 500) return 'status-5xx';
-  return 'text-gray-500';
+/** Map an HTTP method to a Badge tone (+ optional className), preserving the original color intent. */
+function methodBadge(method: string): { tone: BadgeProps['tone']; className?: string } {
+  switch (method) {
+    case 'GET':
+      return { tone: 'success' };
+    case 'POST':
+      return { tone: 'info' };
+    case 'PUT':
+      return { tone: 'warn' };
+    case 'PATCH':
+      return { tone: 'warn', className: 'bg-orange-500/12 text-orange-400 border-orange-500/25' };
+    case 'DELETE':
+      return { tone: 'danger' };
+    case 'OPTIONS':
+      return { tone: 'neutral' };
+    case 'HEAD':
+      return { tone: 'neutral', className: 'bg-purple-500/12 text-purple-400 border-purple-500/25' };
+    default:
+      return { tone: 'neutral' };
+  }
 }
 
 function bodyToString(body: unknown): string | null {
@@ -169,54 +169,70 @@ function TrafficRow({ entry, isSelected, onClick, isCompareMode, isCompareSelect
     }
   };
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
+  const mb = methodBadge(entry.method);
+
   return (
     <div
+      role="row"
+      tabIndex={0}
+      aria-selected={isSelected}
       onClick={handleClick}
-      className={`flex items-center gap-2 px-3 py-2 border-b border-gray-800 cursor-pointer hover:bg-gray-800 transition-colors ${
-        isSelected ? 'bg-gray-700' : ''
-      } ${isCompareSelected ? 'bg-blue-900/30 border-l-2 border-l-blue-500' : ''}`}
+      onKeyDown={handleKeyDown}
+      className={cn(
+        'flex items-center gap-2 px-3 py-1.5 border-b border-edge-subtle border-l-2 border-l-transparent',
+        'cursor-pointer transition-colors outline-none',
+        'hover:bg-surface-raised focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60',
+        (isSelected || isCompareSelected) && 'bg-accent/10 border-l-accent'
+      )}
     >
       {/* Compare Checkbox */}
       {isCompareMode && (
         <div className="w-6 flex-shrink-0">
           {isCompareSelected ? (
-            <CheckSquare className="w-4 h-4 text-blue-400" />
+            <CheckSquare className="w-4 h-4 text-accent" />
           ) : (
-            <Square className="w-4 h-4 text-gray-500" />
+            <Square className="w-4 h-4 text-ink-faint" />
           )}
         </div>
       )}
       {/* Status */}
-      <div className="w-12 text-center">
+      <div className="w-12 flex justify-center">
         {entry.isComplete ? (
-          <span className={`text-sm font-medium ${getStatusClass(entry.status)}`}>
-            {entry.status || '-'}
-          </span>
+          entry.status ? (
+            <Badge tone={statusTone(entry.status)} mono>{entry.status}</Badge>
+          ) : (
+            <span className="text-sm text-ink-faint">-</span>
+          )
         ) : (
-          <Loader2 className="w-4 h-4 animate-spin text-gray-400 mx-auto" />
+          <Loader2 className="w-4 h-4 animate-spin text-ink-muted" />
         )}
       </div>
 
       {/* Method + Protocol Badge */}
-      <div className="w-24 text-sm font-medium flex items-center gap-1">
-        <span className={getMethodClass(entry.method)}>{entry.method}</span>
+      <div className="w-24 flex items-center gap-1">
+        <Badge tone={mb.tone} mono className={mb.className}>{entry.method}</Badge>
         {protocolBadge && (
-          <span className={`inline-flex items-center px-1 py-0 rounded text-[10px] font-semibold border leading-tight ${protocolBadge.className}`}>
-            {protocolBadge.label}
-          </span>
+          <Badge tone="neutral" className={protocolBadge.className}>{protocolBadge.label}</Badge>
         )}
       </div>
 
       {/* Protocol */}
-      <div className="w-12 text-xs text-gray-500 uppercase">{entry.protocol}</div>
+      <div className="w-12 text-xs text-ink-faint uppercase">{entry.protocol}</div>
 
       {/* Host */}
-      <div className="w-48 text-sm text-gray-300 truncate" title={entry.host}>
+      <div className="w-48 text-sm text-ink-secondary truncate" title={entry.host}>
         {entry.host}
       </div>
 
       {/* Path */}
-      <div className="flex-1 text-sm text-gray-400 truncate font-mono" title={displayPath}>
+      <div className="flex-1 text-sm text-ink-muted truncate font-mono" title={displayPath}>
         {displayPath}
       </div>
 
@@ -228,12 +244,12 @@ function TrafficRow({ entry, isSelected, onClick, isCompareMode, isCompareSelect
       )}
 
       {/* Duration */}
-      <div className="w-20 text-right text-sm text-gray-500">
+      <div className="w-20 text-right text-sm text-ink-faint tabular-nums">
         {formatDuration(entry.duration)}
       </div>
 
       {/* Size */}
-      <div className="w-20 text-right text-sm text-gray-500">
+      <div className="w-20 text-right text-sm text-ink-faint tabular-nums">
         {formatSize(entry.responseBodySize)}
       </div>
     </div>
@@ -265,7 +281,7 @@ export function TrafficList({ searchInputRef: _searchInputRef, onOpenCompare }: 
   const virtualizer = useVirtualizer({
     count: entries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 40,
+    estimateSize: () => 32,
     overscan: 20,
   });
 
@@ -277,7 +293,7 @@ export function TrafficList({ searchInputRef: _searchInputRef, onOpenCompare }: 
         description={
           <div className="space-y-2">
             <p>
-              Set your system or browser HTTP proxy to <code className="px-1 py-0.5 rounded bg-gray-800 text-gray-300">localhost:8888</code>,
+              Set your system or browser HTTP proxy to <code className="px-1 py-0.5 rounded bg-surface-raised text-ink-secondary">localhost:8888</code>,
               then make a request.
             </p>
             <p>
@@ -293,37 +309,32 @@ export function TrafficList({ searchInputRef: _searchInputRef, onOpenCompare }: 
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Compare Mode Banner */}
       {isCompareMode && (
-        <div className="flex items-center justify-between px-3 py-2 bg-blue-900/30 border-b border-blue-800/50">
+        <div className="flex items-center justify-between px-3 py-2 bg-accent/10 border-b border-accent/30">
           <div className="flex items-center gap-2">
-            <ArrowLeftRight className="w-4 h-4 text-blue-400" />
-            <span className="text-sm text-blue-300">
+            <ArrowLeftRight className="w-4 h-4 text-accent" />
+            <span className="text-sm text-ink-secondary">
               {compareSelectedIds.length === 0
                 ? 'Select 2 requests to compare'
                 : compareSelectedIds.length === 1
                 ? 'Select 1 more request to compare'
                 : 'Ready to compare'}
             </span>
-            <span className="text-xs text-blue-400/70 bg-blue-900/40 px-2 py-0.5 rounded">
+            <span className="text-xs text-accent bg-accent/15 px-2 py-0.5 rounded tabular-nums">
               {compareSelectedIds.length}/2 selected
             </span>
           </div>
           <div className="flex items-center gap-2">
             {canCompare() && onOpenCompare && (
-              <button
-                onClick={onOpenCompare}
-                className="flex items-center gap-1.5 px-3 py-1 rounded text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-              >
+              <Button variant="primary" onClick={onOpenCompare}>
                 <ArrowLeftRight className="w-3.5 h-3.5" />
                 Compare Now
-              </button>
+              </Button>
             )}
-            <button
+            <IconButton
+              label="Exit compare mode"
+              icon={<X className="w-4 h-4" />}
               onClick={exitCompareMode}
-              className="p-1 rounded hover:bg-blue-800/50 text-blue-400 transition-colors"
-              title="Exit compare mode"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            />
           </div>
         </div>
       )}
@@ -331,7 +342,7 @@ export function TrafficList({ searchInputRef: _searchInputRef, onOpenCompare }: 
       {/* Header */}
       <div
         role="row"
-        className="flex items-center gap-2 px-3 py-2 bg-gray-800 border-b border-gray-700 text-xs text-gray-400 font-medium"
+        className="flex items-center gap-2 px-3 py-1.5 bg-surface-raised border-b border-edge text-xs text-ink-muted font-medium"
       >
         {isCompareMode && <div className="w-6" aria-hidden="true" />}
         <div className="w-12 text-center" title="HTTP response status code">Status</div>

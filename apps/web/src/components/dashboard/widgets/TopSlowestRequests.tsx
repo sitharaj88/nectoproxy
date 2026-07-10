@@ -1,5 +1,6 @@
 import { useTrafficStore } from '@/stores/trafficStore';
 import type { TrafficEntry } from '@nectoproxy/shared';
+import { Card } from '@/components/ui';
 
 interface TopSlowestRequestsProps {
   requests: TrafficEntry[];
@@ -28,44 +29,46 @@ export function TopSlowestRequests({ requests }: TopSlowestRequestsProps) {
 
   if (requests.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-gray-300 mb-3">Slowest Requests</h3>
-        <p className="text-sm text-gray-500 text-center py-4">No requests yet</p>
-      </div>
+      <Card className="p-4">
+        <h3 className="text-sm font-medium text-ink-secondary mb-3">Slowest Requests</h3>
+        <p className="text-sm text-ink-muted text-center py-4">No requests yet</p>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4">
-      <h3 className="text-sm font-medium text-gray-300 mb-3">Slowest Requests</h3>
+    <Card className="p-4">
+      <h3 className="text-sm font-medium text-ink-secondary mb-3">Slowest Requests</h3>
       <div className="space-y-2">
         {requests.map((request, index) => (
           <button
             key={request.id}
             onClick={() => setSelected(request.id)}
-            className="w-full flex items-center gap-3 p-2 rounded bg-gray-700/50 hover:bg-gray-700 transition-colors text-left"
+            className="w-full flex items-center gap-3 p-2 rounded-md bg-surface hover:bg-surface-overlay transition-colors text-left"
           >
-            <span className="text-xs text-gray-500 w-5">#{index + 1}</span>
+            <span className="text-xs text-ink-muted w-5">#{index + 1}</span>
             <span className={`text-xs font-mono method-${request.method.toLowerCase()} w-12`}>
               {request.method}
             </span>
             <div className="flex-1 min-w-0">
-              <div className="text-sm text-gray-300 truncate">{getPath(request.url)}</div>
-              <div className="text-xs text-gray-500 truncate">{getDomain(request.url)}</div>
+              <div className="text-sm text-ink-secondary truncate">{getPath(request.url)}</div>
+              <div className="text-xs text-ink-muted truncate">{getDomain(request.url)}</div>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium text-yellow-400">
+              <div className="text-sm font-medium text-warn">
                 {request.duration ? `${request.duration}ms` : '-'}
               </div>
-              <div className={`text-xs ${
-                request.status && request.status >= 400 ? 'text-red-400' : 'text-gray-500'
-              }`}>
+              <div
+                className={`text-xs ${
+                  request.status && request.status >= 400 ? 'text-danger' : 'text-ink-muted'
+                }`}
+              >
                 {request.status || 'Pending'}
               </div>
             </div>
           </button>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }

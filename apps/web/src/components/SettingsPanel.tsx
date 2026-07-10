@@ -9,6 +9,7 @@ import { Modal } from './ui/Modal';
 import { SettingsSkeleton } from './ui/Skeleton';
 import { CopyButton } from './ui/CopyButton';
 import { toast } from './ui/Toaster';
+import { Button, Input, Select, Switch, Card } from './ui';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -148,34 +149,25 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   const footer = (
     <div className="flex justify-between items-center">
-      <button
-        type="button"
-        onClick={handleReset}
-        disabled={saving}
-        className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md disabled:opacity-50"
-      >
+      <Button variant="ghost" size="md" onClick={handleReset} disabled={saving}>
         Reset to Defaults
-      </button>
+      </Button>
       <div className="flex items-center gap-2">
         {hasChanges && !validationError && (
-          <span className="text-xs text-gray-500" aria-live="polite">Unsaved changes</span>
+          <span className="text-xs text-ink-faint" aria-live="polite">Unsaved changes</span>
         )}
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md"
-        >
+        <Button variant="ghost" size="md" onClick={onClose}>
           Cancel
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="primary"
+          size="md"
           onClick={handleSave}
           disabled={!hasChanges || saving || !!validationError}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           {saving ? 'Saving…' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -193,7 +185,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       >
         {(error || validationError) && (
           <div
-            className="mx-4 mt-4 p-3 rounded bg-red-900/30 border border-red-700/40 text-red-400 text-sm"
+            className="mx-4 mt-4 p-3 rounded-md bg-danger/12 border border-danger/25 text-danger text-sm"
             role="alert"
           >
             {validationError ?? error}
@@ -201,7 +193,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               <button
                 type="button"
                 onClick={() => setLocalError(null)}
-                className="ml-2 underline text-red-300 hover:text-red-100"
+                className="ml-2 underline text-danger hover:text-ink"
               >
                 Dismiss
               </button>
@@ -214,203 +206,178 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             <>
               {/* Proxy Settings */}
               <section aria-labelledby="proxy-heading">
-                <h3 id="proxy-heading" className="text-sm font-medium text-gray-300 mb-3">
+                <h3 id="proxy-heading" className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-3">
                   Proxy Settings
                 </h3>
-                <div className="space-y-4">
+                <Card className="p-4 space-y-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <label htmlFor={proxyPortId} className="text-sm text-gray-300">
+                      <label htmlFor={proxyPortId} className="text-sm text-ink">
                         Proxy Port
                       </label>
-                      <p className="text-xs text-gray-500">Port for the proxy server (1–65535)</p>
+                      <p className="text-xs text-ink-muted">Port for the proxy server (1–65535)</p>
                     </div>
-                    <input
+                    <Input
                       id={proxyPortId}
                       type="number"
+                      sizeVariant="md"
                       min={PORT_MIN}
                       max={PORT_MAX}
                       value={localSettings.proxyPort}
                       onChange={(e) => handleChange('proxyPort', clampInt(e.target.value, PORT_MIN, PORT_MAX) ?? localSettings.proxyPort)}
-                      className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                      className="w-24"
                     />
                   </div>
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <label htmlFor={uiPortId} className="text-sm text-gray-300">UI Port</label>
-                      <p className="text-xs text-gray-500">Port for the Web UI (1–65535)</p>
+                      <label htmlFor={uiPortId} className="text-sm text-ink">UI Port</label>
+                      <p className="text-xs text-ink-muted">Port for the Web UI (1–65535)</p>
                     </div>
-                    <input
+                    <Input
                       id={uiPortId}
                       type="number"
+                      sizeVariant="md"
                       min={PORT_MIN}
                       max={PORT_MAX}
                       value={localSettings.uiPort}
                       onChange={(e) => handleChange('uiPort', clampInt(e.target.value, PORT_MIN, PORT_MAX) ?? localSettings.uiPort)}
-                      className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                      className="w-24"
                     />
                   </div>
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <label htmlFor={timeoutId} className="text-sm text-gray-300">Request Timeout</label>
-                      <p className="text-xs text-gray-500">Max time to wait for response (ms)</p>
+                      <label htmlFor={timeoutId} className="text-sm text-ink">Request Timeout</label>
+                      <p className="text-xs text-ink-muted">Max time to wait for response (ms)</p>
                     </div>
-                    <input
+                    <Input
                       id={timeoutId}
                       type="number"
+                      sizeVariant="md"
                       min={TIMEOUT_MIN}
                       value={localSettings.requestTimeout}
                       onChange={(e) => handleChange('requestTimeout', clampInt(e.target.value, TIMEOUT_MIN) ?? localSettings.requestTimeout)}
-                      className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                      className="w-24"
                     />
                   </div>
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <label htmlFor={bodySizeId} className="text-sm text-gray-300">Max Body Size</label>
-                      <p className="text-xs text-gray-500">Maximum request/response body size (bytes)</p>
+                      <label htmlFor={bodySizeId} className="text-sm text-ink">Max Body Size</label>
+                      <p className="text-xs text-ink-muted">Maximum request/response body size (bytes)</p>
                     </div>
-                    <input
+                    <Input
                       id={bodySizeId}
                       type="number"
+                      sizeVariant="md"
                       min={BODY_SIZE_MIN}
                       value={localSettings.maxBodySize}
                       onChange={(e) => handleChange('maxBodySize', clampInt(e.target.value, BODY_SIZE_MIN) ?? localSettings.maxBodySize)}
-                      className="w-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                      className="w-32"
                     />
                   </div>
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <span className="text-sm text-gray-300">Upstream Proxy</span>
-                      <p className="text-xs text-gray-500">Route traffic through another proxy server</p>
+                      <span className="text-sm text-ink">Upstream Proxy</span>
+                      <p className="text-xs text-ink-muted">Route traffic through another proxy server</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowUpstreamProxy(true)}
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-white text-sm"
-                    >
+                    <Button variant="secondary" size="md" onClick={() => setShowUpstreamProxy(true)}>
                       <Globe className="w-4 h-4" aria-hidden="true" />
                       Configure
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <span className="text-sm text-gray-300">SSL Passthrough</span>
-                      <p className="text-xs text-gray-500">Bypass MITM for specified domains</p>
+                      <span className="text-sm text-ink">SSL Passthrough</span>
+                      <p className="text-xs text-ink-muted">Bypass MITM for specified domains</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowSSLPassthrough(true)}
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-white text-sm"
-                    >
+                    <Button variant="secondary" size="md" onClick={() => setShowSSLPassthrough(true)}>
                       <Shield className="w-4 h-4" aria-hidden="true" />
                       Configure
-                    </button>
+                    </Button>
                   </div>
-                </div>
+                </Card>
               </section>
 
               {/* Behavior Settings */}
-              <section aria-labelledby="behavior-heading" className="border-t border-gray-700 pt-6">
-                <h3 id="behavior-heading" className="text-sm font-medium text-gray-300 mb-3">Behavior</h3>
-                <div className="space-y-4">
+              <section aria-labelledby="behavior-heading">
+                <h3 id="behavior-heading" className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-3">Behavior</h3>
+                <Card className="p-4 space-y-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <span className="text-sm text-gray-300">Auto-record Traffic</span>
-                      <p className="text-xs text-gray-500">Automatically record requests on startup</p>
+                      <span className="text-sm text-ink">Auto-record Traffic</span>
+                      <p className="text-xs text-ink-muted">Automatically record requests on startup</p>
                     </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={localSettings.recording}
+                    <Switch
+                      checked={localSettings.recording}
                       aria-label="Auto-record traffic"
-                      onClick={() => handleChange('recording', !localSettings.recording)}
-                      className={`w-10 h-6 rounded-full transition-colors ${
-                        localSettings.recording ? 'bg-blue-600' : 'bg-gray-600'
-                      }`}
-                    >
-                      <span
-                        className={`block w-4 h-4 bg-white rounded-full transform transition-transform ${
-                          localSettings.recording ? 'translate-x-5' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
+                      onCheckedChange={(v) => handleChange('recording', v)}
+                    />
                   </div>
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <span className="text-sm text-gray-300">Auto-open Browser</span>
-                      <p className="text-xs text-gray-500">Open Web UI in browser on startup</p>
+                      <span className="text-sm text-ink">Auto-open Browser</span>
+                      <p className="text-xs text-ink-muted">Open Web UI in browser on startup</p>
                     </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={localSettings.autoOpenBrowser}
+                    <Switch
+                      checked={localSettings.autoOpenBrowser}
                       aria-label="Auto-open browser"
-                      onClick={() => handleChange('autoOpenBrowser', !localSettings.autoOpenBrowser)}
-                      className={`w-10 h-6 rounded-full transition-colors ${
-                        localSettings.autoOpenBrowser ? 'bg-blue-600' : 'bg-gray-600'
-                      }`}
-                    >
-                      <span
-                        className={`block w-4 h-4 bg-white rounded-full transform transition-transform ${
-                          localSettings.autoOpenBrowser ? 'translate-x-5' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
+                      onCheckedChange={(v) => handleChange('autoOpenBrowser', v)}
+                    />
                   </div>
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <label htmlFor={breakpointTimeoutId} className="text-sm text-gray-300">Breakpoint Timeout</label>
-                      <p className="text-xs text-gray-500">Auto-continue breakpoints after (ms)</p>
+                      <label htmlFor={breakpointTimeoutId} className="text-sm text-ink">Breakpoint Timeout</label>
+                      <p className="text-xs text-ink-muted">Auto-continue breakpoints after (ms)</p>
                     </div>
-                    <input
+                    <Input
                       id={breakpointTimeoutId}
                       type="number"
+                      sizeVariant="md"
                       min={0}
                       value={localSettings.breakpointTimeout}
                       onChange={(e) => handleChange('breakpointTimeout', clampInt(e.target.value, 0) ?? localSettings.breakpointTimeout)}
-                      className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                      className="w-24"
                     />
                   </div>
-                </div>
+                </Card>
               </section>
 
               {/* Appearance Settings */}
-              <section aria-labelledby="appearance-heading" className="border-t border-gray-700 pt-6">
-                <h3 id="appearance-heading" className="text-sm font-medium text-gray-300 mb-3">Appearance</h3>
-                <div className="space-y-4">
+              <section aria-labelledby="appearance-heading">
+                <h3 id="appearance-heading" className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-3">Appearance</h3>
+                <Card className="p-4 space-y-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <label htmlFor={themeId} className="text-sm text-gray-300">Theme</label>
-                      <p className="text-xs text-gray-500">Color theme for the UI</p>
+                      <label htmlFor={themeId} className="text-sm text-ink">Theme</label>
+                      <p className="text-xs text-ink-muted">Color theme for the UI</p>
                     </div>
-                    <select
+                    <Select
                       id={themeId}
+                      sizeVariant="md"
                       value={localSettings.theme}
                       onChange={(e) => handleChange('theme', e.target.value as AppSettings['theme'])}
-                      className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
                     >
                       <option value="dark">Dark</option>
                       <option value="light">Light</option>
                       <option value="system">System</option>
-                    </select>
+                    </Select>
                   </div>
-                </div>
+                </Card>
               </section>
 
               {/* Mobile Configuration */}
-              <section aria-labelledby="mobile-heading" className="border-t border-gray-700 pt-6">
-                <h3 id="mobile-heading" className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+              <section aria-labelledby="mobile-heading">
+                <h3 id="mobile-heading" className="text-xs font-medium uppercase tracking-wide text-ink-muted mb-3 flex items-center gap-2">
                   <Smartphone className="w-4 h-4" aria-hidden="true" />
                   Mobile Configuration
                 </h3>
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-ink-muted mb-4">
                   Use these IP addresses to configure your mobile device to use this proxy.
                   Make sure your mobile device is on the same network.
                 </p>
@@ -421,56 +388,57 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                       return (
                         <div
                           key={`${ip.name}-${ip.address}`}
-                          className="flex items-center justify-between p-3 bg-gray-900 rounded-md"
+                          className="flex items-center justify-between p-3 bg-canvas border border-edge-subtle rounded-md"
                         >
                           <div>
-                            <span className="text-sm text-white font-mono">{ip.address}</span>
-                            <span className="text-xs text-gray-500 ml-2">({ip.name})</span>
+                            <span className="text-sm text-ink font-mono">{ip.address}</span>
+                            <span className="text-xs text-ink-muted ml-2">({ip.name})</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Port: {localSettings.proxyPort}</span>
+                            <span className="text-xs text-ink-muted">Port: {localSettings.proxyPort}</span>
                             <CopyButton text={value} label="Address" />
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="text-sm text-gray-500 p-3 bg-gray-900 rounded-md">
+                    <div className="text-sm text-ink-muted p-3 bg-canvas border border-edge-subtle rounded-md">
                       No network interfaces found
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-600 mt-3">
+                <p className="text-xs text-ink-faint mt-3">
                   Configure your mobile WiFi proxy settings with the IP address and port shown above.
                   Don't forget to install the CA certificate for HTTPS traffic.
                 </p>
 
                 {localIPs.length > 0 && selectedQRIP && (
-                  <div className="mt-5 p-4 bg-gray-900 rounded-lg">
-                    <h4 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                  <Card className="mt-5 p-4">
+                    <h4 className="text-sm font-medium text-ink mb-3 flex items-center gap-2">
                       <QrCode className="w-4 h-4" aria-hidden="true" />
                       Certificate QR Code
                     </h4>
-                    <p className="text-xs text-gray-500 mb-3">
+                    <p className="text-xs text-ink-muted mb-3">
                       Scan this QR code with your phone camera to download the CA certificate.
                     </p>
 
                     {localIPs.length > 1 && (
-                      <>
+                      <div className="mb-3">
                         <label htmlFor={qrSelectId} className="sr-only">Network interface for QR code</label>
-                        <select
+                        <Select
                           id={qrSelectId}
+                          sizeVariant="md"
                           value={selectedQRIP}
                           onChange={(e) => setSelectedQRIP(e.target.value)}
-                          className="w-full mb-3 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                          className="w-full"
                         >
                           {localIPs.map((ip) => (
                             <option key={`${ip.name}-${ip.address}`} value={ip.address}>
                               {ip.address} ({ip.name})
                             </option>
                           ))}
-                        </select>
-                      </>
+                        </Select>
+                      </div>
                     )}
 
                     <div className="flex flex-col items-center gap-3">
@@ -481,11 +449,11 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                           level="M"
                         />
                       </div>
-                      <code className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                      <code className="text-xs text-ink-secondary bg-canvas border border-edge-subtle px-2 py-1 rounded">
                         http://{selectedQRIP}:{localSettings.uiPort}/api/certificates/download
                       </code>
                     </div>
-                  </div>
+                  </Card>
                 )}
               </section>
             </>

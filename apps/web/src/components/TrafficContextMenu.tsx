@@ -13,6 +13,10 @@ import { toast } from 'sonner';
 import type { TrafficEntry } from '@nectoproxy/shared';
 import { copyToClipboard } from '@/utils/clipboard';
 
+const itemClass =
+  'flex items-center gap-2 px-3 py-1.5 text-sm text-ink-secondary rounded cursor-pointer outline-none ' +
+  'hover:bg-surface-raised hover:text-ink data-[highlighted]:bg-surface-raised data-[highlighted]:text-ink';
+
 interface TrafficContextMenuProps {
   entry: TrafficEntry;
   children: React.ReactNode;
@@ -72,11 +76,11 @@ export function TrafficContextMenu({
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
         <ContextMenu.Content
-          className="min-w-[200px] bg-gray-800 border border-gray-700 rounded-lg p-1 shadow-xl z-50"
+          className="min-w-[200px] bg-surface-overlay border border-edge rounded-md p-1 shadow-popover z-50"
         >
           {/* Copy Group */}
           <ContextMenu.Item
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 rounded cursor-pointer hover:bg-gray-700 hover:text-white outline-none"
+            className={itemClass}
             onSelect={copyUrl}
           >
             <Copy className="w-4 h-4" />
@@ -84,7 +88,7 @@ export function TrafficContextMenu({
           </ContextMenu.Item>
 
           <ContextMenu.Item
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 rounded cursor-pointer hover:bg-gray-700 hover:text-white outline-none"
+            className={itemClass}
             onSelect={copyAsCurl}
           >
             <Terminal className="w-4 h-4" />
@@ -92,19 +96,19 @@ export function TrafficContextMenu({
           </ContextMenu.Item>
 
           <ContextMenu.Item
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 rounded cursor-pointer hover:bg-gray-700 hover:text-white outline-none"
+            className={itemClass}
             onSelect={copyAsFetch}
           >
             <Code className="w-4 h-4" />
             Copy as fetch
           </ContextMenu.Item>
 
-          <ContextMenu.Separator className="h-px bg-gray-700 my-1" />
+          <ContextMenu.Separator className="h-px bg-edge my-1" />
 
           {/* Actions Group */}
           {onReplay && (
             <ContextMenu.Item
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 rounded cursor-pointer hover:bg-gray-700 hover:text-white outline-none"
+              className={itemClass}
               onSelect={onReplay}
             >
               <Play className="w-4 h-4" />
@@ -114,7 +118,7 @@ export function TrafficContextMenu({
 
           {onCreateRule && (
             <ContextMenu.Item
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 rounded cursor-pointer hover:bg-gray-700 hover:text-white outline-none"
+              className={itemClass}
               onSelect={onCreateRule}
             >
               <FileCode className="w-4 h-4" />
@@ -124,7 +128,7 @@ export function TrafficContextMenu({
 
           {onCreateBreakpoint && (
             <ContextMenu.Item
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 rounded cursor-pointer hover:bg-gray-700 hover:text-white outline-none"
+              className={itemClass}
               onSelect={onCreateBreakpoint}
             >
               <Pause className="w-4 h-4" />
@@ -132,12 +136,12 @@ export function TrafficContextMenu({
             </ContextMenu.Item>
           )}
 
-          <ContextMenu.Separator className="h-px bg-gray-700 my-1" />
+          <ContextMenu.Separator className="h-px bg-edge my-1" />
 
           {/* Filter & Open Group */}
           {onFilterByHost && (
             <ContextMenu.Item
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 rounded cursor-pointer hover:bg-gray-700 hover:text-white outline-none"
+              className={itemClass}
               onSelect={() => onFilterByHost(entry.host)}
             >
               <Filter className="w-4 h-4" />
@@ -146,7 +150,7 @@ export function TrafficContextMenu({
           )}
 
           <ContextMenu.Item
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 rounded cursor-pointer hover:bg-gray-700 hover:text-white outline-none"
+            className={itemClass}
             onSelect={openInNewTab}
           >
             <ExternalLink className="w-4 h-4" />

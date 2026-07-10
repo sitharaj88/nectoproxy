@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { X, ArrowLeftRight, Clock, FileText, Globe, Minus, Plus, Equal } from 'lucide-react';
 import { DiffView } from './DiffView';
+import { Button, IconButton, Badge, Switch, SegmentedControl, Tabs, type TabItem } from '@/components/ui';
 import type { TrafficEntry } from '@nectoproxy/shared';
 
 type DiffTab = 'overview' | 'headers' | 'request' | 'response' | 'timing';
@@ -195,28 +196,28 @@ function computeLineDiff(left: string, right: string): DiffLine[] {
 
 function EntryBadge({ entry, label }: { entry: TrafficEntry; label: string }) {
   return (
-    <div className="bg-gray-800 rounded-lg p-3 flex-1 min-w-0">
-      <div className="text-xs text-gray-500 mb-1 font-medium">{label}</div>
+    <div className="bg-surface-raised rounded-md p-3 flex-1 min-w-0">
+      <div className="text-xs text-ink-faint mb-1 font-medium">{label}</div>
       <div className="flex items-center gap-2 min-w-0">
         <span className={`font-mono text-sm font-medium method-${entry.method.toLowerCase()}`}>
           {entry.method}
         </span>
-        <span className="text-sm text-gray-300 truncate flex-1" title={entry.url}>
+        <span className="text-sm text-ink-secondary truncate flex-1" title={entry.url}>
           {getPath(entry.url)}
         </span>
         <span
           className={`text-sm font-mono font-medium ${
             entry.status && entry.status >= 400
-              ? 'text-red-400'
+              ? 'text-danger'
               : entry.status && entry.status >= 200
-              ? 'text-green-400'
-              : 'text-gray-400'
+              ? 'text-success'
+              : 'text-ink-muted'
           }`}
         >
           {entry.status || 'Pending'}
         </span>
       </div>
-      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+      <div className="flex items-center gap-3 mt-1 text-xs text-ink-faint">
         <span>{entry.host}</span>
         <span>{formatDuration(entry.duration)}</span>
         <span>{formatSize(entry.responseBodySize)}</span>
@@ -306,27 +307,27 @@ function OverviewTab({
     <div className="space-y-6">
       {/* Summary stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gray-800 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-yellow-400">{diffCount}</div>
-          <div className="text-xs text-gray-400 mt-1">Property Differences</div>
+        <div className="bg-surface-raised rounded-md p-3 text-center">
+          <div className="text-2xl font-bold text-warn">{diffCount}</div>
+          <div className="text-xs text-ink-muted mt-1">Property Differences</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-blue-400">
+        <div className="bg-surface-raised rounded-md p-3 text-center">
+          <div className="text-2xl font-bold text-info">
             {reqHeaderChanges + resHeaderChanges}
           </div>
-          <div className="text-xs text-gray-400 mt-1">Header Changes</div>
+          <div className="text-xs text-ink-muted mt-1">Header Changes</div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold text-purple-400">
+        <div className="bg-surface-raised rounded-md p-3 text-center">
+          <div className="text-2xl font-bold text-accent">
             {(reqBodyDifferent ? 1 : 0) + (resBodyDifferent ? 1 : 0)}
           </div>
-          <div className="text-xs text-gray-400 mt-1">Body Differences</div>
+          <div className="text-xs text-ink-muted mt-1">Body Differences</div>
         </div>
       </div>
 
       {/* Properties table */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[140px_1fr_1fr] text-xs font-medium text-gray-400 px-4 py-2 bg-gray-700 border-b border-gray-700">
+      <div className="bg-surface-raised rounded-md overflow-hidden">
+        <div className="grid grid-cols-[140px_1fr_1fr] text-xs font-medium text-ink-muted px-4 py-2 bg-surface-overlay border-b border-edge">
           <div>Property</div>
           <div>Request A</div>
           <div>Request B</div>
@@ -334,14 +335,14 @@ function OverviewTab({
         {summaryItems.map((item) => (
           <div
             key={item.label}
-            className={`grid grid-cols-[140px_1fr_1fr] text-sm px-4 py-2 border-b border-gray-700/50 ${
-              item.isDifferent ? 'bg-yellow-900/10' : ''
+            className={`grid grid-cols-[140px_1fr_1fr] text-sm px-4 py-2 border-b border-edge-subtle ${
+              item.isDifferent ? 'bg-warn/12' : ''
             }`}
           >
-            <div className="text-gray-400 font-medium text-xs">{item.label}</div>
+            <div className="text-ink-muted font-medium text-xs">{item.label}</div>
             <div
               className={`font-mono text-xs truncate pr-2 ${
-                item.isDifferent ? 'text-yellow-300' : 'text-gray-300'
+                item.isDifferent ? 'text-warn' : 'text-ink-secondary'
               }`}
               title={item.leftVal}
             >
@@ -349,7 +350,7 @@ function OverviewTab({
             </div>
             <div
               className={`font-mono text-xs truncate ${
-                item.isDifferent ? 'text-yellow-300' : 'text-gray-300'
+                item.isDifferent ? 'text-warn' : 'text-ink-secondary'
               }`}
               title={item.rightVal}
             >
@@ -362,29 +363,19 @@ function OverviewTab({
       {/* Change summary badges */}
       <div className="flex flex-wrap gap-2 text-xs">
         {reqHeaderChanges > 0 && (
-          <span className="px-2 py-1 rounded bg-blue-900/30 text-blue-300">
+          <Badge tone="info">
             {reqHeaderChanges} request header change{reqHeaderChanges > 1 ? 's' : ''}
-          </span>
+          </Badge>
         )}
         {resHeaderChanges > 0 && (
-          <span className="px-2 py-1 rounded bg-blue-900/30 text-blue-300">
+          <Badge tone="info">
             {resHeaderChanges} response header change{resHeaderChanges > 1 ? 's' : ''}
-          </span>
+          </Badge>
         )}
-        {reqBodyDifferent && (
-          <span className="px-2 py-1 rounded bg-purple-900/30 text-purple-300">
-            Request body differs
-          </span>
-        )}
-        {resBodyDifferent && (
-          <span className="px-2 py-1 rounded bg-purple-900/30 text-purple-300">
-            Response body differs
-          </span>
-        )}
+        {reqBodyDifferent && <Badge tone="accent">Request body differs</Badge>}
+        {resBodyDifferent && <Badge tone="accent">Response body differs</Badge>}
         {!reqHeaderChanges && !resHeaderChanges && !reqBodyDifferent && !resBodyDifferent && diffCount === 0 && (
-          <span className="px-2 py-1 rounded bg-green-900/30 text-green-300">
-            Requests are identical
-          </span>
+          <Badge tone="success">Requests are identical</Badge>
         )}
       </div>
     </div>
@@ -394,21 +385,21 @@ function OverviewTab({
 function HeaderDiffRow({ diff }: { diff: HeaderDiff }) {
   const bgClass =
     diff.type === 'added'
-      ? 'bg-green-900/20'
+      ? 'bg-success/12'
       : diff.type === 'removed'
-      ? 'bg-red-900/20'
+      ? 'bg-danger/12'
       : diff.type === 'changed'
-      ? 'bg-yellow-900/20'
+      ? 'bg-warn/12'
       : '';
 
   const iconClass =
     diff.type === 'added'
-      ? 'text-green-400'
+      ? 'text-success'
       : diff.type === 'removed'
-      ? 'text-red-400'
+      ? 'text-danger'
       : diff.type === 'changed'
-      ? 'text-yellow-400'
-      : 'text-gray-600';
+      ? 'text-warn'
+      : 'text-ink-faint';
 
   const Icon =
     diff.type === 'added'
@@ -420,20 +411,20 @@ function HeaderDiffRow({ diff }: { diff: HeaderDiff }) {
       : Equal;
 
   return (
-    <div className={`grid grid-cols-[20px_180px_1fr_1fr] gap-2 px-3 py-1.5 text-xs font-mono border-b border-gray-700/50 ${bgClass}`}>
+    <div className={`grid grid-cols-[20px_180px_1fr_1fr] gap-2 px-3 py-1.5 text-xs font-mono border-b border-edge-subtle ${bgClass}`}>
       <div className="flex items-center">
         <Icon className={`w-3 h-3 ${iconClass}`} />
       </div>
-      <div className="text-gray-300 font-medium truncate" title={diff.key}>
+      <div className="text-ink-secondary font-medium truncate" title={diff.key}>
         {diff.key}
       </div>
       <div
         className={`truncate ${
           diff.type === 'removed'
-            ? 'text-red-300'
+            ? 'text-danger'
             : diff.type === 'changed'
-            ? 'text-yellow-300'
-            : 'text-gray-400'
+            ? 'text-warn'
+            : 'text-ink-muted'
         }`}
         title={diff.leftValue}
       >
@@ -442,10 +433,10 @@ function HeaderDiffRow({ diff }: { diff: HeaderDiff }) {
       <div
         className={`truncate ${
           diff.type === 'added'
-            ? 'text-green-300'
+            ? 'text-success'
             : diff.type === 'changed'
-            ? 'text-yellow-300'
-            : 'text-gray-400'
+            ? 'text-warn'
+            : 'text-ink-muted'
         }`}
         title={diff.rightValue}
       >
@@ -485,37 +476,36 @@ function HeadersTab({
       {/* Filter toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1 text-green-400">
+          <span className="flex items-center gap-1 text-success">
             <Plus className="w-3 h-3" /> Added
           </span>
-          <span className="flex items-center gap-1 text-red-400">
+          <span className="flex items-center gap-1 text-danger">
             <Minus className="w-3 h-3" /> Removed
           </span>
-          <span className="flex items-center gap-1 text-yellow-400">
+          <span className="flex items-center gap-1 text-warn">
             <ArrowLeftRight className="w-3 h-3" /> Changed
           </span>
         </div>
-        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
-          <input
-            type="checkbox"
+        <label className="flex items-center gap-2 text-xs text-ink-muted cursor-pointer">
+          <Switch
             checked={showUnchanged}
-            onChange={(e) => setShowUnchanged(e.target.checked)}
-            className="rounded border-gray-600"
+            onCheckedChange={setShowUnchanged}
+            aria-label="Show unchanged"
           />
           Show unchanged
         </label>
       </div>
 
       {/* Request Headers */}
-      <div className="border border-gray-700 rounded-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-800">
-          <span className="text-sm font-medium text-gray-200">Request Headers</span>
-          <span className="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-400">
+      <div className="border border-edge rounded-md overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-2 bg-surface-raised">
+          <span className="text-sm font-medium text-ink">Request Headers</span>
+          <Badge tone="neutral">
             {reqChanges > 0 ? `${reqChanges} change${reqChanges > 1 ? 's' : ''}` : 'No changes'}
-          </span>
+          </Badge>
         </div>
-        <div className="bg-gray-900/50">
-          <div className="grid grid-cols-[20px_180px_1fr_1fr] gap-2 px-3 py-1.5 text-xs font-medium text-gray-500 border-b border-gray-700">
+        <div className="bg-surface">
+          <div className="grid grid-cols-[20px_180px_1fr_1fr] gap-2 px-3 py-1.5 text-xs font-medium text-ink-faint border-b border-edge">
             <div />
             <div>Header</div>
             <div>Request A</div>
@@ -524,7 +514,7 @@ function HeadersTab({
           {filteredReqDiffs.length > 0 ? (
             filteredReqDiffs.map((diff) => <HeaderDiffRow key={diff.key} diff={diff} />)
           ) : (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+            <div className="px-4 py-3 text-sm text-ink-faint text-center">
               {showUnchanged ? 'No headers' : 'No differences'}
             </div>
           )}
@@ -532,15 +522,15 @@ function HeadersTab({
       </div>
 
       {/* Response Headers */}
-      <div className="border border-gray-700 rounded-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-800">
-          <span className="text-sm font-medium text-gray-200">Response Headers</span>
-          <span className="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-400">
+      <div className="border border-edge rounded-md overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-2 bg-surface-raised">
+          <span className="text-sm font-medium text-ink">Response Headers</span>
+          <Badge tone="neutral">
             {resChanges > 0 ? `${resChanges} change${resChanges > 1 ? 's' : ''}` : 'No changes'}
-          </span>
+          </Badge>
         </div>
-        <div className="bg-gray-900/50">
-          <div className="grid grid-cols-[20px_180px_1fr_1fr] gap-2 px-3 py-1.5 text-xs font-medium text-gray-500 border-b border-gray-700">
+        <div className="bg-surface">
+          <div className="grid grid-cols-[20px_180px_1fr_1fr] gap-2 px-3 py-1.5 text-xs font-medium text-ink-faint border-b border-edge">
             <div />
             <div>Header</div>
             <div>Request A</div>
@@ -549,7 +539,7 @@ function HeadersTab({
           {filteredResDiffs.length > 0 ? (
             filteredResDiffs.map((diff) => <HeaderDiffRow key={diff.key} diff={diff} />)
           ) : (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+            <div className="px-4 py-3 text-sm text-ink-faint text-center">
               {showUnchanged ? 'No headers' : 'No differences'}
             </div>
           )}
@@ -593,56 +583,34 @@ function BodyDiffTab({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-300">{title}</h3>
-        <div className="flex items-center bg-gray-800 rounded-md text-xs">
-          <button
-            onClick={() => setViewMode('side-by-side')}
-            className={`px-3 py-1.5 rounded-l-md transition-colors ${
-              viewMode === 'side-by-side'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            Side by Side
-          </button>
-          <button
-            onClick={() => setViewMode('inline')}
-            className={`px-3 py-1.5 transition-colors ${
-              viewMode === 'inline'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            Inline
-          </button>
-          <button
-            onClick={() => setViewMode('raw')}
-            className={`px-3 py-1.5 rounded-r-md transition-colors ${
-              viewMode === 'raw'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            Raw
-          </button>
-        </div>
+        <h3 className="text-sm font-medium text-ink-secondary">{title}</h3>
+        <SegmentedControl
+          aria-label="Diff view mode"
+          value={viewMode}
+          onChange={setViewMode}
+          segments={[
+            { value: 'side-by-side', label: 'Side by Side' },
+            { value: 'inline', label: 'Inline' },
+            { value: 'raw', label: 'Raw' },
+          ]}
+        />
       </div>
 
       {!hasChanges ? (
-        <div className="text-center py-8 text-gray-500 text-sm">
+        <div className="text-center py-8 text-ink-faint text-sm">
           No differences found in {title.toLowerCase()}
         </div>
       ) : viewMode === 'raw' ? (
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-xs font-medium text-gray-400 mb-2 px-1">Request A</div>
-            <pre className="bg-gray-800 rounded-lg p-3 text-xs font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px] border border-gray-700">
+            <div className="text-xs font-medium text-ink-muted mb-2 px-1">Request A</div>
+            <pre className="bg-surface-raised rounded-md p-3 text-xs font-mono text-ink-secondary whitespace-pre-wrap overflow-auto max-h-[500px] border border-edge">
               {leftFormatted}
             </pre>
           </div>
           <div>
-            <div className="text-xs font-medium text-gray-400 mb-2 px-1">Request B</div>
-            <pre className="bg-gray-800 rounded-lg p-3 text-xs font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[500px] border border-gray-700">
+            <div className="text-xs font-medium text-ink-muted mb-2 px-1">Request B</div>
+            <pre className="bg-surface-raised rounded-md p-3 text-xs font-mono text-ink-secondary whitespace-pre-wrap overflow-auto max-h-[500px] border border-edge">
               {rightFormatted}
             </pre>
           </div>
@@ -657,32 +625,32 @@ function BodyDiffTab({
         />
       ) : (
         /* side-by-side with LCS diff */
-        <div className="grid grid-cols-2 gap-0 border border-gray-700 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-2 gap-0 border border-edge rounded-md overflow-hidden">
           {/* Left header */}
-          <div className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-800 border-b border-r border-gray-700">
+          <div className="px-3 py-1.5 text-xs font-medium text-ink-muted bg-surface-raised border-b border-r border-edge">
             Request A
           </div>
-          <div className="px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-800 border-b border-gray-700">
+          <div className="px-3 py-1.5 text-xs font-medium text-ink-muted bg-surface-raised border-b border-edge">
             Request B
           </div>
 
           {/* Left pane */}
-          <div className="bg-gray-900 border-r border-gray-700 overflow-auto max-h-[500px]">
+          <div className="bg-canvas border-r border-edge overflow-auto max-h-[500px]">
             {lineDiffs.map((line, index) => {
               const bgCls =
                 line.type === 'removed'
-                  ? 'bg-red-900/20'
+                  ? 'bg-danger/12'
                   : line.type === 'added'
-                  ? 'bg-gray-800/30'
+                  ? 'bg-surface'
                   : '';
               const textCls =
-                line.type === 'removed' ? 'text-red-300' : line.type === 'added' ? 'text-gray-600' : 'text-gray-300';
+                line.type === 'removed' ? 'text-danger' : line.type === 'added' ? 'text-ink-faint' : 'text-ink-secondary';
               return (
                 <div
                   key={index}
-                  className={`flex items-start px-1 py-0.5 font-mono text-xs border-b border-gray-800/50 min-h-[20px] ${bgCls}`}
+                  className={`flex items-start px-1 py-0.5 font-mono text-xs border-b border-edge-subtle min-h-[20px] ${bgCls}`}
                 >
-                  <span className="text-gray-600 w-8 text-right mr-2 select-none flex-shrink-0">
+                  <span className="text-ink-faint w-8 text-right mr-2 select-none flex-shrink-0">
                     {line.leftLineNum ?? ''}
                   </span>
                   <span className={`flex-1 whitespace-pre-wrap break-all ${textCls}`}>
@@ -694,22 +662,22 @@ function BodyDiffTab({
           </div>
 
           {/* Right pane */}
-          <div className="bg-gray-900 overflow-auto max-h-[500px]">
+          <div className="bg-canvas overflow-auto max-h-[500px]">
             {lineDiffs.map((line, index) => {
               const bgCls =
                 line.type === 'added'
-                  ? 'bg-green-900/20'
+                  ? 'bg-success/12'
                   : line.type === 'removed'
-                  ? 'bg-gray-800/30'
+                  ? 'bg-surface'
                   : '';
               const textCls =
-                line.type === 'added' ? 'text-green-300' : line.type === 'removed' ? 'text-gray-600' : 'text-gray-300';
+                line.type === 'added' ? 'text-success' : line.type === 'removed' ? 'text-ink-faint' : 'text-ink-secondary';
               return (
                 <div
                   key={index}
-                  className={`flex items-start px-1 py-0.5 font-mono text-xs border-b border-gray-800/50 min-h-[20px] ${bgCls}`}
+                  className={`flex items-start px-1 py-0.5 font-mono text-xs border-b border-edge-subtle min-h-[20px] ${bgCls}`}
                 >
-                  <span className="text-gray-600 w-8 text-right mr-2 select-none flex-shrink-0">
+                  <span className="text-ink-faint w-8 text-right mr-2 select-none flex-shrink-0">
                     {line.rightLineNum ?? ''}
                   </span>
                   <span className={`flex-1 whitespace-pre-wrap break-all ${textCls}`}>
@@ -783,30 +751,30 @@ function TimingTab({
   return (
     <div className="space-y-6">
       {/* Timing delta */}
-      <div className="bg-gray-800 rounded-lg p-4">
+      <div className="bg-surface-raised rounded-md p-4">
         <div className="text-center">
           <div
             className={`text-3xl font-bold ${
               timingDiff > 0
-                ? 'text-red-400'
+                ? 'text-danger'
                 : timingDiff < 0
-                ? 'text-green-400'
-                : 'text-gray-400'
+                ? 'text-success'
+                : 'text-ink-muted'
             }`}
           >
             {timingDiff > 0 ? '+' : ''}
             {timingDiff}ms
           </div>
-          <div className="text-sm text-gray-400 mt-1">
+          <div className="text-sm text-ink-muted mt-1">
             Duration difference{' '}
             {timingPctDiff !== 'N/A' && (
               <span
                 className={
                   timingDiff > 0
-                    ? 'text-red-400'
+                    ? 'text-danger'
                     : timingDiff < 0
-                    ? 'text-green-400'
-                    : 'text-gray-400'
+                    ? 'text-success'
+                    : 'text-ink-muted'
                 }
               >
                 ({timingDiff > 0 ? '+' : ''}
@@ -822,16 +790,16 @@ function TimingTab({
         {bars.map((bar) => (
           <div key={bar.label} className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-300 font-medium">{bar.label}</span>
+              <span className="text-ink-secondary font-medium">{bar.label}</span>
             </div>
 
             {/* Request A bar */}
             <div className="space-y-1">
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-500 w-20">Request A</span>
-                <div className="flex-1 bg-gray-800 rounded-full h-6 overflow-hidden">
+                <span className="text-xs text-ink-faint w-20">Request A</span>
+                <div className="flex-1 bg-surface-raised rounded-full h-6 overflow-hidden">
                   <div
-                    className="h-full bg-blue-500/60 rounded-full flex items-center px-2 transition-all duration-500"
+                    className="h-full bg-accent/60 rounded-full flex items-center px-2 transition-all duration-500"
                     style={{
                       width: `${Math.max((bar.leftVal / bar.maxVal) * 100, 2)}%`,
                     }}
@@ -845,15 +813,15 @@ function TimingTab({
 
               {/* Request B bar */}
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-500 w-20">Request B</span>
-                <div className="flex-1 bg-gray-800 rounded-full h-6 overflow-hidden">
+                <span className="text-xs text-ink-faint w-20">Request B</span>
+                <div className="flex-1 bg-surface-raised rounded-full h-6 overflow-hidden">
                   <div
                     className={`h-full rounded-full flex items-center px-2 transition-all duration-500 ${
                       bar.rightVal > bar.leftVal
-                        ? 'bg-red-500/60'
+                        ? 'bg-danger/60'
                         : bar.rightVal < bar.leftVal
-                        ? 'bg-green-500/60'
-                        : 'bg-blue-500/60'
+                        ? 'bg-success/60'
+                        : 'bg-accent/60'
                     }`}
                     style={{
                       width: `${Math.max((bar.rightVal / bar.maxVal) * 100, 2)}%`,
@@ -871,32 +839,32 @@ function TimingTab({
       </div>
 
       {/* Timing details table */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
-        <div className="grid grid-cols-3 text-xs font-medium text-gray-400 px-4 py-2 border-b border-gray-700">
+      <div className="bg-surface-raised rounded-md overflow-hidden">
+        <div className="grid grid-cols-3 text-xs font-medium text-ink-muted px-4 py-2 border-b border-edge">
           <div>Metric</div>
           <div>Request A</div>
           <div>Request B</div>
         </div>
-        <div className="grid grid-cols-3 text-sm px-4 py-2 border-b border-gray-700/50">
-          <div className="text-gray-400 text-xs">Duration</div>
-          <div className="text-gray-300 font-mono text-xs">{formatDuration(leftEntry.duration)}</div>
-          <div className="text-gray-300 font-mono text-xs">{formatDuration(rightEntry.duration)}</div>
+        <div className="grid grid-cols-3 text-sm px-4 py-2 border-b border-edge-subtle">
+          <div className="text-ink-muted text-xs">Duration</div>
+          <div className="text-ink-secondary font-mono text-xs">{formatDuration(leftEntry.duration)}</div>
+          <div className="text-ink-secondary font-mono text-xs">{formatDuration(rightEntry.duration)}</div>
         </div>
-        <div className="grid grid-cols-3 text-sm px-4 py-2 border-b border-gray-700/50">
-          <div className="text-gray-400 text-xs">Request Size</div>
-          <div className="text-gray-300 font-mono text-xs">{formatSize(leftEntry.requestBodySize)}</div>
-          <div className="text-gray-300 font-mono text-xs">{formatSize(rightEntry.requestBodySize)}</div>
+        <div className="grid grid-cols-3 text-sm px-4 py-2 border-b border-edge-subtle">
+          <div className="text-ink-muted text-xs">Request Size</div>
+          <div className="text-ink-secondary font-mono text-xs">{formatSize(leftEntry.requestBodySize)}</div>
+          <div className="text-ink-secondary font-mono text-xs">{formatSize(rightEntry.requestBodySize)}</div>
         </div>
-        <div className="grid grid-cols-3 text-sm px-4 py-2 border-b border-gray-700/50">
-          <div className="text-gray-400 text-xs">Response Size</div>
-          <div className="text-gray-300 font-mono text-xs">{formatSize(leftEntry.responseBodySize)}</div>
-          <div className="text-gray-300 font-mono text-xs">{formatSize(rightEntry.responseBodySize)}</div>
+        <div className="grid grid-cols-3 text-sm px-4 py-2 border-b border-edge-subtle">
+          <div className="text-ink-muted text-xs">Response Size</div>
+          <div className="text-ink-secondary font-mono text-xs">{formatSize(leftEntry.responseBodySize)}</div>
+          <div className="text-ink-secondary font-mono text-xs">{formatSize(rightEntry.responseBodySize)}</div>
         </div>
         {leftEntry.remoteAddress && (
-          <div className="grid grid-cols-3 text-sm px-4 py-2 border-b border-gray-700/50">
-            <div className="text-gray-400 text-xs">Remote Address</div>
-            <div className="text-gray-300 font-mono text-xs">{leftEntry.remoteAddress || '-'}</div>
-            <div className="text-gray-300 font-mono text-xs">{rightEntry.remoteAddress || '-'}</div>
+          <div className="grid grid-cols-3 text-sm px-4 py-2 border-b border-edge-subtle">
+            <div className="text-ink-muted text-xs">Remote Address</div>
+            <div className="text-ink-secondary font-mono text-xs">{leftEntry.remoteAddress || '-'}</div>
+            <div className="text-ink-secondary font-mono text-xs">{rightEntry.remoteAddress || '-'}</div>
           </div>
         )}
       </div>
@@ -917,57 +885,60 @@ const TABS: { id: DiffTab; label: string; icon: typeof FileText }[] = [
 export function DiffViewer({ leftEntry, rightEntry, onClose }: DiffViewerProps) {
   const [activeTab, setActiveTab] = useState<DiffTab>('overview');
 
+  const tabItems: TabItem[] = TABS.map((tab) => {
+    const Icon = tab.icon;
+    return {
+      value: tab.id,
+      label: (
+        <span className="inline-flex items-center gap-1.5">
+          <Icon className="w-3.5 h-3.5" />
+          {tab.label}
+        </span>
+      ),
+    };
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
       <div
-        className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-7xl max-h-[92vh] flex flex-col border border-gray-700"
+        className="bg-surface rounded-md shadow-popover w-full max-w-7xl max-h-[92vh] flex flex-col border border-edge"
         role="dialog"
         aria-modal="true"
         aria-labelledby="diffviewer-title"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 rounded-t-lg">
+        <div className="flex items-center justify-between px-4 py-3 bg-surface-raised border-b border-edge rounded-t-md">
           <div className="flex items-center gap-2">
-            <ArrowLeftRight className="w-5 h-5 text-blue-400" />
-            <h2 id="diffviewer-title" className="text-lg font-semibold text-white">
+            <ArrowLeftRight className="w-5 h-5 text-accent" />
+            <h2 id="diffviewer-title" className="text-lg font-semibold text-ink">
               Compare Requests
             </h2>
           </div>
-          <button
+          <IconButton
+            label="Close diff viewer"
+            icon={<X className="w-5 h-5" />}
             onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
-            aria-label="Close diff viewer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+            size="md"
+          />
         </div>
 
         {/* Entry summaries */}
-        <div className="flex gap-4 px-4 py-3 border-b border-gray-700 bg-gray-800/50">
+        <div className="flex gap-4 px-4 py-3 border-b border-edge bg-surface-raised">
           <EntryBadge entry={leftEntry} label="Request A" />
           <div className="flex items-center">
-            <ArrowLeftRight className="w-4 h-4 text-gray-600" />
+            <ArrowLeftRight className="w-4 h-4 text-ink-faint" />
           </div>
           <EntryBadge entry={rightEntry} label="Request B" />
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700 bg-gray-800/30 px-2">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 ${
-                activeTab === tab.id
-                  ? 'text-blue-400 border-blue-400'
-                  : 'text-gray-400 hover:text-gray-300 border-transparent'
-              }`}
-            >
-              <tab.icon className="w-3.5 h-3.5" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          items={tabItems}
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as DiffTab)}
+          size="md"
+          className="bg-surface-raised px-2"
+        />
 
         {/* Tab content */}
         <div className="flex-1 overflow-auto p-4">
@@ -1005,16 +976,13 @@ export function DiffViewer({ leftEntry, rightEntry, onClose }: DiffViewerProps) 
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700 bg-gray-800/30 rounded-b-lg">
-          <div className="text-xs text-gray-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-edge bg-surface-raised rounded-b-md">
+          <div className="text-xs text-ink-faint">
             Comparing {getPath(leftEntry.url)} vs {getPath(rightEntry.url)}
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium transition-colors"
-          >
+          <Button variant="secondary" size="md" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
       </div>
     </div>

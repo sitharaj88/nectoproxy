@@ -18,6 +18,7 @@ import {
   List,
   BarChart3,
 } from 'lucide-react';
+import { Kbd } from '@/components/ui';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -95,31 +96,29 @@ export function CommandPalette({ isOpen, onClose, onNavigate }: CommandPalettePr
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15 }}
-            className="w-[560px] overflow-hidden rounded-xl bg-gray-800 border border-gray-700 shadow-2xl"
+            className="w-[560px] overflow-hidden rounded-md bg-surface-overlay border border-edge shadow-popover"
             onClick={(e) => e.stopPropagation()}
           >
             <Command
-              className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-gray-500"
+              className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-ink-muted"
               loop
             >
               {/* Search Input */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-700">
-                <Search className="w-5 h-5 text-gray-500" />
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-edge">
+                <Search className="w-5 h-5 text-ink-faint" />
                 <Command.Input
                   value={search}
                   onValueChange={setSearch}
                   placeholder="Type a command or search..."
-                  className="flex-1 bg-transparent text-gray-100 placeholder-gray-500 outline-none text-sm"
+                  className="flex-1 bg-transparent text-ink placeholder:text-ink-faint outline-none text-sm"
                   autoFocus
                 />
-                <kbd className="px-2 py-1 text-xs font-mono bg-gray-900 text-gray-400 rounded border border-gray-600">
-                  Esc
-                </kbd>
+                <Kbd>Esc</Kbd>
               </div>
 
               {/* Commands List */}
               <Command.List className="max-h-[400px] overflow-y-auto p-2">
-                <Command.Empty className="py-6 text-center text-sm text-gray-500">
+                <Command.Empty className="py-6 text-center text-sm text-ink-muted">
                   No results found.
                 </Command.Empty>
 
@@ -130,15 +129,11 @@ export function CommandPalette({ isOpen, onClose, onNavigate }: CommandPalettePr
                         key={item.id}
                         value={item.label}
                         onSelect={() => handleSelect(item.id)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white aria-selected:bg-gray-700 aria-selected:text-white"
+                        className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer text-ink-secondary hover:bg-surface-raised hover:text-ink aria-selected:bg-surface-raised aria-selected:text-ink"
                       >
-                        <span className="text-gray-400">{item.icon}</span>
+                        <span className="text-ink-muted">{item.icon}</span>
                         <span className="flex-1 text-sm">{item.label}</span>
-                        {item.shortcut && (
-                          <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-900 text-gray-400 rounded border border-gray-600">
-                            {item.shortcut}
-                          </kbd>
-                        )}
+                        {item.shortcut && <Kbd>{item.shortcut}</Kbd>}
                       </Command.Item>
                     ))}
                   </Command.Group>

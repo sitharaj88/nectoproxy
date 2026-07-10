@@ -13,6 +13,7 @@ import { AnnotationsPanel } from './AnnotationsPanel';
 import { CodeViewer } from './CodeViewer';
 import { CopyButton } from './ui/CopyButton';
 import { EmptyState } from './ui/EmptyState';
+import { Tabs, IconButton, type TabItem } from './ui';
 
 type Tab = 'headers' | 'request' | 'response' | 'timing' | 'security' | 'messages' | 'annotations';
 
@@ -87,16 +88,18 @@ export function DetailPanel() {
     return baseTabs;
   }, [isWebSocket]);
 
+  const tabItems: TabItem[] = tabs.map((tab) => ({ value: tab.id, label: tab.label }));
+
   return (
-    <div className="flex flex-col h-full bg-gray-900">
+    <div className="flex flex-col h-full bg-surface">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-surface-raised border-b border-edge">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={`font-medium method-${entry.method.toLowerCase()}`}>
               {entry.method}
             </span>
-            <span className="text-gray-400 truncate text-sm font-mono">
+            <span className="text-ink-muted truncate text-sm font-mono">
               {entry.url}
             </span>
           </div>
@@ -109,49 +112,29 @@ export function DetailPanel() {
                 entry={entry}
                 requestBody={bodyToString(entry.requestBody)}
               />
-              <button
-                type="button"
+              <IconButton
+                label="Replay request"
+                icon={<Play className="w-4 h-4" aria-hidden="true" />}
                 onClick={() => setShowReplay(true)}
-                aria-label="Replay request"
-                title="Replay Request"
-                className="p-1 rounded hover:bg-gray-700 text-gray-400 transition-colors"
-              >
-                <Play className="w-4 h-4" aria-hidden="true" />
-              </button>
+              />
             </>
           )}
-          <button
-            type="button"
+          <IconButton
+            label="Close detail panel"
+            icon={<X className="w-4 h-4" aria-hidden="true" />}
             onClick={() => setSelected(null)}
-            aria-label="Close detail panel"
-            className="p-1 rounded hover:bg-gray-700 text-gray-400"
-          >
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
+          />
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-700" role="tablist" aria-label="Request details">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            aria-controls={`tabpanel-${tab.id}`}
-            id={`tab-${tab.id}`}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'text-primary-400 border-b-2 border-primary-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        label="Request details"
+        className="px-2"
+        items={tabItems}
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as Tab)}
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-4">
@@ -159,25 +142,25 @@ export function DetailPanel() {
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-300">General</h3>
+                <h3 className="text-sm font-medium text-ink-secondary">General</h3>
               </div>
-              <div className="bg-gray-800 rounded-md p-3 text-sm font-mono space-y-1 overflow-hidden">
-                <div className="break-all"><span className="text-gray-500">URL:</span> {entry.url}</div>
-                <div><span className="text-gray-500">Method:</span> {entry.method}</div>
-                <div><span className="text-gray-500">Status:</span> {entry.status} {entry.statusText}</div>
-                <div><span className="text-gray-500">Protocol:</span> {entry.protocol}</div>
+              <div className="bg-surface-raised border border-edge rounded-md p-3 text-sm font-mono space-y-1 overflow-hidden">
+                <div className="break-all"><span className="text-ink-faint">URL:</span> {entry.url}</div>
+                <div><span className="text-ink-faint">Method:</span> {entry.method}</div>
+                <div><span className="text-ink-faint">Status:</span> {entry.status} {entry.statusText}</div>
+                <div><span className="text-ink-faint">Protocol:</span> {entry.protocol}</div>
                 {entry.remoteAddress && (
-                  <div><span className="text-gray-500">Remote:</span> {entry.remoteAddress}</div>
+                  <div><span className="text-ink-faint">Remote:</span> {entry.remoteAddress}</div>
                 )}
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-300">Request Headers</h3>
+                <h3 className="text-sm font-medium text-ink-secondary">Request Headers</h3>
                 <CopyButton text={formatHeaders(entry.requestHeaders)} label="Request headers" />
               </div>
-              <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap break-all overflow-hidden">
+              <pre className="bg-surface-raised border border-edge rounded-md p-3 text-sm font-mono text-ink-secondary whitespace-pre-wrap break-all overflow-hidden">
                 {formatHeaders(entry.requestHeaders)}
               </pre>
             </div>
@@ -185,10 +168,10 @@ export function DetailPanel() {
             {entry.responseHeaders && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-300">Response Headers</h3>
+                  <h3 className="text-sm font-medium text-ink-secondary">Response Headers</h3>
                   <CopyButton text={formatHeaders(entry.responseHeaders)} label="Response headers" />
                 </div>
-                <pre className="bg-gray-800 rounded-md p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap break-all overflow-hidden">
+                <pre className="bg-surface-raised border border-edge rounded-md p-3 text-sm font-mono text-ink-secondary whitespace-pre-wrap break-all overflow-hidden">
                   {formatHeaders(entry.responseHeaders)}
                 </pre>
               </div>
@@ -229,7 +212,7 @@ export function DetailPanel() {
 
           return (
             <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">Request Body</h3>
+              <h3 className="text-sm font-medium text-ink-secondary mb-2">Request Body</h3>
               <CodeViewer
                 content={bodyToString(entry.requestBody) || '(empty)'}
                 contentType={getContentType(entry.requestHeaders)}
@@ -271,7 +254,7 @@ export function DetailPanel() {
 
           return (
             <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">Response Body</h3>
+              <h3 className="text-sm font-medium text-ink-secondary mb-2">Response Body</h3>
               <CodeViewer
                 content={bodyToString(entry.responseBody) || '(empty)'}
                 contentType={getContentType(entry.responseHeaders)}
@@ -283,18 +266,18 @@ export function DetailPanel() {
 
         {activeTab === 'timing' && (
           <div>
-            <h3 className="text-sm font-medium text-gray-300 mb-2">Timing</h3>
-            <div className="bg-gray-800 rounded-md p-3">
+            <h3 className="text-sm font-medium text-ink-secondary mb-2">Timing</h3>
+            <div className="bg-surface-raised border border-edge rounded-md p-3">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-gray-400">Total Duration:</span>
-                <span className="text-sm font-medium text-gray-200">
+                <span className="text-sm text-ink-muted">Total Duration:</span>
+                <span className="text-sm font-medium text-ink tabular-nums">
                   {entry.duration ? `${entry.duration}ms` : 'Pending...'}
                 </span>
               </div>
               {entry.duration && (
-                <div className="h-4 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-4 bg-surface rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-primary-500 rounded-full"
+                    className="h-full bg-accent rounded-full"
                     style={{ width: '100%' }}
                   />
                 </div>

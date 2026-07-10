@@ -14,11 +14,11 @@ const dmp = new DiffMatchPatch();
 function getDiffClass(op: number): string {
   switch (op) {
     case -1:
-      return 'bg-red-900/30 text-red-400';
+      return 'bg-danger/12 text-danger';
     case 1:
-      return 'bg-green-900/30 text-green-400';
+      return 'bg-success/12 text-success';
     default:
-      return 'text-gray-300';
+      return 'text-ink-secondary';
   }
 }
 
@@ -88,13 +88,13 @@ function SideBySideDiff({
   const getLineClass = (type: string) => {
     switch (type) {
       case 'removed':
-        return 'bg-red-900/20 text-red-400';
+        return 'bg-danger/12 text-danger';
       case 'added':
-        return 'bg-green-900/20 text-green-400';
+        return 'bg-success/12 text-success';
       case 'empty':
-        return 'bg-gray-800/50 text-gray-600';
+        return 'bg-surface text-ink-faint';
       default:
-        return 'text-gray-300';
+        return 'text-ink-secondary';
     }
   };
 
@@ -102,19 +102,19 @@ function SideBySideDiff({
     <div className="grid grid-cols-2 gap-4">
       <div>
         {leftLabel && (
-          <div className="text-xs font-medium text-gray-400 mb-2 px-2">
+          <div className="text-xs font-medium text-ink-muted mb-2 px-2">
             {leftLabel}
           </div>
         )}
-        <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
+        <div className="bg-canvas rounded-md overflow-hidden border border-edge">
           {leftLines.map((line, index) => (
             <div
               key={index}
-              className={`px-3 py-0.5 font-mono text-xs border-b border-gray-800 ${getLineClass(
+              className={`px-3 py-0.5 font-mono text-xs border-b border-edge-subtle ${getLineClass(
                 line.type
               )}`}
             >
-              <span className="text-gray-600 mr-3 select-none">{index + 1}</span>
+              <span className="text-ink-faint mr-3 select-none">{index + 1}</span>
               {line.text || '\u00A0'}
             </div>
           ))}
@@ -122,19 +122,19 @@ function SideBySideDiff({
       </div>
       <div>
         {rightLabel && (
-          <div className="text-xs font-medium text-gray-400 mb-2 px-2">
+          <div className="text-xs font-medium text-ink-muted mb-2 px-2">
             {rightLabel}
           </div>
         )}
-        <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
+        <div className="bg-canvas rounded-md overflow-hidden border border-edge">
           {rightLines.map((line, index) => (
             <div
               key={index}
-              className={`px-3 py-0.5 font-mono text-xs border-b border-gray-800 ${getLineClass(
+              className={`px-3 py-0.5 font-mono text-xs border-b border-edge-subtle ${getLineClass(
                 line.type
               )}`}
             >
-              <span className="text-gray-600 mr-3 select-none">{index + 1}</span>
+              <span className="text-ink-faint mr-3 select-none">{index + 1}</span>
               {line.text || '\u00A0'}
             </div>
           ))}
@@ -164,7 +164,7 @@ export function DiffView({
 
   if (!hasChanges) {
     return (
-      <div className="text-center py-4 text-gray-500 text-sm">
+      <div className="text-center py-4 text-ink-faint text-sm">
         No differences found
       </div>
     );

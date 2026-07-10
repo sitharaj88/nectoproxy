@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { getGRPCStatusText } from '@/utils/grpc';
+import { Badge, Button } from '@/components/ui';
 
 interface GRPCViewerProps {
   service: string;
@@ -20,20 +21,21 @@ function CollapsibleSection({ title, defaultOpen = false, children }: Collapsibl
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-gray-700 rounded-md overflow-hidden">
-      <button
+    <div className="border border-edge rounded-md overflow-hidden">
+      <Button
+        variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 w-full px-3 py-2 bg-gray-800 hover:bg-gray-700 text-sm font-medium text-gray-300 transition-colors"
+        className="w-full justify-start gap-2 h-auto px-3 py-2 rounded-none text-sm text-ink-secondary"
       >
         {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-gray-500" />
+          <ChevronDown className="w-4 h-4 text-ink-faint" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-500" />
+          <ChevronRight className="w-4 h-4 text-ink-faint" />
         )}
         {title}
-      </button>
+      </Button>
       {isOpen && (
-        <div className="border-t border-gray-700">
+        <div className="border-t border-edge">
           {children}
         </div>
       )}
@@ -78,14 +80,14 @@ export function GRPCViewer({
     <div className="space-y-4">
       {/* Service and Method Header */}
       <div className="flex items-start gap-3">
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase border bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+        <Badge tone="success" className="uppercase">
           gRPC
-        </span>
+        </Badge>
         <div className="min-w-0">
-          <div className="text-gray-400 text-sm font-mono truncate" title={service}>
+          <div className="text-ink-muted text-sm font-mono truncate" title={service}>
             {service}
           </div>
-          <div className="text-lg font-semibold text-gray-200">
+          <div className="text-lg font-semibold text-ink">
             {method}
           </div>
         </div>
@@ -95,16 +97,16 @@ export function GRPCViewer({
       {grpcStatus !== null && (
         <div className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ${
           isSuccess
-            ? 'bg-green-900/20 border border-green-700/30 text-green-400'
-            : 'bg-red-900/20 border border-red-700/30 text-red-400'
+            ? 'bg-success/12 border border-success/25 text-success'
+            : 'bg-danger/12 border border-danger/25 text-danger'
         }`}>
           <span className="font-medium">Status:</span>
           <span className="font-mono">{grpcStatus}</span>
-          <span className="text-gray-400">-</span>
+          <span className="text-ink-muted">-</span>
           <span>{getGRPCStatusText(grpcStatus)}</span>
           {grpcMessage && (
             <>
-              <span className="text-gray-400">|</span>
+              <span className="text-ink-muted">|</span>
               <span className="truncate">{decodeURIComponent(grpcMessage)}</span>
             </>
           )}
@@ -114,22 +116,22 @@ export function GRPCViewer({
       {/* Request Body */}
       <CollapsibleSection title="Request Message" defaultOpen={true}>
         {requestBody ? (
-          <pre className="p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[300px] bg-gray-900">
+          <pre className="p-3 text-sm font-mono text-ink-secondary whitespace-pre-wrap overflow-auto max-h-[300px] bg-canvas">
             {tryFormatJson(requestBody)}
           </pre>
         ) : (
-          <div className="p-3 text-sm text-gray-500 bg-gray-900">(empty)</div>
+          <div className="p-3 text-sm text-ink-muted bg-canvas">(empty)</div>
         )}
       </CollapsibleSection>
 
       {/* Response Body */}
       <CollapsibleSection title="Response Message" defaultOpen={true}>
         {responseBody ? (
-          <pre className="p-3 text-sm font-mono text-gray-300 whitespace-pre-wrap overflow-auto max-h-[300px] bg-gray-900">
+          <pre className="p-3 text-sm font-mono text-ink-secondary whitespace-pre-wrap overflow-auto max-h-[300px] bg-canvas">
             {tryFormatJson(responseBody)}
           </pre>
         ) : (
-          <div className="p-3 text-sm text-gray-500 bg-gray-900">(empty)</div>
+          <div className="p-3 text-sm text-ink-muted bg-canvas">(empty)</div>
         )}
       </CollapsibleSection>
     </div>

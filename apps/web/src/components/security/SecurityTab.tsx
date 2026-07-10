@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { TrafficEntry } from '@nectoproxy/shared';
+import { Badge } from '@/components/ui';
 import { runAllScanners, type SecurityIssue, type IssueCategory } from './scanners';
 import { SecuritySummary } from './SecuritySummary';
 import { SecurityIssueCard } from './SecurityIssueCard';
@@ -47,10 +48,10 @@ export function SecurityTab({ entry, responseBody }: SecurityTabProps) {
 
       {issues.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-400">
+          <p className="text-ink-secondary">
             No security issues detected in this request/response.
           </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-ink-muted mt-1">
             Note: This scanner checks for common security misconfigurations but is not exhaustive.
           </p>
         </div>
@@ -58,11 +59,11 @@ export function SecurityTab({ entry, responseBody }: SecurityTabProps) {
         <div className="space-y-6">
           {categories.map((category) => (
             <div key={category}>
-              <h3 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-ink-secondary mb-2 flex items-center gap-2">
                 {categoryLabels[category]}
-                <span className="text-xs text-gray-500 bg-gray-700 px-1.5 py-0.5 rounded">
+                <Badge tone="neutral">
                   {groupedIssues[category].length}
-                </span>
+                </Badge>
               </h3>
               <div className="space-y-2">
                 {groupedIssues[category].map((issue) => (

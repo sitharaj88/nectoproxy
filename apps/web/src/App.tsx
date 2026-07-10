@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
+import { Group, Panel, Separator, type Layout, type LayoutChangedMeta } from 'react-resizable-panels';
 import { Header } from '@/components/Header';
 import { FilterBar } from '@/components/FilterBar';
 import { TrafficList } from '@/components/TrafficList';
@@ -48,6 +49,26 @@ export default function App() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const rules = useRulesStore((state) => state.rules);
+
+  // Persisted layout for the resizable traffic | detail split (equivalent of
+  // autoSaveId — react-resizable-panels v4 persists via defaultLayout + onLayoutChanged).
+  const [splitLayout] = useState<Layout | undefined>(() => {
+    try {
+      const raw = localStorage.getItem('necto-main-split');
+      return raw ? (JSON.parse(raw) as Layout) : undefined;
+    } catch {
+      return undefined;
+    }
+  });
+
+  const handleSplitLayoutChanged = useCallback((layout: Layout, meta: LayoutChangedMeta) => {
+    if (!meta.isUserInteraction) return;
+    try {
+      localStorage.setItem('necto-main-split', JSON.stringify(layout));
+    } catch {
+      /* ignore persistence failures */
+    }
+  }, []);
 
   // Check if there are any active throttle/delay rules
   const hasActiveThrottleRules = useMemo(
@@ -188,28 +209,43 @@ export default function App() {
       }
     }
 
-    // Desktop: Multi-panel layout
+    // Desktop: Multi-panel layout — resizable split between traffic list and detail.
     return (
       <>
-        {/* Traffic List or Waterfall */}
-        <div
-          className={`flex flex-col ${
-            selectedEntry ? (showRules ? 'w-1/3' : 'w-1/2') : showRules ? 'flex-1' : 'w-full'
-          } border-r border-gray-700`}
+        <Group
+          orientation="horizontal"
+          id="necto-main-split"
+          defaultLayout={splitLayout}
+          onLayoutChanged={handleSplitLayoutChanged}
+          className="flex-1 min-w-0"
         >
-          {viewMode === 'waterfall' ? (
-            <WaterfallChart />
-          ) : (
-            <TrafficList searchInputRef={searchInputRef} onOpenCompare={() => setShowCompare(true)} />
-          )}
-        </div>
+          {/* Traffic List or Waterfall */}
+          <Panel id="traffic" defaultSize={selectedEntry ? 55 : 100} minSize={30}>
+            <div
+              className={`flex flex-col h-full ${
+                showRules && !selectedEntry ? 'border-r border-edge' : ''
+              }`}
+            >
+              {viewMode === 'waterfall' ? (
+                <WaterfallChart />
+              ) : (
+                <TrafficList searchInputRef={searchInputRef} onOpenCompare={() => setShowCompare(true)} />
+              )}
+            </div>
+          </Panel>
 
-        {/* Detail Panel */}
-        {selectedEntry && (
-          <div className={showRules ? 'w-1/3' : 'w-1/2'}>
-            <DetailPanel />
-          </div>
-        )}
+          {/* Detail Panel */}
+          {selectedEntry && (
+            <>
+              <Separator className="resizer" />
+              <Panel id="detail" defaultSize={45} minSize={25}>
+                <div className="h-full">
+                  <DetailPanel />
+                </div>
+              </Panel>
+            </>
+          )}
+        </Group>
 
         {/* Rules Panel */}
         {showRules && <RulesPanel onClose={() => setShowRules(false)} />}
@@ -218,7 +254,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900 text-gray-100">
+    <div className="h-screen flex flex-col bg-canvas text-ink">
       {/* Header */}
       <Header
         isConnected={isConnected}

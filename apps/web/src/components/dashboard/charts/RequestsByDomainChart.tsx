@@ -8,6 +8,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { DomainStats } from '@/hooks/usePerformanceStats';
+import { Card } from '@/components/ui';
+import { useChartTheme, tooltipContentStyle } from './chartTheme';
 
 interface RequestsByDomainChartProps {
   data: DomainStats[];
@@ -27,6 +29,7 @@ function formatBytes(bytes: number): string {
 }
 
 export function RequestsByDomainChart({ data }: RequestsByDomainChartProps) {
+  const theme = useChartTheme();
   const chartData = data.map((d) => ({
     ...d,
     domainLabel: truncateDomain(d.domain),
@@ -34,24 +37,24 @@ export function RequestsByDomainChart({ data }: RequestsByDomainChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4 h-64">
-        <h3 className="text-sm font-medium text-gray-300 mb-3">Requests by Domain</h3>
-        <div className="flex items-center justify-center h-[85%] text-gray-500 text-sm">
+      <Card className="p-4 h-64">
+        <h3 className="text-sm font-medium text-ink-secondary mb-3">Requests by Domain</h3>
+        <div className="flex items-center justify-center h-[85%] text-ink-muted text-sm">
           No data available
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 h-64">
-      <h3 className="text-sm font-medium text-gray-300 mb-3">Requests by Domain</h3>
+    <Card className="p-4 h-64">
+      <h3 className="text-sm font-medium text-ink-secondary mb-3">Requests by Domain</h3>
       <ResponsiveContainer width="100%" height="85%">
         <BarChart data={chartData} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} horizontal={false} />
           <XAxis
             type="number"
-            stroke="#6b7280"
+            stroke={theme.axis}
             fontSize={10}
             tickLine={false}
             allowDecimals={false}
@@ -59,28 +62,23 @@ export function RequestsByDomainChart({ data }: RequestsByDomainChartProps) {
           <YAxis
             type="category"
             dataKey="domainLabel"
-            stroke="#6b7280"
+            stroke={theme.axis}
             fontSize={10}
             tickLine={false}
             width={100}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: '#1f2937',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              fontSize: '12px',
-            }}
+            contentStyle={tooltipContentStyle(theme)}
             formatter={(value, name, props) => {
               const numValue = Number(value) || 0;
               if (name === 'count') {
                 return [
                   <div key="tooltip" className="space-y-1">
                     <div>{numValue} requests</div>
-                    <div className="text-gray-400">
+                    <div className="text-ink-muted">
                       Avg: {Math.round(props.payload.avgDuration)}ms
                     </div>
-                    <div className="text-gray-400">
+                    <div className="text-ink-muted">
                       Size: {formatBytes(props.payload.totalSize)}
                     </div>
                   </div>,
@@ -90,9 +88,9 @@ export function RequestsByDomainChart({ data }: RequestsByDomainChartProps) {
               return [numValue, name];
             }}
           />
-          <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+          <Bar dataKey="count" fill={theme.accent} radius={[0, 4, 4, 0]} />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </Card>
   );
 }

@@ -2,31 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===========================================================================
+ * NectoProxy design tokens — "pro devtool, dark-first"
+ * ---------------------------------------------------------------------------
+ * Single source of truth: space-separated RGB channel triplets so Tailwind
+ * utilities (bg-surface, text-ink, border-edge, bg-accent/40 …) resolve to
+ * `rgb(var(--token) / <alpha>)` with full opacity support. Legacy hex-named
+ * vars are derived from these channels for direct-CSS callers (scrollbars,
+ * body). Light mode overrides the same channels — no !important hacks needed
+ * for token-driven components.
+ * ========================================================================= */
+
 :root {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color-scheme: dark;
 
-  /* Theme variables - default (dark). Overridden by .light below. */
-  --bg-primary: #111827;          /* gray-900 */
-  --bg-secondary: #1f2937;        /* gray-800 */
-  --bg-tertiary: #374151;         /* gray-700 */
-  --bg-elevated: #1f2937;         /* surface for modals/cards */
-  --bg-input: #111827;            /* input background */
-  --bg-hover: #374151;
-  --bg-active: #4b5563;
-  --text-primary: #f3f4f6;        /* gray-100 */
-  --text-secondary: #d1d5db;      /* gray-300 */
-  --text-muted: #9ca3af;          /* gray-400 */
-  --text-faint: #6b7280;          /* gray-500 */
-  --text-placeholder: #6b7280;
-  --border-color: #374151;        /* gray-700 */
-  --border-strong: #4b5563;       /* gray-600 */
-  --accent-color: #3b82f6;
-  --focus-ring: #3b82f6;
-  --focus-ring-offset: #111827;
-  --scrollbar-track: #1f2937;
-  --scrollbar-thumb: #4b5563;
-  --scrollbar-thumb-hover: #6b7280;
+  /* Surfaces — cool-tinted near-black, layered by elevation */
+  --color-bg: 10 11 14;            /* app canvas (deepest) */
+  --color-surface: 18 20 25;       /* panels */
+  --color-surface-2: 24 27 33;     /* headers, cards, raised */
+  --color-overlay: 30 34 42;       /* popovers, menus, modals */
+
+  /* Borders */
+  --color-border-subtle: 30 34 44;
+  --color-border: 42 47 58;
+  --color-border-strong: 58 65 80;
+
+  /* Text / foreground */
+  --color-text: 230 233 239;
+  --color-text-secondary: 180 186 198;
+  --color-text-muted: 125 133 149;
+  --color-text-faint: 86 94 110;
+
+  /* Signature accent — iris/indigo */
+  --color-accent: 109 123 250;
+  --color-accent-hover: 128 141 255;
+  --color-accent-fg: 255 255 255;
+  --color-accent-subtle: 109 123 250; /* used at low alpha for tinted fills */
+
+  /* Semantic status (dark-tuned for AA on dark surfaces) */
+  --color-success: 63 185 80;
+  --color-info: 88 166 255;
+  --color-warn: 210 153 34;
+  --color-danger: 248 81 73;
+
+  /* Legacy hex-named vars, derived from channels (kept for direct-CSS callers) */
+  --bg-primary: rgb(var(--color-bg));
+  --bg-secondary: rgb(var(--color-surface));
+  --bg-tertiary: rgb(var(--color-surface-2));
+  --bg-elevated: rgb(var(--color-overlay));
+  --bg-input: rgb(var(--color-bg));
+  --bg-hover: rgb(var(--color-surface-2));
+  --bg-active: rgb(var(--color-border-strong));
+  --text-primary: rgb(var(--color-text));
+  --text-secondary: rgb(var(--color-text-secondary));
+  --text-muted: rgb(var(--color-text-muted));
+  --text-faint: rgb(var(--color-text-faint));
+  --text-placeholder: rgb(var(--color-text-faint));
+  --border-color: rgb(var(--color-border));
+  --border-strong: rgb(var(--color-border-strong));
+  --accent-color: rgb(var(--color-accent));
+  --focus-ring: rgb(var(--color-accent));
+  --focus-ring-offset: rgb(var(--color-bg));
+  --scrollbar-track: rgb(var(--color-surface));
+  --scrollbar-thumb: rgb(var(--color-border-strong));
+  --scrollbar-thumb-hover: rgb(var(--color-text-faint));
+
+  /* Elevation */
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-popover: 0 12px 34px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.04);
 }
 
 .dark {
@@ -35,77 +79,86 @@
 
 .light {
   color-scheme: light;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-tertiary: #f3f4f6;
-  --bg-elevated: #ffffff;
-  --bg-input: #ffffff;
-  --bg-hover: #f3f4f6;
-  --bg-active: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #374151;
-  --text-muted: #4b5563;          /* darker for AA contrast on white */
-  --text-faint: #6b7280;
-  --text-placeholder: #9ca3af;
-  --border-color: #e5e7eb;
-  --border-strong: #d1d5db;
-  --accent-color: #2563eb;
-  --focus-ring: #2563eb;
-  --focus-ring-offset: #ffffff;
-  --scrollbar-track: #f3f4f6;
-  --scrollbar-thumb: #d1d5db;
-  --scrollbar-thumb-hover: #9ca3af;
+
+  --color-bg: 255 255 255;
+  --color-surface: 249 250 251;
+  --color-surface-2: 243 244 246;
+  --color-overlay: 255 255 255;
+
+  --color-border-subtle: 237 239 242;
+  --color-border: 226 232 240;
+  --color-border-strong: 203 213 225;
+
+  --color-text: 17 24 39;
+  --color-text-secondary: 55 65 81;
+  --color-text-muted: 75 85 99;
+  --color-text-faint: 107 114 128;
+
+  --color-accent: 79 70 229;
+  --color-accent-hover: 67 56 202;
+  --color-accent-fg: 255 255 255;
+  --color-accent-subtle: 79 70 229;
+
+  --color-success: 22 128 61;
+  --color-info: 37 99 235;
+  --color-warn: 180 83 9;
+  --color-danger: 220 38 38;
+
+  --focus-ring-offset: rgb(var(--color-bg));
+  --shadow-panel: 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-popover: 0 12px 34px rgb(15 23 42 / 0.14), 0 0 0 1px rgb(15 23 42 / 0.06);
 }
 
 /* ---------------------------------------------------------------------------
- * Light theme overrides for Tailwind utility classes used throughout the app.
- * Components were authored against the dark palette (bg-gray-800, text-gray-300,
- * etc.); these rules remap them when `.light` is active. !important keeps the
- * remap predictable when utilities collide.
+ * Legacy light-mode remap for components NOT YET migrated to semantic tokens.
+ * These map the old hardcoded dark utilities (bg-gray-800, text-gray-300 …)
+ * onto the theme variables when `.light` is active. As components migrate to
+ * bg-surface/text-ink/border-edge, these rules can shrink. !important keeps the
+ * remap deterministic where utilities collide.
  * ------------------------------------------------------------------------- */
 
-.light .bg-gray-900 { background-color: var(--bg-primary) !important; }
-.light .bg-gray-800 { background-color: var(--bg-secondary) !important; }
-.light .bg-gray-700 { background-color: var(--bg-tertiary) !important; }
-.light .bg-gray-600 { background-color: var(--border-strong) !important; }
+.light .bg-gray-900 { background-color: rgb(var(--color-bg)) !important; }
+.light .bg-gray-800 { background-color: rgb(var(--color-surface)) !important; }
+.light .bg-gray-700 { background-color: rgb(var(--color-surface-2)) !important; }
+.light .bg-gray-600 { background-color: rgb(var(--color-border-strong)) !important; }
 
-.light .bg-gray-800\/80 { background-color: rgba(249, 250, 251, 0.92) !important; }
-.light .bg-gray-800\/50 { background-color: rgba(249, 250, 251, 0.5) !important; }
-.light .bg-gray-900\/80 { background-color: rgba(255, 255, 255, 0.92) !important; }
-.light .bg-gray-900\/50 { background-color: rgba(243, 244, 246, 0.5) !important; }
-.light .bg-gray-900\/30 { background-color: rgba(243, 244, 246, 0.3) !important; }
-.light .bg-black\/50 { background-color: rgba(17, 24, 39, 0.35) !important; }
+.light .bg-gray-800\/80 { background-color: rgb(249 250 251 / 0.92) !important; }
+.light .bg-gray-800\/50 { background-color: rgb(249 250 251 / 0.5) !important; }
+.light .bg-gray-900\/80 { background-color: rgb(255 255 255 / 0.92) !important; }
+.light .bg-gray-900\/50 { background-color: rgb(243 244 246 / 0.5) !important; }
+.light .bg-gray-900\/30 { background-color: rgb(243 244 246 / 0.3) !important; }
+.light .bg-black\/50 { background-color: rgb(17 24 39 / 0.35) !important; }
 
-.light .hover\:bg-gray-800:hover { background-color: var(--bg-tertiary) !important; }
-.light .hover\:bg-gray-800\/50:hover { background-color: rgba(243, 244, 246, 0.6) !important; }
-.light .hover\:bg-gray-700:hover { background-color: var(--bg-active) !important; }
-.light .hover\:bg-gray-600:hover { background-color: var(--border-strong) !important; }
+.light .hover\:bg-gray-800:hover { background-color: rgb(var(--color-surface-2)) !important; }
+.light .hover\:bg-gray-800\/50:hover { background-color: rgb(243 244 246 / 0.6) !important; }
+.light .hover\:bg-gray-700:hover { background-color: rgb(var(--color-border-strong)) !important; }
+.light .hover\:bg-gray-600:hover { background-color: rgb(var(--color-border-strong)) !important; }
 
-.light .border-gray-600 { border-color: var(--border-strong) !important; }
-.light .border-gray-700 { border-color: var(--border-color) !important; }
-.light .border-gray-800 { border-color: var(--border-color) !important; }
+.light .border-gray-600 { border-color: rgb(var(--color-border-strong)) !important; }
+.light .border-gray-700 { border-color: rgb(var(--color-border)) !important; }
+.light .border-gray-800 { border-color: rgb(var(--color-border)) !important; }
 
-.light .text-gray-100 { color: var(--text-primary) !important; }
-.light .text-gray-200 { color: var(--text-primary) !important; }
-.light .text-gray-300 { color: var(--text-secondary) !important; }
-.light .text-gray-400 { color: var(--text-muted) !important; }
-.light .text-gray-500 { color: var(--text-muted) !important; }
-.light .text-gray-600 { color: var(--text-faint) !important; }
-.light .text-white { color: var(--text-primary) !important; }
+.light .text-gray-100 { color: rgb(var(--color-text)) !important; }
+.light .text-gray-200 { color: rgb(var(--color-text)) !important; }
+.light .text-gray-300 { color: rgb(var(--color-text-secondary)) !important; }
+.light .text-gray-400 { color: rgb(var(--color-text-muted)) !important; }
+.light .text-gray-500 { color: rgb(var(--color-text-muted)) !important; }
+.light .text-gray-600 { color: rgb(var(--color-text-faint)) !important; }
+.light .text-white { color: rgb(var(--color-text)) !important; }
 
-.light .hover\:text-gray-200:hover { color: var(--text-primary) !important; }
-.light .hover\:text-gray-300:hover { color: var(--text-primary) !important; }
-.light .hover\:text-white:hover { color: var(--text-primary) !important; }
+.light .hover\:text-gray-200:hover { color: rgb(var(--color-text)) !important; }
+.light .hover\:text-gray-300:hover { color: rgb(var(--color-text)) !important; }
+.light .hover\:text-white:hover { color: rgb(var(--color-text)) !important; }
 
 .light .placeholder-gray-500::placeholder,
 .light input::placeholder,
 .light textarea::placeholder {
-  color: var(--text-placeholder) !important;
+  color: rgb(var(--color-text-faint)) !important;
 }
 
 /* Lighten saturated tints used for status pills/highlights in light mode */
-.light .bg-blue-900\/30 { background-color: rgba(37, 99, 235, 0.08) !important; }
-.light .bg-red-900\/30 { background-color: rgba(220, 38, 38, 0.08) !important; }
+.light .bg-blue-900\/30 { background-color: rgb(37 99 235 / 0.08) !important; }
+.light .bg-red-900\/30 { background-color: rgb(220 38 38 / 0.08) !important; }
 .light .text-red-400 { color: #b91c1c !important; }
 .light .text-red-300 { color: #991b1b !important; }
 .light .text-green-400 { color: #047857 !important; }
@@ -115,144 +168,127 @@
 .light .text-purple-400 { color: #7e22ce !important; }
 .light .text-pink-400 { color: #be185d !important; }
 .light .text-emerald-400 { color: #047857 !important; }
-.light .text-primary-400 { color: #1d4ed8 !important; }
+.light .text-primary-400 { color: #4338ca !important; }
 
 /* Light mode skeleton */
 .light .animate-pulse.bg-gray-700 { background-color: #e5e7eb !important; }
 
-/* Light mode command palette selection */
+/* Command palette selection */
 .light [cmdk-item][aria-selected="true"] { background-color: #e5e7eb !important; }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Scrollbars use theme variables (works in both modes automatically) */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-border-strong));
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-text-faint)); background-clip: padding-box; }
 
-::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
-
-/* Status colors (used for HTTP status badges) */
-.status-2xx { @apply text-green-400; }
-.status-3xx { @apply text-blue-400; }
-.status-4xx { @apply text-yellow-400; }
-.status-5xx { @apply text-red-400; }
+/* Status colors (HTTP status badges) — tuned to semantic tokens */
+.status-2xx { color: rgb(var(--color-success)); }
+.status-3xx { color: rgb(var(--color-info)); }
+.status-4xx { color: rgb(var(--color-warn)); }
+.status-5xx { color: rgb(var(--color-danger)); }
 
 /* Method colors */
-.method-get { @apply text-green-400; }
-.method-post { @apply text-blue-400; }
-.method-put { @apply text-yellow-400; }
+.method-get { color: rgb(var(--color-success)); }
+.method-post { color: rgb(var(--color-info)); }
+.method-put { color: rgb(var(--color-warn)); }
 .method-patch { @apply text-orange-400; }
-.method-delete { @apply text-red-400; }
-.method-options { @apply text-gray-400; }
+.method-delete { color: rgb(var(--color-danger)); }
+.method-options { color: rgb(var(--color-text-muted)); }
 .method-head { @apply text-purple-400; }
 
 /* Code editor style */
 .code-block {
-  @apply font-mono text-sm bg-gray-800 p-4 rounded-lg overflow-auto;
+  @apply font-mono text-sm p-4 rounded-lg overflow-auto;
+  background-color: rgb(var(--color-surface));
 }
 
-/* Panel resizer */
+/* Panel resizer (react split handles style themselves; this is the fallback) */
 .resizer {
-  @apply bg-gray-700 hover:bg-primary-500 transition-colors cursor-col-resize;
-  width: 4px;
+  background-color: rgb(var(--color-border));
+  width: 1px;
+  transition: background-color 0.12s ease;
+  cursor: col-resize;
 }
-
-.resizer:hover { @apply bg-primary-500; }
+.resizer:hover, .resizer[data-resize-handle-active] {
+  background-color: rgb(var(--color-accent));
+  box-shadow: 0 0 0 1px rgb(var(--color-accent) / 0.4);
+}
 
 /* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-@keyframes slideIn {
-  from { transform: translateY(-10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes slideIn { from { transform: translateY(-8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.97); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes rowHighlight {
-  0% { background-color: rgba(59, 130, 246, 0.3); }
+  0% { background-color: rgb(var(--color-accent) / 0.22); }
   100% { background-color: transparent; }
 }
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 .animate-fadeIn { animation: fadeIn 0.15s ease-out; }
 .animate-slideIn { animation: slideIn 0.2s ease-out; }
 .animate-scaleIn { animation: scaleIn 0.15s ease-out; }
 .animate-rowHighlight { animation: rowHighlight 1s ease-out; }
 
-/* Focus rings — drive the offset color from the theme variable so it stays
- * visible in both modes. Tailwind's ring-offset utility reads --tw-ring-offset-color. */
+/* Focus rings */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2;
+  --tw-ring-color: rgb(var(--color-accent));
   --tw-ring-offset-color: var(--focus-ring-offset);
 }
 
 :focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: 2px solid rgb(var(--color-accent));
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* Suppress focus ring for non-keyboard interactions */
-:focus:not(:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
+:focus:not(:focus-visible) { outline: none; box-shadow: none; }
 
-/* Disabled controls: clearer affordance than just opacity-50 */
 button:disabled:not(.no-disabled-style),
 input:disabled:not(.no-disabled-style),
 select:disabled:not(.no-disabled-style),
-textarea:disabled:not(.no-disabled-style) {
-  cursor: not-allowed;
+textarea:disabled:not(.no-disabled-style) { cursor: not-allowed; }
+
+input:disabled, select:disabled, textarea:disabled {
+  background-color: color-mix(in srgb, rgb(var(--color-surface-2)) 70%, transparent);
+  color: rgb(var(--color-text-muted));
 }
 
-input:disabled,
-select:disabled,
-textarea:disabled {
-  background-color: color-mix(in srgb, var(--bg-tertiary) 70%, transparent);
-  color: var(--text-muted);
-}
-
-/* Skip link for accessibility */
+/* Skip link */
 .skip-link {
-  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded;
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:rounded;
+  background-color: rgb(var(--color-accent));
+  color: rgb(var(--color-accent-fg));
 }
 
 /* Toast animations */
 [data-sonner-toast] { animation: slideIn 0.2s ease-out; }
 
 /* Command palette item selection (dark) */
-[cmdk-item][aria-selected="true"] { @apply bg-gray-700; }
+[cmdk-item][aria-selected="true"] { background-color: rgb(var(--color-surface-2)); }
 
 /* Mobile-friendly touch targets */
 @media (max-width: 640px) {
-  button, a, [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
+  button, a, [role="button"] { min-height: 44px; min-width: 44px; }
 }
 
-/* Reduced motion preference */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

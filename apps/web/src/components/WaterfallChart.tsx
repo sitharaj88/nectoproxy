@@ -72,21 +72,21 @@ export function WaterfallChart({ maxEntries = 100 }: WaterfallChartProps) {
 
   // Get color based on status
   const getStatusColor = (entry: TrafficEntry): string => {
-    if (entry.error) return 'bg-red-500';
-    if (!entry.status) return 'bg-gray-500';
-    if (entry.status >= 500) return 'bg-red-500';
-    if (entry.status >= 400) return 'bg-yellow-500';
-    if (entry.status >= 300) return 'bg-blue-500';
-    return 'bg-green-500';
+    if (entry.error) return 'bg-danger';
+    if (!entry.status) return 'bg-ink-faint';
+    if (entry.status >= 500) return 'bg-danger';
+    if (entry.status >= 400) return 'bg-warn';
+    if (entry.status >= 300) return 'bg-info';
+    return 'bg-success';
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-canvas">
       {/* Time axis header */}
-      <div className="flex-shrink-0 px-4 py-2 border-b border-gray-700 bg-gray-800">
+      <div className="flex-shrink-0 px-4 py-2 border-b border-edge bg-surface-raised">
         <div className="flex items-center gap-2">
-          <div className="w-48 text-xs font-medium text-gray-400">URL</div>
-          <div className="flex-1 flex justify-between text-xs text-gray-500">
+          <div className="w-48 text-xs font-medium text-ink-muted">URL</div>
+          <div className="flex-1 flex justify-between text-xs text-ink-faint">
             {axisLabels.map((label, i) => (
               <span key={i}>{label}</span>
             ))}
@@ -107,8 +107,8 @@ export function WaterfallChart({ maxEntries = 100 }: WaterfallChartProps) {
               <div
                 key={entry.id}
                 data-entry-id={entry.id}
-                className={`flex items-center gap-2 px-4 py-1 border-b border-gray-800 cursor-pointer hover:bg-gray-800/50 transition-colors ${
-                  selectedId === entry.id ? 'bg-gray-800' : ''
+                className={`flex items-center gap-2 px-4 py-1 border-b border-edge-subtle cursor-pointer hover:bg-surface/50 transition-colors ${
+                  selectedId === entry.id ? 'bg-surface' : ''
                 }`}
                 onClick={() => setSelected(entry.id)}
               >
@@ -117,25 +117,25 @@ export function WaterfallChart({ maxEntries = 100 }: WaterfallChartProps) {
                   <span
                     className={`text-xs font-mono ${
                       entry.method === 'GET'
-                        ? 'text-green-400'
+                        ? 'text-success'
                         : entry.method === 'POST'
-                        ? 'text-blue-400'
+                        ? 'text-info'
                         : entry.method === 'PUT'
-                        ? 'text-yellow-400'
+                        ? 'text-warn'
                         : entry.method === 'DELETE'
-                        ? 'text-red-400'
-                        : 'text-gray-400'
+                        ? 'text-danger'
+                        : 'text-ink-muted'
                     }`}
                   >
                     {entry.method}
                   </span>
-                  <span className="text-xs text-gray-500 ml-1 truncate">
+                  <span className="text-xs text-ink-faint ml-1 truncate">
                     {new URL(entry.url).pathname}
                   </span>
                 </div>
 
                 {/* Timeline bar */}
-                <div className="flex-1 h-5 relative bg-gray-900 rounded">
+                <div className="flex-1 h-5 relative bg-canvas rounded">
                   <div
                     className={`absolute h-full rounded ${getStatusColor(entry)} opacity-80 hover:opacity-100 transition-opacity`}
                     style={{
@@ -156,7 +156,7 @@ export function WaterfallChart({ maxEntries = 100 }: WaterfallChartProps) {
                   {/* Waiting indicator (connection time) */}
                   {!entry.isComplete && (
                     <div
-                      className="absolute h-full bg-gray-600 rounded animate-pulse"
+                      className="absolute h-full bg-edge-strong rounded animate-pulse"
                       style={{
                         left: `${startOffset}%`,
                         width: '4px',
@@ -171,20 +171,20 @@ export function WaterfallChart({ maxEntries = 100 }: WaterfallChartProps) {
                     <span
                       className={`text-xs font-medium ${
                         entry.status >= 500
-                          ? 'text-red-400'
+                          ? 'text-danger'
                           : entry.status >= 400
-                          ? 'text-yellow-400'
+                          ? 'text-warn'
                           : entry.status >= 300
-                          ? 'text-blue-400'
-                          : 'text-green-400'
+                          ? 'text-info'
+                          : 'text-success'
                       }`}
                     >
                       {entry.status}
                     </span>
                   ) : entry.error ? (
-                    <span className="text-xs text-red-400">ERR</span>
+                    <span className="text-xs text-danger">ERR</span>
                   ) : (
-                    <span className="text-xs text-gray-500">...</span>
+                    <span className="text-xs text-ink-faint">...</span>
                   )}
                 </div>
               </div>
@@ -194,29 +194,29 @@ export function WaterfallChart({ maxEntries = 100 }: WaterfallChartProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex-shrink-0 px-4 py-2 border-t border-gray-700 bg-gray-800">
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+      <div className="flex-shrink-0 px-4 py-2 border-t border-edge bg-surface-raised">
+        <div className="flex items-center gap-4 text-xs text-ink-muted">
           <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-green-500" />
+            <span className="w-3 h-3 rounded bg-success" />
             <span>2xx</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-blue-500" />
+            <span className="w-3 h-3 rounded bg-info" />
             <span>3xx</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-yellow-500" />
+            <span className="w-3 h-3 rounded bg-warn" />
             <span>4xx</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-red-500" />
+            <span className="w-3 h-3 rounded bg-danger" />
             <span>5xx/Error</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-gray-500" />
+            <span className="w-3 h-3 rounded bg-ink-faint" />
             <span>Pending</span>
           </div>
-          <div className="ml-auto text-gray-600">
+          <div className="ml-auto text-ink-faint">
             Showing {displayEntries.length} of {entries.length} requests
           </div>
         </div>

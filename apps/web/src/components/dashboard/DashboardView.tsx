@@ -1,5 +1,6 @@
 import { Activity, AlertTriangle, Clock, Gauge, Database, Zap } from 'lucide-react';
 import { usePerformanceStats } from '@/hooks/usePerformanceStats';
+import { Card } from '@/components/ui';
 import { StatCard, TopSlowestRequests } from './widgets';
 import {
   RequestsPerSecondChart,
@@ -26,15 +27,15 @@ export function DashboardView() {
   const stats = usePerformanceStats();
 
   return (
-    <div className="h-full w-full overflow-auto p-4 bg-gray-900">
+    <div className="h-full w-full overflow-auto p-4 bg-canvas">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-white flex items-center gap-2">
-            <Gauge className="w-5 h-5 text-blue-400" />
+          <h1 className="text-xl font-semibold text-ink flex items-center gap-2">
+            <Gauge className="w-5 h-5 text-accent" />
             Performance Dashboard
           </h1>
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-ink-muted">
             Last 60 seconds
           </span>
         </div>
@@ -102,24 +103,24 @@ export function DashboardView() {
         <TopSlowestRequests requests={stats.slowestRequests} />
 
         {/* Methods Breakdown */}
-        <div className="bg-gray-800 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">Requests by Method</h3>
+        <Card className="p-4">
+          <h3 className="text-sm font-medium text-ink-secondary mb-3">Requests by Method</h3>
           <div className="flex flex-wrap gap-3">
             {stats.requestsByMethod.map(({ method, count, color }) => (
               <div
                 key={method}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-gray-700/50"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-surface"
               >
                 <div
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: color }}
                 />
-                <span className="text-sm font-mono text-gray-300">{method}</span>
-                <span className="text-sm text-gray-500">{count}</span>
+                <span className="text-sm font-mono text-ink-secondary">{method}</span>
+                <span className="text-sm text-ink-muted">{count}</span>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

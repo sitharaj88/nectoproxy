@@ -52,7 +52,7 @@ export function TimingBreakdown({ duration, timing }: TimingBreakdownProps) {
     <div className="space-y-4">
       {/* Timeline Bar */}
       <div className="relative">
-        <div className="h-8 flex rounded-lg overflow-hidden bg-gray-900">
+        <div className="h-8 flex rounded-md overflow-hidden bg-surface">
           {phases.map((phase) => {
             const width = (phase.value / total) * 100;
             if (width < 0.5) return null;
@@ -74,7 +74,7 @@ export function TimingBreakdown({ duration, timing }: TimingBreakdownProps) {
                 )}
 
                 {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-gray-700">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface-overlay text-ink text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-edge shadow-popover">
                   {phase.label}: {phase.value.toFixed(1)}ms
                 </div>
               </div>
@@ -84,7 +84,7 @@ export function TimingBreakdown({ duration, timing }: TimingBreakdownProps) {
 
         {/* Total duration label */}
         <div className="absolute -right-2 top-1/2 -translate-y-1/2 translate-x-full pl-3">
-          <span className="text-sm font-medium text-gray-300">{duration.toFixed(0)}ms</span>
+          <span className="text-sm font-medium text-ink-secondary tabular-nums">{duration.toFixed(0)}ms</span>
         </div>
       </div>
 
@@ -97,8 +97,8 @@ export function TimingBreakdown({ duration, timing }: TimingBreakdownProps) {
               style={{ backgroundColor: phase.color }}
             />
             <div className="min-w-0">
-              <div className="text-xs text-gray-400 truncate">{phase.label}</div>
-              <div className="text-sm text-gray-200 font-medium">
+              <div className="text-xs text-ink-muted truncate">{phase.label}</div>
+              <div className="text-sm text-ink font-medium tabular-nums">
                 {phase.value.toFixed(1)}ms
               </div>
             </div>
@@ -108,8 +108,8 @@ export function TimingBreakdown({ duration, timing }: TimingBreakdownProps) {
 
       {/* Phase descriptions */}
       {hasDetailedTiming && (
-        <div className="pt-3 border-t border-gray-700">
-          <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+        <div className="pt-3 border-t border-edge">
+          <h4 className="text-xs font-medium text-ink-faint uppercase tracking-wider mb-2">
             Phase Details
           </h4>
           <div className="space-y-1">
@@ -117,8 +117,8 @@ export function TimingBreakdown({ duration, timing }: TimingBreakdownProps) {
               const phaseInfo = TIMING_PHASES.find((p) => p.key === phase.key);
               return (
                 <div key={phase.key} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400">{phaseInfo?.description || phase.label}</span>
-                  <span className="text-gray-300 font-mono">{phase.value.toFixed(2)}ms</span>
+                  <span className="text-ink-muted">{phaseInfo?.description || phase.label}</span>
+                  <span className="text-ink-secondary font-mono tabular-nums">{phase.value.toFixed(2)}ms</span>
                 </div>
               );
             })}
