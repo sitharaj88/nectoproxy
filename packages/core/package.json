@@ -20,7 +20,7 @@
     "@nectoproxy/certs": "workspace:*",
     "@nectoproxy/shared": "workspace:*",
     "uuid": "^9.0.1",
-    "ws": "^8.19.0"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.8",
